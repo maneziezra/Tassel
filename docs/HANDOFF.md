@@ -44,7 +44,7 @@ Offline crop-disease scanner + AI advisor for Kenyan smallholders, English/Kiswa
 - Known: one SIGSEGV on first gallery scan (unconfirmed, retry worked).
 
 ## Open work (in order)
-1. Confirm no other agent session is editing this folder (one did a Mche restyle on 16 Oct ~11:26–11:35). Then `git init`, commit, push to a **private** GitHub repo (check .gitignore covers .env, android/app/.cxx, keystores).
+1. DONE: git + private repos maneziezra/cropguard-ai and maneziezra/cropguard-proxy. `git push` after each change.
 2. DONE: v2.1 schema applied; advisors clean apart from intended warnings (anon sign-in, aggregate RPCs, server-only chat_usage). Optional: enable leaked-password protection in Auth settings.
 3. Emulator walkthrough: scan pill → gallery → /photo-check; result → photo check; v2.1 features (outbreaks, farmer prices, photo posts, planting date). Fix bugs.
 4. Code review pass (requested), tsc, check_sw.js.
