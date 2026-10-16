@@ -24,7 +24,7 @@ Offline crop-disease scanner + AI advisor for Kenyan smallholders, English/Kiswa
   - `advisor-chat` v5 — Claude chat.
   - `photo-check` v1 — Claude vision, forced tool `report_photo_check`. Tested: EN 16s, SW 22.7s, correct early blight.
   - Shared limits via `increment_chat_usage`: 20/user/hour, 500 global/day. Model `claude-sonnet-4-6`. Secret `ANTHROPIC_API_KEY`.
-- **`../cropguard-proxy/supabase/cropguard_v21_features.sql` is NOT applied** (last attempt returned "cancelled"). Adds: incidents.county + trigger, `county_outbreaks` RPC (>=2 farmers), farms.planting_date, forum_posts photo_path/scan_label/scan_confidence, `forum-photos` bucket + policies (insert requires `photo_path like auth.uid()||'/%'`), price_reports + daily limit trigger, `price_report_summary` (>=3 distinct reporters). App degrades gracefully without it (`isMissingSchema`/`hasV21Schema` in lib/data.ts). Apply only after Ezra says "apply db".
+- `../cropguard-proxy/supabase/cropguard_v21_features.sql` APPLIED 16 Oct 2026 via SQL editor (MCP apply_migration keeps returning "cancelled"; use the SQL editor for DDL). Adds: incidents.county + trigger, `county_outbreaks` RPC (>=2 farmers), farms.planting_date, forum_posts photo_path/scan_label/scan_confidence, `forum-photos` bucket + policies (insert requires `photo_path like auth.uid()||'/%'`), price_reports + daily limit trigger, `price_report_summary` (>=3 distinct reporters). App degrades gracefully without it (`isMissingSchema`/`hasV21Schema` in lib/data.ts).
 - `../cropguard-proxy/api/chat.js` is the old unused Vercel proxy (can be deleted with Ezra's OK).
 - External data: Open-Meteo (Hutton late-blight risk; spray days = wind<15km/h, no rain 6h, 10–30°C), OSM Overpass/Nominatim agro-dealers, Leaflet-in-WebView field mapping (Esri/OSM tiles).
 
@@ -45,7 +45,7 @@ Offline crop-disease scanner + AI advisor for Kenyan smallholders, English/Kiswa
 
 ## Open work (in order)
 1. Confirm no other agent session is editing this folder (one did a Mche restyle on 16 Oct ~11:26–11:35). Then `git init`, commit, push to a **private** GitHub repo (check .gitignore covers .env, android/app/.cxx, keystores).
-2. With Ezra's "apply db": apply cropguard_v21_features.sql, run Supabase advisors.
+2. DONE: v2.1 schema applied; advisors clean apart from intended warnings (anon sign-in, aggregate RPCs, server-only chat_usage). Optional: enable leaked-password protection in Auth settings.
 3. Emulator walkthrough: scan pill → gallery → /photo-check; result → photo check; v2.1 features (outbreaks, farmer prices, photo posts, planting date). Fix bugs.
 4. Code review pass (requested), tsc, check_sw.js.
 5. Signed release APK; back up keystore off-machine; QR code for judges.
