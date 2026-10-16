@@ -1,0 +1,459 @@
+: icon ?
+{a} acres · {h} ha
+{county} County
+{crop} field
+{crop}: {disease}?
+{disease} on {crop} reported by {n} farmers in the last 14 days.
+{disease} on {crop} reported by {n} farmers nearby. Check your crop and open the treatment guide.
+{done}/{total} done
+{healthy} of {n} scanned fields healthy at last scan
+{km} km away
+{n} acres
+{n} bags
+{n} crops
+{n} d ago
+{n} disease detections in the last 7 days — latest: {what}.
+{n} entries · scanner detects {s} diseases
+{n} fields
+{n} fields have no calendar yet — add the crop and planting date.
+{n} h ago
+{n} km/h wind
+{n} min ago
+{n} points
+{n} reminders scheduled at 7:00 on the first day of each task.
+{n} replies
+{n} reports
+{n} results
+{n} saved scans
+{n} scans
+{n} stages
+{n} with disease
+{n}% confidence
+{n}% humidity
+{pct}% vs previous
++ Add
++{n} more
+1 observation
+1 point
+1 reply
+14 days
+30 days
+38 conditions
+38 leaf conditions · {n} crops · works offline
+A crop calendar is available for maize, beans, potato, tomato and wheat.
+About
+Account
+Activities
+Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. CropGuard then plans weeding, top-dressing, scouting and harvest for you.
+Add a planting date to a field to get its crop calendar and reminders
+Add a title (at least 3 letters) and some details.
+Add field
+Add your first field (draw it on the map or type its size)
+Added to the field's disease history.
+Advice from other farmers is not checked. Confirm pesticide advice with an agro-dealer or extension officer.
+Advisory
+Agro-dealers near me
+AI advisor
+AI farm advisor
+Alerts & reminders
+All fields
+All of Kenya
+Allow camera
+Allow camera access to take a photo.
+Allow location access to pin the field.
+Allow location to centre the map on your farm.
+Allow location to find agro-dealers near you.
+Allow location to see the forecast for your farm
+Allow notifications for CropGuard in your phone settings to get reminders.
+Almost there
+Analysed on this phone in {ms} ms
+App version
+Area appears after 3 points
+Ask · Share · Learn with Kenyan farmers
+Ask about your crop… (English or Kiswahili)
+Ask AI
+Ask the AI advisor
+Ask the AI advisor about it
+Ask the AI advisor about this plan
+Ask the community
+Attach the scan result
+Back up this phone instead
+Back up with email & password
+Back up your fields and scans
+Be the first to ask a question!
+Boundary drawn on the map · {n} acres measured
+Built from confident scans that farmers saved in CropGuard. A disease appears only when at least 2 different farmers found it, and no names or farm locations are shared.
+Calendar
+Camera off
+Cancel
+Category
+Change language
+Check a sick leaf in seconds
+Check if a pesticide is registered
+Check my crop
+Check the price
+Check the size
+Check your email
+Checked on-device with CropGuard AI. Confirm with your extension officer.
+Chemical options (active ingredient)
+Choose a date
+Choose county
+Choose from gallery
+Choose the crop and county and enter the price.
+Choose the planting date
+Choose your county
+Choose your county in Profile to see outbreaks near you.
+Clear date
+Close
+Close scanner
+Coming up
+Community
+Confidence
+Confidence is below {n}%, so treat this as a guess. Retake the photo of a single leaf in daylight, or show the plant to an extension officer or agro-dealer.
+Confidence is low. Retake the photo of a single leaf in daylight, or ask an extension officer.
+Confirm password
+Continue as guest
+Costs vary by shop and pack size — ask your agro-dealer for a quote.
+Could not {what}
+Could not {what}. Check your internet connection.
+Could not add a field
+Could not analyse this photo.
+Could not create the account
+Could not delete
+Could not load fields
+Could not load outbreak alerts.
+Could not load posts.
+Could not load prices.
+Could not load the field.
+Could not load the post.
+Could not load your fields
+Could not load your fields.
+Could not post
+Could not read the photo.
+Could not report
+Could not save
+Could not search right now. Check your internet connection.
+Could not send
+County
+County *
+Create "{name}" and save
+Create account
+Crop
+Crop (optional)
+Crop *
+Crop advisory
+Crop calendar
+Crop calendar reminders and outbreak alerts in your county
+Crop stage
+CropGuard AI
+CropGuard AI scan
+CropGuard AI treatment plan
+CropGuard Community
+CropGuard needs the camera to photograph leaves. You can also choose a photo from your gallery.
+Crops grown
+Daily limit reached: you can report up to 20 prices a day.
+Data © OpenStreetMap contributors
+Data © OpenStreetMap contributors. Shops not on the map won't appear.
+Day {n}
+Delete
+Delete field
+Delete post
+Delete this field?
+Delete this record?
+Delete your post?
+Describe the problem: crop, age, what you see, what you have tried, your county.
+Details *
+Disease & pest library
+Disease detected
+Disease library
+Do it now
+Done
+Draw new field
+Draw the field on the satellite map to measure its size
+e.g. 2.5
+e.g. Muthoni's tomato plot
+e.g. Ruiru
+e.g. Wakulima market, farm gate
+Email
+EN
+English
+Enter the size in acres, e.g. 1.5
+Enter your email
+Enter your email and password.
+Enter your name, email and a password.
+Farm map
+Farm reminders and alerts
+Farmer
+Farmer price reports are not switched on yet (the database update is pending).
+Farmer-to-buyer marketplace
+Fertiliser calc
+Fertiliser calculator
+Field
+Field details
+Field name *
+Field not found
+Field size
+Find agro-dealers
+Find agro-dealers near me
+Forecast: Open-Meteo
+Forgot password?
+From gallery
+Full name
+Gallery
+Getting your location…
+Give the field a name, e.g. "Shamba la juu".
+Go back
+Good days to spray
+Growth stages
+Guest — data is linked to this phone
+Habari! I am the CropGuard farm advisor. Ask me about crop diseases, pests, fertiliser or planting — in English or Kiswahili.
+Have a question about your {crop}?
+Healthy
+Healthy leaf
+Help: what is wrong with my {crop}?
+Home
+How CropGuard works
+How CropGuard works (methodology)
+How it spreads
+I'm at the field — pin my location
+If an account exists for this email, a reset link has been sent.
+Inputs
+Its saved scans stay in your scan history.
+just now
+Keep your fields and scans if you change phone
+KES {v} per {unit} looks unusual. Please check the number and the unit.
+Kiswahili
+Kiswahili voice installed
+Kiswahili voice not installed
+KSEF 2027 project
+Language · Lugha
+last {when}
+last 30 days
+Late blight risk: {level} (Hutton criteria, forecast-based)
+Leaf photos are analysed on this phone and are not uploaded unless you attach one to a community post. Your profile, fields, saved scans, price reports and forum posts are stored in your CropGuard account (Supabase, EU region). Outbreak alerts and farmer prices only show anonymous totals. Chat questions are sent to the AI advisor to answer them. No ads. We do not sell your data.
+Library
+Listen
+Loading disease model…
+loading…
+Location off
+Location permission is needed to find nearby agro-dealers.
+Main crop
+Management
+Map
+Market
+Market (optional)
+Market prices & agro-dealers
+median per {unit}
+Methods, limits and sources
+Ministry of Agriculture
+Ministry of Agriculture market information system
+Missed
+Missing details
+Monthly reference prices, not today's price at your market. Check KAMIS or your nearest market before selling.
+My county
+My fields
+My location
+Name needed
+National Cereals and Produce Board
+Nearby agro-dealers
+Need more points
+New post
+No agro-dealers are mapped within 15 km yet.
+No agro-dealers are mapped within 20 km yet.
+No crop calendar yet
+No disease has been confirmed by 2 or more farmers here recently. Keep scanning and saving your results — it helps your neighbours.
+No farmer reports here yet. Be the first — it helps others get a fair price.
+No Kiswahili voice — install it in phone settings for a better voice
+No outbreaks reported
+No plan for this result
+No posts in {cat} yet
+No replies yet. Be the first to help!
+No saved scans yet. After scanning, tap "Save to my farm".
+No scans yet
+No size
+Not scanned yet
+Not sure — check again
+Notes
+Nothing due this week.
+Notifications
+Notifications are off
+Official sources & buyers
+Offline — scanning still works. Fields and history will load when you reconnect.
+OK
+Open day-by-day treatment plan
+Open Profile
+Organic / biological options
+Other possibilities
+Outbreak alert: {county}
+Outbreak alerts
+Outbreak alerts are not switched on yet
+Outbreaks
+Overdue
+Password
+Password (min 8 characters)
+Passwords differ
+Personal details
+Personal info
+Pest Control Products Board — pcpb.go.ke
+Pest Control Products Board ↗
+Pesticide guidance follows Kenya PCPB registrations as reviewed in June 2025. Always read the label.
+Phone number
+Phone number (optional)
+Photo sharing is not switched on yet (the database update is pending).
+Pinned at {lat}, {lng}
+Planted
+Planting date
+PlantVillage dataset on Kaggle ↗
+Please try again.
+Post
+Post a question
+Posted by {name} on CropGuard AI
+Price (KES) *
+Price history
+Price reporting is not switched on yet (the database update is pending).
+Prices from farmers
+Privacy
+Profile
+Quick questions
+Rates below are common guide rates. If you have a soil test, type its rate instead.
+Read aloud
+Recent scans
+Redraw: {name}
+Reference only
+Reference prices · farmer prices · agro-dealers
+Remind me of each task
+Remind me of each task (weeding, top-dressing, scouting, harvest)
+Reminders on
+Reminders on ({n} scheduled) — tap to turn off
+Remove photo
+Replies ({n})
+Reply not sent
+Report
+Report a price
+Report a price I got
+Report it
+Report post
+Report posts that are spam, abusive, or give dangerous advice. Posts reported by 3 people are hidden.
+Report suspected cases to your county agricultural officer.
+Report the price you were paid or saw today. Reports are anonymous: a price shows only as a median once 3 or more farmers have reported that crop in the county.
+Report this post?
+Report to authorities
+Reported recently
+Resources
+Result
+Retail
+Retry
+Save failed
+Save field
+Save this scan to…
+Saved
+Saved to your scan history.
+Scan
+Scan a leaf
+Scan a leaf and save it to a field to track its health.
+Scan a leaf first, then open the plan from the result screen.
+Scan a leaf from this field, then tap "Save to my farm".
+Scan another leaf
+Scan history only (no field)
+Scan result
+Scan result: {crop} — {disease} ({pct}%). What should I do?
+Scanner can detect
+Scanner result
+Search disease, pest or crop…
+Searching OpenStreetMap…
+Season guide and fertiliser calculator
+Send
+Send price
+Set the crop for this field to get a crop calendar.
+Set your county
+Set your county in Profile
+Set your county to get outbreak alerts and local farmer prices.
+Share
+Share on WhatsApp
+Share plan
+Show fewer
+Show the whole season ({n} tasks)
+Shown as the middle value (median) once 3 or more farmers report, so one wrong report cannot move the price much and no single farmer's price can be worked out. Reports are anonymous.
+Sign in
+Sign in to an existing account
+Sign in to see the fields and scans you backed up.
+Sign out
+Sign out?
+Sign-in failed
+Signed in
+Signing in switches this phone to that account. Anything saved as a guest on this phone stays in the guest account.
+Size
+Size (acres)
+Smart farming for Kenyan farmers
+Something went wrong.
+Source
+Starts {date}
+Stop
+Stop reading
+SW
+Switch map type
+Symptoms
+t.replace(/[&
+Take photo
+Take photo and scan
+Tap a field to zoom to it · long-press to open it
+Tap at least 3 corners of the field on the map.
+Tap to choose
+Tasks for all your fields
+Test the read-aloud voice
+Thank you
+That email address does not look right.
+The CropGuard scanner suggested {d} ({pct}% confidence). What I see: 
+The database update for this feature is pending. Scans you save now will count once it is on.
+The disease model failed to load
+The post has been reported.
+The scanner cannot detect insects — check for:
+The scanner is not sure
+The two passwords do not match.
+There are no upcoming tasks to remind you about.
+Thinking…
+This also deletes its replies.
+This post was deleted or hidden.
+This week
+This week on your farm
+Timings are typical for Kenyan conditions and change with variety, altitude and rain. Adjust to what you see in your field.
+Title *
+Toggle torch
+Treatment plan
+Treatment plan: {crop} — {disease}. Talk me through it.
+Try again
+Turn this guide into dated tasks for your own field.
+Type your email above, then tap "Forgot password?" again.
+Uncertain (best guess: {d})
+Unclear (best guess: {d})
+Unclear scan
+Undo
+Unit *
+Updated {when}
+Use at least 8 characters.
+Use my location for the forecast
+Variety, soil, irrigation…
+View full treatment plan
+Village / area
+We sent a link to {email}. Open it to finish backing up. You can keep using the app meanwhile.
+Weak password
+Weather
+Week {n}
+Week {n} · {stage}
+Welcome back
+Welcome to CropGuard. Scan a leaf to check your crop.
+Welcome, {name}! Your fields and scans are now backed up.
+What is your question or topic?
+What it looks like
+What to do first
+Wholesale
+With a planting date you get a week-by-week crop calendar.
+Works offline
+Write a reply…
+Your county
+Your data
+Your data stays in your account. This phone will start a new guest session.
+Your farm data stays private to your account. Forum posts show your name to other farmers.
+Your phone will read the Kiswahili text with its default voice. For a better voice, open Settings → Language → Text-to-speech and install Kiswahili.
+Your price helps other farmers get a fair deal.
+Your profile name is shown with the post. Be respectful — posts reported by 3 people are hidden.

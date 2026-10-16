@@ -1,0 +1,312 @@
+// Scan screen — dark full-screen camera from v1.0, now running the real model.
+// v1.0's "Processing" screen showed 4 fake timed steps (3.8 s). Here every step
+// shown is real and its measured time is displayed.
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+import { router, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTensorflowModel } from 'react-native-fast-tflite';
+import { classifyPhoto, type ScanStep } from '../../lib/classifier';
+import { DETECTABLE_CROPS } from '../../lib/diseases';
+import { Icon, Text } from '../../components/ui';
+import { useLang } from '../../lib/i18n';
+import { C } from '../../lib/theme';
+
+const MODEL = require('../../assets/model/cropguard.tflite');
+
+const TIPS = [
+  'Fill the frame with one leaf',
+  'Use daylight — avoid flash glare',
+  'Show the spots or damage clearly',
+  'Hold the phone steady and close',
+  'Photograph the upper side of the leaf',
+];
+
+const STEP_TEXT: Record<ScanStep, string> = {
+  prepare: 'Preparing photo (crop & resize to 224×224)',
+  infer: 'Running the disease model on this phone',
+  done: 'Matching the treatment guide',
+};
+
+export default function ScanScreen() {
+  const insets = useSafeAreaInsets();
+  const { t, lang } = useLang();
+  const [focused, setFocused] = useState(true);
+  // Set synchronously so a double tap cannot start two scans before React re-renders.
+  const running = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, [])
+  );
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const tflite = useTensorflowModel(MODEL, []);
+  const [torch, setTorch] = useState(false);
+  const [tip, setTip] = useState(0);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [steps, setSteps] = useState<{ step: ScanStep; ms?: number }[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const busy = photoUri !== null && !error;
+
+  useEffect(() => {
+    const timer = setInterval(() => setTip((i) => (i + 1) % TIPS.length), 3500);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!focused) {
+      setPhotoUri(null);
+      setSteps([]);
+      setError(null);
+      setTorch(false);
+    }
+  }, [focused]);
+
+  const analyze = async (photo: { uri: string; width: number; height: number }) => {
+    if (tflite.state !== 'loaded' || running.current) return;
+    running.current = true;
+    setPhotoUri(photo.uri);
+    setError(null);
+    setSteps([]);
+    try {
+      const result = await classifyPhoto(tflite.model, photo, (step, ms) => {
+        setSteps((prev) => {
+          const next = prev.map((p, i) => (i === prev.length - 1 && p.ms === undefined ? { ...p, ms } : p));
+          return step === 'done' ? next : [...next, { step }];
+        });
+      });
+      setSteps((prev) => [...prev, { step: 'done', ms: 0 }]);
+      router.push({
+        pathname: '/result',
+        params: {
+          label: result.top.label,
+          confidence: String(result.top.confidence),
+          uri: photo.uri,
+          alts: JSON.stringify(result.alternatives.map((a) => [a.label, a.confidence])),
+          prepareMs: String(result.timings.prepareMs),
+          inferMs: String(result.timings.inferMs),
+        },
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not analyse this photo.');
+    } finally {
+      running.current = false;
+    }
+  };
+
+  const capture = async () => {
+    if (!cameraRef.current || busy || running.current) return;
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
+      if (photo) await analyze(photo);
+    } catch {
+      setError('Could not take a photo. Please try again.');
+    }
+  };
+
+  const pick = async () => {
+    if (busy || running.current) return;
+    const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
+    if (!picked.canceled && picked.assets?.[0]) {
+      const a = picked.assets[0];
+      await analyze({ uri: a.uri, width: a.width, height: a.height });
+    }
+  };
+
+  // AI photo check (online): for pests, deficiencies and crops the offline model does not know.
+  const sw = lang === 'sw';
+  const photoCheck = () => {
+    if (busy || running.current) return;
+    const go = (uri: string) => router.push({ pathname: '/photo-check', params: { uri } });
+    const fromCamera = async () => {
+      try {
+        const photo = await cameraRef.current?.takePictureAsync({ quality: 0.85 });
+        if (photo) go(photo.uri);
+      } catch {
+        setError(t('Could not take a photo. Please try again.'));
+      }
+    };
+    const fromGallery = async () => {
+      const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
+      if (!picked.canceled && picked.assets?.[0]) go(picked.assets[0].uri);
+    };
+    Alert.alert(
+      sw ? 'Ukaguzi wa picha wa AI' : 'AI photo check',
+      sw
+        ? 'Kwa wadudu, upungufu wa virutubisho na mazao ambayo skana haiyajui. Inahitaji intaneti.'
+        : 'For pests, nutrient deficiencies and crops the scanner does not know. Needs internet.',
+      [
+        ...(permission?.granted ? [{ text: sw ? 'Piga picha' : 'Take photo', onPress: fromCamera }] : []),
+        { text: sw ? 'Chagua kutoka picha' : 'Choose from gallery', onPress: fromGallery },
+        { text: sw ? 'Ghairi' : 'Cancel', style: 'cancel' as const },
+      ]
+    );
+  };
+
+  const modelReady = tflite.state === 'loaded';
+  const status =
+    tflite.state === 'error'
+      ? t('The disease model failed to load')
+      : modelReady
+      ? t('38 leaf conditions, {n} crops, works offline', { n: DETECTABLE_CROPS.length })
+      : t('Loading disease model…');
+
+  let viewport: React.ReactNode;
+  if (photoUri) {
+    viewport = <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />;
+  } else if (!permission) {
+    viewport = <ActivityIndicator color="#fff" />;
+  } else if (!permission.granted) {
+    viewport = (
+      <View style={{ alignItems: 'center', paddingHorizontal: 32, gap: 12 }}>
+        <Icon name="camera-off-outline" size={44} color="#9CA3AF" />
+        <Text style={st.permTxt}>CropGuard needs the camera to photograph leaves. You can also choose a photo from your gallery.</Text>
+        <TouchableOpacity style={st.permBtn} onPress={requestPermission}>
+          <Text style={{ color: '#fff', fontWeight: '800' }}>Allow camera</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  } else {
+    viewport = <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" enableTorch={torch} active={focused} />;
+  }
+
+  return (
+    <View style={st.root}>
+      <View style={st.viewport}>{viewport}</View>
+
+      {/* Top bar */}
+      <View style={[st.topBar, { paddingTop: insets.top + 8 }]}>
+        <TouchableOpacity style={st.roundBtn} onPress={() => router.navigate('/')} accessibilityLabel={t('Close scanner')}>
+          <Icon name="close" size={22} color="#fff" />
+        </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={st.title}>Scan a leaf</Text>
+          <Text raw style={st.status}>{status}</Text>
+        </View>
+        <TouchableOpacity style={st.roundBtn} onPress={() => setTorch((v) => !v)} accessibilityLabel={t('Toggle torch')}>
+          <Icon name={torch ? 'flashlight' : 'flashlight-off'} size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Frame + tip */}
+      {!photoUri && permission?.granted ? (
+        <View pointerEvents="none" style={st.frameWrap}>
+          <View style={st.frame}>
+            {['tl', 'tr', 'bl', 'br'].map((k) => (
+              <View key={k} style={[st.corner, st[k as 'tl']]} />
+            ))}
+          </View>
+          <View style={st.tipPill}>
+            <Icon name="lightbulb-on-outline" size={14} color={C.accent} />
+            <Text style={st.tipTxt}>{TIPS[tip]}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      {/* Analysis overlay with real, timed steps */}
+      {photoUri ? (
+        <View style={st.overlay}>
+          <View style={st.overlayCard}>
+            <Text style={st.overlayTitle}>{error ? 'Something went wrong' : 'Analysing leaf…'}</Text>
+            {(['prepare', 'infer', 'done'] as ScanStep[]).map((k) => {
+              const s = steps.find((x) => x.step === k);
+              const finished = s?.ms !== undefined;
+              return (
+                <View key={k} style={st.stepRow}>
+                  {finished ? (
+                    <Icon name="check-circle" size={20} color={C.secondary} />
+                  ) : s ? (
+                    <ActivityIndicator size="small" color={C.secondary} />
+                  ) : (
+                    <Icon name="circle-outline" size={20} color="#4B5563" />
+                  )}
+                  <Text style={[st.stepTxt, !s && { color: '#6B7280' }]}>{STEP_TEXT[k]}</Text>
+                  {finished && k !== 'done' ? <Text raw style={st.stepMs}>{`${s!.ms} ms`}</Text> : null}
+                </View>
+              );
+            })}
+            {error ? (
+              <>
+                <Text style={st.errorTxt}>{error}</Text>
+                <TouchableOpacity style={st.permBtn} onPress={() => { setPhotoUri(null); setError(null); }}>
+                  <Text style={{ color: '#fff', fontWeight: '800' }}>Try again</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+
+      {/* AI photo check entry (pests, deficiencies, other crops) */}
+      {!photoUri ? (
+        <TouchableOpacity style={[st.aiPill, { bottom: insets.bottom + 132 }]} onPress={photoCheck} accessibilityRole="button">
+          <Icon name="bug-check-outline" size={18} color={C.accent} />
+          <Text raw style={st.aiPillTxt}>
+            {sw ? 'Wadudu au zao jingine? Ukaguzi wa picha wa AI' : 'Pest or other crop? AI photo check'}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
+      {/* Bottom controls */}
+      <View style={[st.bottom, { paddingBottom: insets.bottom + 20 }]}>
+        <TouchableOpacity style={st.sideBtn} onPress={pick} disabled={!modelReady || busy} accessibilityLabel={t('Choose from gallery')}>
+          <Icon name="image-multiple-outline" size={26} color="#fff" />
+          <Text style={st.sideTxt}>Gallery</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[st.shutter, (!modelReady || !permission?.granted || busy) && { opacity: 0.4 }]}
+          onPress={capture}
+          disabled={!modelReady || !permission?.granted || busy}
+          accessibilityLabel={t('Take photo and scan')}
+        >
+          <View style={st.shutterInner} />
+        </TouchableOpacity>
+        <TouchableOpacity style={st.sideBtn} onPress={() => router.push('/encyclopedia')} accessibilityLabel={t('Disease library')}>
+          <Icon name="book-open-page-variant-outline" size={26} color="#fff" />
+          <Text style={st.sideTxt}>Library</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const CORNER = 28;
+const FILL = { position: 'absolute' as const, top: 0, left: 0, right: 0, bottom: 0 };
+const st = StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.dark },
+  viewport: { ...FILL, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  topBar: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, backgroundColor: 'rgba(0,0,0,0.35)' },
+  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+  title: { color: '#fff', fontSize: 17, fontWeight: '900' },
+  status: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
+  frameWrap: { ...FILL, justifyContent: 'center', alignItems: 'center' },
+  frame: { width: '72%', aspectRatio: 1 },
+  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: C.accent },
+  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 12 },
+  tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 12 },
+  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 12 },
+  br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 12 },
+  tipPill: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  tipTxt: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  overlay: { ...FILL, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
+  overlayCard: { backgroundColor: '#111827', borderRadius: 20, padding: 20, gap: 14 },
+  overlayTitle: { color: '#fff', fontSize: 18, fontWeight: '900', marginBottom: 4 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  stepTxt: { flex: 1, color: '#E5E7EB', fontSize: 14 },
+  stepMs: { color: C.secondary, fontWeight: '800', fontSize: 12 },
+  errorTxt: { color: '#FCA5A5', fontSize: 14 },
+  bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingTop: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sideBtn: { alignItems: 'center', width: 72, gap: 4 },
+  sideTxt: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  shutter: { width: 78, height: 78, borderRadius: 39, borderWidth: 5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  shutterInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: C.secondary },
+  permTxt: { color: '#D1D5DB', textAlign: 'center', lineHeight: 20 },
+  permBtn: { backgroundColor: C.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
+  aiPill: { position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.darkRaised, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, maxWidth: '92%' },
+  aiPillTxt: { color: '#fff', fontSize: 14, fontWeight: '700', flexShrink: 1 },
+});

@@ -1,0 +1,13 @@
+done Tomato___Late_blight (5 images)
+done Tomato___healthy (5 images)
+done Tomato___Early_blight (5 images)
+done Potato___Late_blight (5 images)
+done Potato___Early_blight (5 images)
+done Corn_(maize)___Common_rust_ (5 images)
+done Corn_(maize)___Northern_Leaf_Blight (5 images)
+done Pepper,_bell___Bacterial_spot (5 images)
+
+RESULTS on 40 labelled PlantVillage images:
+RESULT [0,1]  (x/255): 31/40 = 77.5%  mean top-1 confidence 89.1%
+RESULT [-1,1] (x/127.5-1): 38/40 = 95.0%  mean top-1 confidence 94.7%
+RESULT [0,255] raw: 2/40 = 5.0%  mean top-1 confidence 88.6%

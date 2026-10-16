@@ -1,0 +1,16 @@
+[
+{"file": "app/(tabs)/profile.tsx", "edits": [
+{"old": "import { ensurePermission, notificationsWanted, setNotificationsWanted } from '../../lib/notify';", "new": "import { ensurePermission, notificationsWanted, scheduleFieldReminders, setNotificationsWanted } from '../../lib/notify';\nimport { calendarFor, fieldTasks, loadTicks } from '../../lib/calendar';"},
+{"old": "    setNotify(on);\n    await setNotificationsWanted(on);\n  };", "new": "    setNotify(on);\n    await setNotificationsWanted(on);\n    if (on) {\n      // Turning reminders back on re-creates them for every field with a crop calendar.\n      try {\n        for (const f of await listFarms()) {\n          if (f.planting_date && calendarFor(f.crop)) await scheduleFieldReminders(f.id, fieldTasks(f, await loadTicks(f.id), lang));\n        }\n      } catch {\n        // offline: reminders are re-created the next time a field is opened\n      }\n    }\n  };"}
+]},
+{"file": "lib/data.ts", "edits": [
+{"old": "  const ctx = ImageManipulator.manipulate(uri);\n  ctx.resize({ width: 1080 });\n  const img = await ctx.renderAsync();", "new": "  // Shrink large photos only (never upscale a small one).\n  let img = await ImageManipulator.manipulate(uri).renderAsync();\n  if (img.width > 1080) {\n    const ctx = ImageManipulator.manipulate(uri);\n    ctx.resize({ width: 1080 });\n    img = await ctx.renderAsync();\n  }"},
+{"old": "  if (isMissingSchema(error) && hasExtra) {\n    v21 = false;\n    ({ data, error } = await supabase.from('forum_posts').insert(base).select(POST_COLS).single());\n  }\n  fail(error, 'publish the post');", "new": "  if (isMissingSchema(error) && hasExtra) {\n    v21 = false;\n    ({ data, error } = await supabase.from('forum_posts').insert(base).select(POST_COLS).single());\n  }\n  // The photo is uploaded first; if it ended up on no post, remove it again.\n  const photo = extra.photo_path as string | undefined;\n  if (photo && (error || !(data as unknown as Post | null)?.photo_path)) {\n    await supabase.storage.from(PHOTO_BUCKET).remove([photo]).catch(() => undefined);\n  }\n  fail(error, 'publish the post');"}
+]},
+{"file": "app/report-price.tsx", "edits": [
+{"old": "Report the price you were paid or saw today. Reports are anonymous and shown only as a median with other farmers' reports.", "new": "Report the price you were paid or saw today. Reports are anonymous: a price shows only as a median once 2 or more farmers have reported that crop in the county."}
+]},
+{"file": "lib/sw.ts", "edits": [
+{"old": "  \"Report the price you were paid or saw today. Reports are anonymous and shown only as a median with other farmers' reports.\":\n    'Ripoti bei uliyolipwa au uliyoiona leo. Ripoti hazina jina na huonyeshwa tu kama wastani wa kati pamoja na ripoti za wakulima wengine.',", "new": "  'Report the price you were paid or saw today. Reports are anonymous: a price shows only as a median once 2 or more farmers have reported that crop in the county.':\n    'Ripoti bei uliyolipwa au uliyoiona leo. Ripoti hazina jina: bei huonyeshwa tu kama wastani wa kati wakulima 2 au zaidi wakiripoti zao hilo katika kaunti.',"}
+]}
+]

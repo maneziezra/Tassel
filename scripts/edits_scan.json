@@ -1,0 +1,18 @@
+[{"file": "app/(tabs)/scan.tsx", "edits": [
+{"old": "import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';", "new": "import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from 'react-native';"},
+{"old": "import { Icon } from '../../components/ui';\nimport { C } from '../../lib/theme';", "new": "import { Icon, Text } from '../../components/ui';\nimport { useLang } from '../../lib/i18n';\nimport { C } from '../../lib/theme';"},
+{"old": "  const insets = useSafeAreaInsets();\n  const [focused, setFocused] = useState(true);", "new": "  const insets = useSafeAreaInsets();\n  const { t } = useLang();\n  const [focused, setFocused] = useState(true);\n  // Set synchronously so a double tap cannot start two scans before React re-renders.\n  const running = useRef(false);"},
+{"old": "    const t = setInterval(() => setTip((i) => (i + 1) % TIPS.length), 3500);\n    return () => clearInterval(t);", "new": "    const timer = setInterval(() => setTip((i) => (i + 1) % TIPS.length), 3500);\n    return () => clearInterval(timer);"},
+{"old": "    if (tflite.state !== 'loaded') return;\n    setPhotoUri(photo.uri);", "new": "    if (tflite.state !== 'loaded' || running.current) return;\n    running.current = true;\n    setPhotoUri(photo.uri);"},
+{"old": "    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Could not analyse this photo.');\n    }\n  };", "new": "    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Could not analyse this photo.');\n    } finally {\n      running.current = false;\n    }\n  };"},
+{"old": "    if (!cameraRef.current || busy) return;", "new": "    if (!cameraRef.current || busy || running.current) return;"},
+{"old": "    if (busy) return;\n    const picked", "new": "    if (busy || running.current) return;\n    const picked"},
+{"old": "      ? 'The disease model failed to load'\n      : modelReady\n      ? `38 leaf conditions · ${DETECTABLE_CROPS.length} crops · works offline`\n      : 'Loading disease model…';", "new": "      ? t('The disease model failed to load')\n      : modelReady\n      ? t('38 leaf conditions · {n} crops · works offline', { n: DETECTABLE_CROPS.length })\n      : t('Loading disease model…');"},
+{"old": "onPress={() => router.navigate('/')} accessibilityLabel=\"Close scanner\">", "new": "onPress={() => router.navigate('/')} accessibilityLabel={t('Close scanner')}>"},
+{"old": "onPress={() => setTorch((t) => !t)} accessibilityLabel=\"Toggle torch\">", "new": "onPress={() => setTorch((v) => !v)} accessibilityLabel={t('Toggle torch')}>"},
+{"old": "disabled={!modelReady || busy} accessibilityLabel=\"Choose from gallery\">", "new": "disabled={!modelReady || busy} accessibilityLabel={t('Choose from gallery')}>"},
+{"old": "          accessibilityLabel=\"Take photo and scan\"", "new": "          accessibilityLabel={t('Take photo and scan')}"},
+{"old": "onPress={() => router.push('/encyclopedia')} accessibilityLabel=\"Disease library\">", "new": "onPress={() => router.push('/encyclopedia')} accessibilityLabel={t('Disease library')}>"},
+{"old": "<Text style={st.stepMs}>{s!.ms} ms</Text>", "new": "<Text raw style={st.stepMs}>{`${s!.ms} ms`}</Text>"},
+{"old": "<Text style={st.status}>{status}</Text>", "new": "<Text raw style={st.status}>{status}</Text>"}
+]}]

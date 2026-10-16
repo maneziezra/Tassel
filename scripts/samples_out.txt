@@ -1,0 +1,8 @@
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Tomato___Late_blight__1.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Tomato___Late_blight__2.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Tomato___healthy__1.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Tomato___healthy__2.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Potato___Early_blight__1.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Potato___Early_blight__2.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Corn_maize___Common_rust___1.jpg
+saved C:\Users\Archlord\Desktop\CropGuard-AI\scripts\samples\Corn_maize___Common_rust___2.jpg

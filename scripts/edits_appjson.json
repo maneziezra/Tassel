@@ -1,0 +1,6 @@
+[{"file": "app.json", "edits": [
+{"old": "\"version\": \"2.0.0\",", "new": "\"version\": \"2.1.0\","},
+{"old": "\"versionCode\": 2,", "new": "\"versionCode\": 3,"},
+{"old": "        \"ACCESS_FINE_LOCATION\"\n      ]", "new": "        \"ACCESS_FINE_LOCATION\",\n        \"POST_NOTIFICATIONS\"\n      ]"},
+{"old": "      \"@react-native-community/datetimepicker\"\n    ]", "new": "      \"@react-native-community/datetimepicker\",\n      [\n        \"expo-notifications\",\n        {\n          \"color\": \"#2E7D32\"\n        }\n      ]\n    ]"}
+]}]

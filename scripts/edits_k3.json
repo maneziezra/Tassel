@@ -1,0 +1,14 @@
+[
+{"file": "app/methodology.tsx", "edits": [
+{"old": "only once 2 or more farmers have reported it, and never who reported.", "new": "only once 3 or more farmers have reported it (with 2, each could work out the other's price), and never who reported."},
+{"old": "tu wakulima 2 au zaidi wakiwa wameripoti, na kamwe si aliyeripoti.", "new": "tu wakulima 3 au zaidi wakiwa wameripoti (wakiwa 2, kila mmoja angeweza kujua bei ya mwenzake), na kamwe si aliyeripoti."}
+]},
+{"file": "lib/sw.ts", "edits": [
+{"old": "  ACCOUNT: 'AKAUNTI',\n", "new": ""},
+{"old": "  'AI LEAF SCANNER': 'SKANA YA MAJANI YA AI',\n", "new": ""},
+{"old": "  SYMPTOMS: 'DALILI',\n", "new": ""},
+{"old": "  'PERSONAL INFO': 'TAARIFA BINAFSI',\n", "new": ""},
+{"old": "  'YOUR COUNTY': 'KAUNTI YAKO',\n", "new": ""},
+{"old": "  MANAGEMENT: 'USIMAMIZI',\n", "new": ""}
+]}
+]

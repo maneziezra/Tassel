@@ -1,0 +1,43 @@
+[
+{"file": "app/login.tsx", "edits": [
+{"old": "import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';", "new": "import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';"},
+{"old": "import { Btn, Header, Icon } from '../components/ui';", "new": "import { Btn, Header, Icon, Text } from '../components/ui';\nimport { tr as t } from '../lib/i18n';"},
+{"old": "Alert.alert('Missing details', 'Enter your email and password.');", "new": "Alert.alert(t('Missing details'), t('Enter your email and password.'));"},
+{"old": "Alert.alert('Sign-in failed', e instanceof Error ? e.message : '');", "new": "Alert.alert(t('Sign-in failed'), e instanceof Error ? e.message : '');"},
+{"old": "Alert.alert('Enter your email', 'Type your email above, then tap \"Forgot password?\" again.');", "new": "Alert.alert(t('Enter your email'), t('Type your email above, then tap \"Forgot password?\" again.'));"},
+{"old": "Alert.alert('Check your email', 'If an account exists for this email, a reset link has been sent.');", "new": "Alert.alert(t('Check your email'), t('If an account exists for this email, a reset link has been sent.'));"},
+{"old": "Alert.alert('Could not send', e instanceof Error ? e.message : '');", "new": "Alert.alert(t('Could not send'), e instanceof Error ? e.message : '');"}
+]},
+{"file": "app/register.tsx", "edits": [
+{"old": "import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';", "new": "import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';"},
+{"old": "import { Btn, Chip, Header } from '../components/ui';", "new": "import { Btn, Chip, Header, Text } from '../components/ui';\nimport { tr as t } from '../lib/i18n';"},
+{"old": "Alert.alert('Missing details', 'Enter your name, email and a password.');", "new": "Alert.alert(t('Missing details'), t('Enter your name, email and a password.'));"},
+{"old": "Alert.alert('Check your email', 'That email address does not look right.');", "new": "Alert.alert(t('Check your email'), t('That email address does not look right.'));"},
+{"old": "Alert.alert('Weak password', 'Use at least 8 characters.');", "new": "Alert.alert(t('Weak password'), t('Use at least 8 characters.'));"},
+{"old": "Alert.alert('Passwords differ', 'The two passwords do not match.');", "new": "Alert.alert(t('Passwords differ'), t('The two passwords do not match.'));"},
+{"old": "        needsConfirmation ? 'Confirm your email' : 'Account ready',\n        needsConfirmation\n          ? `We sent a link to ${email.trim()}. Open it to finish backing up. You can keep using the app meanwhile.`\n          : `Welcome, ${name.trim().split(' ')[0]}! Your fields and scans are now backed up.`,\n        [{ text: 'OK', onPress: () => router.replace('/profile') }]", "new": "        t(needsConfirmation ? 'Confirm your email' : 'Account ready'),\n        needsConfirmation\n          ? t('We sent a link to {email}. Open it to finish backing up. You can keep using the app meanwhile.', { email: email.trim() })\n          : t('Welcome, {name}! Your fields and scans are now backed up.', { name: name.trim().split(' ')[0] }),\n        [{ text: t('OK'), onPress: () => router.replace('/profile') }]"},
+{"old": "Alert.alert('Could not create the account', e instanceof Error ? e.message : '');", "new": "Alert.alert(t('Could not create the account'), e instanceof Error ? e.message : '');"},
+{"old": "<Chip key={c} label={c} active={county === c} onPress={() => setCounty(c)} />", "new": "<Chip key={c} label={c} raw active={county === c} onPress={() => setCounty(c)} />"}
+]},
+{"file": "components/AuthField.tsx", "edits": [
+{"old": "import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';\nimport { Icon, type IconName } from './ui';", "new": "import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';\nimport { Icon, Text, type IconName } from './ui';\nimport { useLang } from '../lib/i18n';"},
+{"old": "  const [focus, setFocus] = useState(false);", "new": "  const { t } = useLang();\n  const [focus, setFocus] = useState(false);"},
+{"old": "accessibilityLabel={show ? 'Hide password' : 'Show password'}", "new": "accessibilityLabel={t(show ? 'Hide password' : 'Show password')}"}
+]},
+{"file": "app/farm-map.tsx", "edits": [
+{"old": "import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';", "new": "import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';"},
+{"old": "import { Header, Icon } from '../components/ui';", "new": "import { Header, Icon, Text } from '../components/ui';\nimport { tr, useLang } from '../lib/i18n';"},
+{"old": "export default function FarmMapScreen() {\n  const insets = useSafeAreaInsets();", "new": "export default function FarmMapScreen() {\n  const insets = useSafeAreaInsets();\n  const { t } = useLang();"},
+{"old": "Alert.alert('Could not load fields', e instanceof Error ? e.message : '');", "new": "Alert.alert(tr('Could not load fields'), e instanceof Error ? e.message : '');"},
+{"old": "Alert.alert('Location off', 'Allow location to centre the map on your farm.');", "new": "Alert.alert(tr('Location off'), tr('Allow location to centre the map on your farm.'));"},
+{"old": "Alert.alert('Need more points', 'Tap at least 3 corners of the field on the map.');", "new": "Alert.alert(tr('Need more points'), tr('Tap at least 3 corners of the field on the map.'));"},
+{"old": "Alert.alert('Could not save', e instanceof Error ? e.message : '');", "new": "Alert.alert(tr('Could not save'), e instanceof Error ? e.message : '');"},
+{"old": "title={drawing ? (editFarm ? `Redraw: ${editFarm.name}` : 'Draw a field') : 'Farm map'} subtitle={drawing ? 'Tap each corner of the field' : `${farms.length} field${farms.length === 1 ? '' : 's'}`}", "new": "title={drawing ? (editFarm ? t('Redraw: {name}', { name: editFarm.name }) : 'Draw a field') : 'Farm map'} subtitle={drawing ? 'Tap each corner of the field' : farms.length === 1 ? '1 field' : t('{n} fields', { n: farms.length })}"},
+{"old": "accessibilityLabel=\"Switch map type\"", "new": "accessibilityLabel={t('Switch map type')}"},
+{"old": "accessibilityLabel=\"My location\"", "new": "accessibilityLabel={t('My location')}"},
+{"old": "<Text style={st.drawInfo}>{points.length} point{points.length === 1 ? '' : 's'}</Text>", "new": "<Text raw style={st.drawInfo}>{points.length === 1 ? t('1 point') : t('{n} points', { n: points.length })}</Text>"},
+{"old": "<Text style={st.drawArea}>{points.length >= 3 ? `${acres.toFixed(2)} acres · ${(acres * 0.404686).toFixed(2)} ha` : 'Area appears after 3 points'}</Text>", "new": "<Text raw style={st.drawArea}>{points.length >= 3 ? t('{a} acres · {h} ha', { a: acres.toFixed(2), h: (acres * 0.404686).toFixed(2) }) : t('Area appears after 3 points')}</Text>"},
+{"old": "<Text style={st.fieldName} numberOfLines={1}>{f.name}</Text>", "new": "<Text raw style={st.fieldName} numberOfLines={1}>{f.name}</Text>"},
+{"old": "<Text style={st.fieldSub}>{f.size_acres ? `${Number(f.size_acres).toFixed(2)} acres` : 'No size'}</Text>", "new": "<Text raw style={st.fieldSub}>{f.size_acres ? t('{n} acres', { n: Number(f.size_acres).toFixed(2) }) : t('No size')}</Text>"}
+]}
+]

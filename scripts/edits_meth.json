@@ -1,0 +1,4 @@
+[{"file": "app/methodology.tsx", "edits": [
+{"old": "The app shows the median (middle value) per crop, county and unit for the last 30 days, never who reported.", "new": "The app shows the median (middle value) per crop, county and unit for the last 30 days, only once 2 or more farmers have reported it, and never who reported."},
+{"old": "Programu huonyesha wastani wa kati kwa kila zao, kaunti na kipimo kwa siku 30 zilizopita, kamwe si aliyeripoti.", "new": "Programu huonyesha wastani wa kati kwa kila zao, kaunti na kipimo kwa siku 30 zilizopita, tu wakulima 2 au zaidi wakiwa wameripoti, na kamwe si aliyeripoti."}
+]}]

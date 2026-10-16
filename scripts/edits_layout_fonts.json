@@ -1,0 +1,5 @@
+[{"file": "app/_layout.tsx", "edits": [
+{"old": "import { StatusBar } from 'expo-status-bar';\n", "new": "import { StatusBar } from 'expo-status-bar';\nimport { useFonts } from 'expo-font';\nimport { ArchivoNarrow_600SemiBold, ArchivoNarrow_700Bold } from '@expo-google-fonts/archivo-narrow';\nimport { AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold } from '@expo-google-fonts/atkinson-hyperlegible';\n"},
+{"old": "  const [ready, setReady] = useState(false);\n", "new": "  const [ready, setReady] = useState(false);\n  // Mche typefaces. If they cannot load, the phone's own font is used instead.\n  const [fontsLoaded, fontError] = useFonts({ ArchivoNarrow_600SemiBold, ArchivoNarrow_700Bold, AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold });\n"},
+{"old": "  if (!ready) return null;", "new": "  if (!ready || (!fontsLoaded && !fontError)) return null;"}
+]}]

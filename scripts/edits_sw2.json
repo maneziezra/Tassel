@@ -1,0 +1,8 @@
+[
+{"file": "app/market.tsx", "edits": [
+{"old": "Shown as the middle value (median) so one wrong report cannot move the price much. Reports are anonymous.", "new": "Shown as the middle value (median) once 2 or more farmers report, so one wrong report cannot move the price much. Reports are anonymous."}
+]},
+{"file": "lib/sw.ts", "edits": [
+{"old": "  '{a} acres · {h} ha': 'ekari {a} · hekta {h}',\n};", "new": "  '{a} acres · {h} ha': 'ekari {a} · hekta {h}',\n  'Add your first field (draw it on the map or type its size)': 'Ongeza shamba lako la kwanza (lichore kwenye ramani au andika ukubwa wake)',\n  'Crop (optional)': 'Zao (si lazima)',\n  'Farmer price reports are not switched on yet (the database update is pending).':\n    'Ripoti za bei za wakulima bado hazijawashwa (sasisho la hifadhidata linasubiriwa).',\n  'Market (optional)': 'Soko (si lazima)',\n  'Price (KES) *': 'Bei (KES) *',\n  'Remind me of each task (weeding, top-dressing, scouting, harvest)': 'Nikumbushe kila kazi (kupalilia, mbolea ya juu, ukaguzi, mavuno)',\n  'Scan history only (no field)': 'Historia ya skani tu (bila shamba)',\n  'Shown as the middle value (median) once 2 or more farmers report, so one wrong report cannot move the price much. Reports are anonymous.':\n    'Huonyeshwa kama wastani wa kati wakulima 2 au zaidi wakiripoti, ili ripoti moja yenye makosa isibadilishe bei sana. Ripoti hazina jina.',\n  'Size (acres)': 'Ukubwa (ekari)',\n};"}
+]}
+]
