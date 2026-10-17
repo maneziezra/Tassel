@@ -19,18 +19,18 @@ const HTML = `<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>html,body,#map{height:100%;margin:0;background:#EEF3F0}
-.lbl{background:rgba(46,125,50,.9);color:#fff;border:0;border-radius:8px;font:700 12px sans-serif;padding:2px 6px;box-shadow:none}
+<style>html,body,#map{height:100%;margin:0;background:#F4F2EC}
+.lbl{background:rgba(31,77,57,.92);color:#fff;border:0;border-radius:8px;font:700 12px sans-serif;padding:2px 6px;box-shadow:none}
 .lbl:before{display:none}</style></head><body><div id="map"></div><script>
 var send=function(o){window.ReactNativeWebView.postMessage(JSON.stringify(o))};
-var map=L.map('map',{zoomControl:false,attributionControl:true}).setView([-0.6,37.0],7);
-var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
-var street=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+var map=L.map('map',{zoomControl:false,attributionControl:true,maxZoom:21,bounceAtZoomLimits:false,zoomSnap:0.5}).setView([-0.6,37.0],7);
+var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:18,attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
+var street=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,maxNativeZoom:19,attribution:'© OpenStreetMap contributors'});
 sat.addTo(map);
 var farmsLayer=L.layerGroup().addTo(map), drawLayer=L.layerGroup().addTo(map), me=null, mode='view', pts=[];
 function redraw(){drawLayer.clearLayers();
- pts.forEach(function(p){L.circleMarker(p,{radius:6,color:'#fff',weight:2,fillColor:'#F2B630',fillOpacity:1}).addTo(drawLayer)});
- if(pts.length>1)L.polygon(pts,{color:'#F2B630',weight:3,fillOpacity:.25,dashArray:pts.length<3?'6':null}).addTo(drawLayer);
+ pts.forEach(function(p){L.circleMarker(p,{radius:6,color:'#fff',weight:2,fillColor:'#E8C25A',fillOpacity:1}).addTo(drawLayer)});
+ if(pts.length>1)L.polygon(pts,{color:'#E8C25A',weight:3,fillOpacity:.25,dashArray:pts.length<3?'6':null}).addTo(drawLayer);
  send({type:'points',points:pts});}
 map.on('click',function(e){if(mode!=='draw')return;pts.push([e.latlng.lat,e.latlng.lng]);redraw();});
 window.cg={
@@ -41,19 +41,19 @@ window.cg={
    else if(f.center){var m=L.circleMarker(f.center,{radius:9,color:'#fff',weight:2,fillColor:f.color,fillOpacity:1}).addTo(farmsLayer);
     m.bindTooltip(f.label,{direction:'top',className:'lbl'});m.on('click',function(){send({type:'farm',id:f.id})});b.push(f.center);}
   });
-  if(fit&&b.length)map.fitBounds(b,{padding:[40,40],maxZoom:18});},
+  if(fit&&b.length)map.fitBounds(b,{padding:[40,40],maxZoom:19});},
  setMode:function(m){mode=m;if(m!=='draw'){pts=[];}redraw();},
  undo:function(){pts.pop();redraw();},
  clear:function(){pts=[];redraw();},
  base:function(b){if(b==='sat'){map.removeLayer(street);sat.addTo(map);}else{map.removeLayer(sat);street.addTo(map);}},
  locate:function(lat,lng){if(me)map.removeLayer(me);me=L.circleMarker([lat,lng],{radius:8,color:'#fff',weight:3,fillColor:'#24609B',fillOpacity:1}).addTo(map);map.setView([lat,lng],17);},
- focus:function(poly){if(poly&&poly.length)map.fitBounds(poly,{padding:[40,40],maxZoom:18});}
+ focus:function(poly){if(poly&&poly.length)map.fitBounds(poly,{padding:[40,40],maxZoom:19});}
 };
 send({type:'ready'});
 </script></body></html>`;
 
 function healthColor(_f: Farm) {
-  return '#3DBB8C'; // Mche Chai on dark (satellite) ground
+  return '#8FC2A5'; // light forest green: readable on dark satellite ground
 }
 
 // Leaflet tooltips render HTML, so escape user-entered field names.
@@ -199,7 +199,7 @@ export default function FarmMapScreen() {
               <TouchableOpacity style={[st.drawBtn, { backgroundColor: C.bg }]} onPress={cancelDraw}>
                 <Text style={[st.drawBtnTxt, { color: C.textMid }]}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[st.drawBtn, { backgroundColor: C.accentTint }]} onPress={() => js('window.cg.undo()')} disabled={!points.length}>
+              <TouchableOpacity style={[st.drawBtn, { backgroundColor: C.sunken }]} onPress={() => js('window.cg.undo()')} disabled={!points.length}>
                 <Icon name="undo" size={18} color={C.warn} />
                 <Text style={[st.drawBtnTxt, { color: C.warn }]}>Undo</Text>
               </TouchableOpacity>

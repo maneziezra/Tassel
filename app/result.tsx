@@ -1,17 +1,17 @@
-// Scan result — v1.0 layout (status badge, result card, treatment, agrovets,
-// Ask AI, Save to farm, WhatsApp share) rebuilt on structured, verified data.
-// v2.1: Kiswahili, read-aloud, and "Ask the community" with the photo attached.
+// Scan result — one clear verdict first (crop, problem, how sure), then what it
+// looks like, what to do in order, where to buy inputs, and the next actions.
+// v2.2: calm layout (no tinted panels), steps as numbered lists, field picker sheet.
 
 import React, { useMemo, useState } from 'react';
-import { Alert, Image, Linking, Modal, Pressable, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Badge, Btn, Card, Header, Icon, ListenButton, SectionLabel, Text, type IconName } from '../components/ui';
+import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, type IconName } from '../components/ui';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
 import { addFarm, listFarms, saveIncident, type Farm } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
 import { useLang } from '../lib/i18n';
-import { C, KIND_META, URGENCY_META, confidenceBand } from '../lib/theme';
+import { C, FONT, KIND_META, URGENCY_META, confidenceBand } from '../lib/theme';
 
 export default function ResultScreen() {
   const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string }>();
@@ -54,7 +54,7 @@ export default function ResultScreen() {
   };
 
   const status: { text: string; icon: IconName; color: string } = uncertain
-    ? { text: 'Not sure — check again', icon: 'help-circle', color: C.accent }
+    ? { text: 'Not sure — check again', icon: 'help-circle', color: C.warn }
     : healthy
     ? { text: 'Healthy leaf', icon: 'check-circle', color: C.primary }
     : { text: 'Disease detected', icon: 'alert-circle', color: C.error };
@@ -162,126 +162,131 @@ export default function ResultScreen() {
         right={<ListenButton compact text={listenText} />}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-        {p.uri ? <Image source={{ uri: p.uri }} style={st.leaf} resizeMode="cover" /> : <View style={[st.leaf, { height: 80, backgroundColor: C.primaryTint }]} />}
+        {p.uri ? <Image source={{ uri: p.uri }} style={st.leaf} resizeMode="cover" /> : null}
 
-        <View style={[st.status, { borderColor: status.color }]}>
-          <Icon name={status.icon} size={22} color={status.color} />
-          <Text style={[st.statusTxt, { color: status.color }]}>{status.text}</Text>
-        </View>
-
-        {/* Main result */}
-        <Card>
-          <View style={st.rowBetween}>
-            <Text raw style={st.cropName}>
-              {crop}
-            </Text>
-            <Badge label={band.label} color={band.color} tint={band.tint} />
+        {/* Verdict */}
+        <View style={st.panel}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <CropIcon crop={cropEn} size={44} />
+            <View style={{ flex: 1 }}>
+              <Text raw style={st.crop}>
+                {crop}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Dot color={status.color} />
+                <Text style={[st.status, { color: status.color }]}>{status.text}</Text>
+              </View>
+            </View>
           </View>
-          <View style={[st.rowBetween, { alignItems: 'flex-start', marginTop: 4 }]}>
-            <Text raw style={[st.disease, { color: healthy && !uncertain ? C.primary : C.text }]}>
-              {disease}
-            </Text>
-            <View style={[st.pctBox, { backgroundColor: band.tint }]}>
-              <Text raw style={[st.pct, { color: band.color }]}>
+          <Text raw style={st.disease}>
+            {disease}
+          </Text>
+          <View style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={st.small}>{band.label}</Text>
+              <Text raw style={[st.small, { color: band.color, fontFamily: FONT.bodyBold }]}>
                 {pct}
               </Text>
             </View>
-          </View>
-          <View style={st.barBg}>
-            <View style={[st.barFill, { width: `${Math.round(confidence * 100)}%`, backgroundColor: band.color }]} />
+            <ProgressBar value={confidence} color={band.color} height={8} />
           </View>
           {info && !healthy ? (
-            <>
-              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                <Badge label={info.kind} color={kind.color} tint={kind.tint} />
-                <Badge label={urgency.label} color={urgency.color} tint={urgency.tint} />
-                {info.notifiable ? <Badge label="Report to authorities" color={C.error} tint={C.errorTint} /> : null}
-              </View>
-              {info.pathogen ? (
-                <Text raw style={st.pathogen}>
-                  {info.pathogen}
-                </Text>
-              ) : null}
-              <Text style={st.label}>What it looks like</Text>
-              <Text raw style={st.body}>
-                {info.symptoms}
+            <Text raw style={[st.small, { marginTop: 12 }]}>
+              {[t(info.kind), info.pathogen].filter(Boolean).join(' · ')}
+              {'  '}
+              <Text raw style={{ color: urgency.color, fontFamily: FONT.bodyBold }}>
+                {t(urgency.label)}
               </Text>
-              {info.spread ? (
-                <>
-                  <Text style={st.label}>How it spreads</Text>
-                  <Text raw style={st.body}>
-                    {info.spread}
-                  </Text>
-                </>
-              ) : null}
-              {info.kenya ? (
-                <View style={st.note}>
-                  <Icon name="map-marker-radius-outline" size={18} color={C.info} />
-                  <Text raw style={st.noteTxt}>
-                    {info.kenya}
-                  </Text>
-                </View>
-              ) : null}
-            </>
+            </Text>
           ) : null}
-        </Card>
+          {info?.notifiable ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+              <Dot color={C.error} />
+              <Text style={[st.small, { color: C.error, fontFamily: FONT.bodyBold }]}>Report to authorities</Text>
+            </View>
+          ) : null}
+        </View>
 
         {/* Uncertain: no fabricated diagnosis */}
         {uncertain ? (
-          <Card style={{ backgroundColor: C.accentTint }}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Icon name="alert-outline" size={22} color={C.warn} />
-              <View style={{ flex: 1 }}>
-                <Text style={[st.label, { marginTop: 0, color: C.warn }]}>The scanner is not sure</Text>
-                <Text style={st.body}>
-                  {t('Confidence is below {n}%, so treat this as a guess. Retake the photo of a single leaf in daylight, or show the plant to an extension officer or agro-dealer.', {
-                    n: Math.round(CONFIDENCE_THRESHOLD * 100),
-                  })}
+          <View style={st.panel}>
+            <Text style={st.h}>The scanner is not sure</Text>
+            <Text style={st.body}>
+              {t('Confidence is below {n}%, so treat this as a guess. Retake the photo of a single leaf in daylight, or show the plant to an extension officer or agro-dealer.', {
+                n: Math.round(CONFIDENCE_THRESHOLD * 100),
+              })}
+            </Text>
+            {hints.length ? (
+              <>
+                <Text style={[st.h2, { marginTop: 14 }]}>The scanner cannot detect insects — check for:</Text>
+                {hints.map((h) => (
+                  <View key={h} style={st.li}>
+                    <View style={{ paddingTop: 8 }}>
+                      <Dot color={C.textLight} size={5} />
+                    </View>
+                    <Text raw style={[st.body, { flex: 1 }]}>
+                      {h}
+                    </Text>
+                  </View>
+                ))}
+              </>
+            ) : null}
+            {p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="signature" style={{ marginTop: 14 }} onPress={openPhotoCheck} /> : null}
+            <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ marginTop: 10 }} onPress={askCommunity} />
+          </View>
+        ) : null}
+
+        {/* What it looks like */}
+        {info && !healthy ? (
+          <View style={st.panel}>
+            <Text style={st.h}>What it looks like</Text>
+            <Text raw style={st.body}>
+              {info.symptoms}
+            </Text>
+            {info.spread ? (
+              <>
+                <Text style={[st.h2, { marginTop: 14 }]}>How it spreads</Text>
+                <Text raw style={st.body}>
+                  {info.spread}
                 </Text>
-                {hints.length ? (
-                  <>
-                    <Text style={[st.label, { color: C.warn }]}>The scanner cannot detect insects — check for:</Text>
-                    {hints.map((h) => (
-                      <Text raw key={h} style={[st.body, { marginBottom: 4 }]}>
-                        • {h}
-                      </Text>
-                    ))}
-                  </>
-                ) : null}
-                {p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="signature" style={{ marginTop: 12 }} onPress={openPhotoCheck} /> : null}
-                <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ marginTop: 12 }} onPress={askCommunity} />
+              </>
+            ) : null}
+            {info.kenya ? (
+              <View style={[st.li, { marginTop: 14 }]}>
+                <Icon name="map-marker-outline" size={18} color={C.textSub} />
+                <Text raw style={[st.small, { flex: 1 }]}>
+                  {info.kenya}
+                </Text>
               </View>
-            </View>
-          </Card>
+            ) : null}
+          </View>
         ) : null}
 
         {/* Other possibilities */}
         {alts.length ? (
-          <Card>
-            <SectionLabel>Other possibilities</SectionLabel>
+          <View style={st.panel}>
+            <Text style={st.h}>Other possibilities</Text>
             {alts.map(([l, c]) => (
-              <View key={l} style={{ marginBottom: 10 }}>
-                <View style={st.rowBetween}>
-                  <Text raw style={st.altName}>
+              <View key={l} style={{ marginTop: 10, gap: 6 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                  <Text raw style={[st.body, { flex: 1 }]}>
                     {altName(l)}
                   </Text>
-                  <Text raw style={st.altPct}>
+                  <Text raw style={st.small}>
                     {(c * 100).toFixed(1)}%
                   </Text>
                 </View>
-                <View style={[st.barBg, { height: 5 }]}>
-                  <View style={[st.barFill, { width: `${Math.max(1, Math.round(c * 100))}%`, backgroundColor: C.textLight }]} />
-                </View>
+                <ProgressBar value={c} color={C.textLight} height={5} />
               </View>
             ))}
-          </Card>
+          </View>
         ) : null}
 
-        {/* Treatment — three explicit pillars */}
+        {/* What to do */}
         {info ? (
-          <Card>
-            <View style={st.rowBetween}>
-              <SectionLabel>{healthy ? 'Keep it healthy' : 'What to do'}</SectionLabel>
+          <View style={st.panel}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={st.h}>{healthy ? 'Keep it healthy' : 'What to do'}</Text>
               <ListenButton
                 compact
                 text={() =>
@@ -291,22 +296,14 @@ export default function ResultScreen() {
                 }
               />
             </View>
-            <Pillar icon="hand-heart-outline" color={C.primary} title={healthy ? 'Good practice' : 'Do this first (cultural)'} items={info.cultural} />
-            {info.biological.length ? <Pillar icon="leaf" color="#558B2F" title="Organic / biological options" items={info.biological} /> : null}
+            <Steps title={healthy ? 'Good practice' : 'Do this first (cultural)'} items={info.cultural} />
+            {info.biological.length ? <Steps title="Organic / biological options" items={info.biological} /> : null}
             {info.chemical.length ? (
               <>
-                <Pillar
-                  icon="flask-outline"
-                  color={C.error}
-                  title="Chemical options (active ingredient)"
-                  items={info.chemical.map((c) => (c.note ? `${c.active} — ${c.note}` : c.active))}
-                />
-                <View style={st.rules}>
-                  <Icon name="shield-alert-outline" size={16} color={C.textSub} />
-                  <Text raw style={st.rulesTxt}>
-                    {chemicalRules(lang)}
-                  </Text>
-                </View>
+                <Steps title="Chemical options (active ingredient)" items={info.chemical.map((c) => (c.note ? `${c.active} — ${c.note}` : c.active))} />
+                <Text raw style={[st.small, { marginTop: 12 }]}>
+                  {chemicalRules(lang)}
+                </Text>
               </>
             ) : null}
             {!healthy ? (
@@ -314,39 +311,36 @@ export default function ResultScreen() {
                 label="Open day-by-day treatment plan"
                 icon="clipboard-list-outline"
                 kind="secondary"
-                style={{ marginTop: 14 }}
+                style={{ marginTop: 16 }}
                 onPress={() => router.push({ pathname: '/treatment-plan', params: { label, incidentId: savedId ?? '' } })}
               />
             ) : null}
-          </Card>
+          </View>
         ) : null}
 
         {/* Nearby agro-dealers (OpenStreetMap) */}
         {!healthy ? (
-          <Card>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Icon name="store-outline" size={20} color={C.primary} />
-              <Text style={st.cardTitle}>Nearby agro-dealers</Text>
-            </View>
+          <View style={st.panel}>
+            <Text style={st.h}>Nearby agro-dealers</Text>
             {agrovets?.length ? (
-              agrovets.map((a, i) => (
-                <TouchableOpacity key={a.id} style={[st.agroRow, i === agrovets.length - 1 && { borderBottomWidth: 0 }]} onPress={() => Linking.openURL(mapsUrl(a.lat, a.lng, a.name))}>
+              agrovets.map((a) => (
+                <TouchableOpacity key={a.id} style={st.agroRow} onPress={() => Linking.openURL(mapsUrl(a.lat, a.lng, a.name))}>
                   <View style={{ flex: 1 }}>
                     <Text raw style={st.agroName}>
                       {a.name}
                     </Text>
-                    <Text raw style={st.agroSub}>
+                    <Text raw style={st.small}>
                       {t('{km} km away', { km: a.distanceKm.toFixed(1) })}
                       {a.address ? `, ${a.address}` : ''}
                     </Text>
                   </View>
                   {a.phone ? (
-                    <TouchableOpacity style={st.agroIcon} onPress={() => Linking.openURL(`tel:${a.phone}`)}>
-                      <Icon name="phone" size={18} color={C.primary} />
+                    <TouchableOpacity style={st.agroIcon} onPress={() => Linking.openURL(`tel:${a.phone}`)} accessibilityLabel={t('Call')}>
+                      <Icon name="phone-outline" size={20} color={C.text} />
                     </TouchableOpacity>
                   ) : null}
                   <View style={st.agroIcon}>
-                    <Icon name="directions" size={18} color={C.primary} />
+                    <Icon name="directions" size={20} color={C.text} />
                   </View>
                 </TouchableOpacity>
               ))
@@ -357,114 +351,92 @@ export default function ResultScreen() {
                     {agroStatus}
                   </Text>
                 ) : null}
-                <Btn label="Find agro-dealers near me" icon="map-marker-radius" kind="ghost" onPress={loadAgrovets} />
+                <Btn label="Find agro-dealers near me" icon="map-marker-radius-outline" kind="secondary" onPress={loadAgrovets} />
               </>
             )}
-            <Text style={st.osm}>Data © OpenStreetMap contributors</Text>
-          </Card>
+            <Text style={[st.small, { marginTop: 10, fontSize: 13 }]}>Data © OpenStreetMap contributors</Text>
+          </View>
         ) : null}
 
         {/* Actions */}
-        <View style={{ paddingHorizontal: 16, marginTop: 20, gap: 12 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 24, gap: 10 }}>
           <Btn
             label="Ask the AI advisor"
-            icon="robot-outline"
+            icon="chat-processing-outline"
             onPress={() => router.push({ pathname: '/chat', params: { crop: cropEn, disease: diseaseEn, confidence: String(confidence) } })}
           />
           <Btn label={savedId ? 'Saved ✓' : 'Save to my farm'} icon="content-save-outline" kind="secondary" onPress={openSave} loading={saving} disabled={Boolean(savedId)} />
           {!uncertain ? <Btn label="Ask the community" icon="account-group-outline" kind="secondary" onPress={askCommunity} /> : null}
           {!uncertain && p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="secondary" onPress={openPhotoCheck} /> : null}
-          <Btn label="Share on WhatsApp" icon="whatsapp" kind="whatsapp" onPress={shareWhatsApp} />
+          <Btn label="Share on WhatsApp" icon="whatsapp" kind="secondary" onPress={shareWhatsApp} />
           <Btn label="Scan another leaf" icon="camera-retake-outline" kind="ghost" onPress={() => router.navigate('/scan')} />
         </View>
       </ScrollView>
 
-      {/* Farm picker */}
-      <Modal visible={picker} transparent animationType="slide" onRequestClose={() => setPicker(false)}>
-        <Pressable style={st.overlay} onPress={() => setPicker(false)}>
-          <Pressable style={st.sheet}>
-            <Text style={st.sheetTitle}>Save this scan to…</Text>
-            {(farms ?? []).map((f) => (
-              <TouchableOpacity key={f.id} style={st.farmRow} onPress={() => save(f.id)}>
-                <Icon name="sprout" size={22} color={C.primary} />
-                <View style={{ flex: 1 }}>
-                  <Text raw style={st.farmName}>
-                    {f.name}
-                  </Text>
-                  <Text raw style={st.agroSub}>
-                    {[f.crop ? cropName(f.crop, lang) : null, f.size_acres ? t('{n} acres', { n: Number(f.size_acres).toFixed(2) }) : null].filter(Boolean).join(', ') || t('Field')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-            {farms && farms.length === 0 ? (
-              <TouchableOpacity style={st.farmRow} onPress={quickAddFarm}>
-                <Icon name="plus-circle-outline" size={22} color={C.primary} />
-                <Text raw style={st.farmName}>
-                  {t('Create "{name}" and save', { name: t('{crop} field', { crop }) })}
-                </Text>
-              </TouchableOpacity>
-            ) : null}
-            <TouchableOpacity style={st.farmRow} onPress={() => save(null)}>
-              <Icon name="history" size={22} color={C.textSub} />
-              <Text style={st.farmName}>Scan history only (no field)</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      {/* Field picker */}
+      <Sheet visible={picker} onClose={() => setPicker(false)} title="Save this scan to…">
+        {(farms ?? []).map((f) => (
+          <TouchableOpacity key={f.id} style={st.farmRow} onPress={() => save(f.id)}>
+            <CropIcon crop={f.crop} size={40} />
+            <View style={{ flex: 1 }}>
+              <Text raw style={st.agroName}>
+                {f.name}
+              </Text>
+              <Text raw style={st.small}>
+                {[f.crop ? cropName(f.crop, lang) : null, f.size_acres ? t('{n} acres', { n: Number(f.size_acres).toFixed(2) }) : null].filter(Boolean).join(', ') || t('Field')}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+        {farms && farms.length === 0 ? (
+          <TouchableOpacity style={st.farmRow} onPress={quickAddFarm}>
+            <Icon name="plus" size={24} color={C.primary} />
+            <Text raw style={[st.agroName, { color: C.primary }]}>
+              {t('Create "{name}" and save', { name: t('{crop} field', { crop }) })}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity style={st.farmRow} onPress={() => save(null)}>
+          <Icon name="history" size={24} color={C.textSub} />
+          <Text style={st.agroName}>Scan history only (no field)</Text>
+        </TouchableOpacity>
+      </Sheet>
     </View>
   );
 }
 
-function Pillar({ icon, color, title, items }: { icon: IconName; color: string; title: string; items: string[] }) {
+function Steps({ title, items }: { title: string; items: string[] }) {
   return (
-    <View style={[st.pillar, { borderLeftColor: color }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-        <Icon name={icon} size={16} color={color} />
-        <Text style={[st.pillarTitle, { color }]}>{title}</Text>
-      </View>
+    <View style={{ marginTop: 16 }}>
+      <Text style={st.h2}>{title}</Text>
       {items.map((x, i) => (
-        <Text raw key={i} style={st.pillarTxt}>
-          {items.length > 1 ? `${i + 1}. ` : ''}
-          {x}
-        </Text>
+        <View key={i} style={st.li}>
+          <Text raw style={st.num}>
+            {items.length > 1 ? `${i + 1}` : '•'}
+          </Text>
+          <Text raw style={[st.body, { flex: 1 }]}>
+            {x}
+          </Text>
+        </View>
       ))}
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  leaf: { width: '100%', height: 240 },
-  status: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', marginTop: -20, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, backgroundColor: C.surface, elevation: 4 },
-  statusTxt: { fontSize: 15, fontWeight: '800' },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  cropName: { fontSize: 13, fontWeight: '700', color: C.textSub, textTransform: 'uppercase', letterSpacing: 0.5 },
-  disease: { fontSize: 25, fontWeight: '900', flex: 1 },
-  pctBox: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  pct: { fontSize: 16, fontWeight: '900' },
-  barBg: { height: 8, borderRadius: 4, backgroundColor: C.bg, overflow: 'hidden', marginTop: 10 },
-  barFill: { height: '100%', borderRadius: 4 },
-  pathogen: { fontSize: 13, fontStyle: 'italic', color: C.textSub, marginTop: 10 },
-  label: { fontSize: 14, fontWeight: '800', color: C.text, marginTop: 14, marginBottom: 4 },
-  body: { fontSize: 15, color: C.textMid, lineHeight: 22 },
-  note: { flexDirection: 'row', gap: 8, backgroundColor: C.infoTint, borderRadius: 10, padding: 10, marginTop: 14 },
-  noteTxt: { flex: 1, color: C.info, fontSize: 13, lineHeight: 19 },
-  altName: { flex: 1, fontSize: 14, color: C.textMid, fontWeight: '600' },
-  altPct: { fontSize: 13, fontWeight: '800', color: C.textSub },
-  pillar: { borderLeftWidth: 4, backgroundColor: '#F8FAF9', borderRadius: 10, padding: 12, marginTop: 10 },
-  pillarTitle: { fontSize: 13, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.3 },
-  pillarTxt: { fontSize: 14, color: C.textMid, lineHeight: 21, marginTop: 2 },
-  rules: { flexDirection: 'row', gap: 8, marginTop: 10, padding: 10, backgroundColor: C.bg, borderRadius: 10 },
-  rulesTxt: { flex: 1, fontSize: 12, color: C.textSub, lineHeight: 18 },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: C.text },
-  agroRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
-  agroName: { fontSize: 14, fontWeight: '800', color: C.text },
-  agroSub: { fontSize: 12, color: C.textSub, marginTop: 2 },
-  agroIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.primaryTint, justifyContent: 'center', alignItems: 'center' },
-  osm: { fontSize: 10, color: C.textLight, marginTop: 8 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: C.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 36 },
-  sheetTitle: { fontSize: 18, fontWeight: '900', color: C.text, marginBottom: 8 },
-  farmRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
-  farmName: { fontSize: 15, fontWeight: '700', color: C.text },
+  leaf: { height: 240, marginHorizontal: 16, borderRadius: 16, marginTop: 4 },
+  panel: { backgroundColor: C.surface, borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 12 },
+  crop: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
+  status: { fontSize: 15, fontFamily: FONT.bodyBold },
+  disease: { fontSize: 32, lineHeight: 38, fontFamily: FONT.display, color: C.text, marginTop: 14, marginBottom: 14 },
+  h: { fontSize: 21, fontFamily: FONT.display, color: C.text, marginBottom: 8 },
+  h2: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, marginBottom: 6 },
+  body: { fontSize: 16, color: C.textMid, lineHeight: 23 },
+  small: { fontSize: 14, color: C.textSub, lineHeight: 20 },
+  li: { flexDirection: 'row', gap: 10, marginTop: 6 },
+  num: { width: 18, fontSize: 16, lineHeight: 23, fontFamily: FONT.bodyBold, color: C.primary },
+  agroRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  agroName: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
+  agroIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
+  farmRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
 });

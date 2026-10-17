@@ -22,7 +22,14 @@ export type Weather = {
 };
 
 /** Is a day good for spraying? Wind, rain and heat decide whether a spray stays on the leaf. */
-export type SprayDay = { date: string; level: 'Good' | 'Fair' | 'Poor'; window: string | null; reason: string };
+export type SprayDay = {
+  date: string;
+  level: 'Good' | 'Fair' | 'Poor';
+  window: string | null;
+  reason: string;
+  /** One entry per daylight hour from 06:00 to 17:00: can you spray in that hour? */
+  hours?: boolean[];
+};
 export type BlightRisk = { level: 'Low' | 'Medium' | 'High'; reason: string; days: string[] };
 
 export function describeCode(code: number): { label: string; icon: string } {
@@ -140,7 +147,8 @@ export function sprayDays(hourly: OpenMeteo['hourly'], days: string[]): SprayDay
         : windy >= hot
         ? 'Too windy — the spray would drift.'
         : 'Too hot or too cold for spraying.';
-    return { date, level, window, reason };
+    const hours = Array.from({ length: 12 }, (_, k) => good.includes(6 + k));
+    return { date, level, window, reason, hours };
   });
 }
 

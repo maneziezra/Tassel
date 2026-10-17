@@ -1,0 +1,1 @@
+param($n) $adb="C:\Users\Archlord\AppData\Local\Android\Sdk\platform-tools\adb.exe"; cmd /c "`"$adb`" -s 050162503I019840 exec-out screencap -p > C:\Users\Archlord\Desktop\CropGuard-AI\scripts\shots\$n.png"

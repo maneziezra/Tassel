@@ -150,7 +150,7 @@ export default function NewPostScreen() {
 }
 
 const st = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: C.border },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14 },
   headerTitle: { fontSize: 18, fontWeight: '800', color: C.text },
   postBtn: { fontSize: 17, color: C.primary, fontWeight: '900' },
   label: { fontSize: 13, fontWeight: '800', color: C.textMid, marginTop: 10 },

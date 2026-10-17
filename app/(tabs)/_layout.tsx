@@ -1,13 +1,22 @@
-// Same navigation as the v1.0 release: Home | Advisory | Scan (green button) | Community | Profile
+// Navigation: Home | Advisory | Scan (raised) | Community | Profile
 import { Tabs } from 'expo-router';
-import { Pressable, StyleSheet, View, type ColorValue } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon, type IconName } from '../../components/ui';
+import { Icon, tick, type IconName } from '../../components/ui';
 import { C, FONT } from '../../lib/theme';
 import { useLang } from '../../lib/i18n';
 
 function tabIcon(name: IconName, active: IconName) {
-  return ({ color, focused }: { color: ColorValue; focused: boolean }) => <Icon name={focused ? active : name} size={24} color={color as string} />;
+  return ({ color, focused }: { color: ColorValue; focused: boolean }) => <Icon name={focused ? active : name} size={25} color={color as string} />;
+}
+
+/** One line, shrinks to fit: "Community" and "Jamii" never get cut to "Commu…". */
+function tabLabel(text: string) {
+  return ({ color, focused }: { color: ColorValue; focused: boolean }) => (
+    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ color: color as string, fontSize: 12, fontFamily: focused ? FONT.bodyBold : FONT.body, marginTop: 2 }}>
+      {text}
+    </Text>
+  );
 }
 
 export default function TabLayout() {
@@ -15,16 +24,18 @@ export default function TabLayout() {
   const { t } = useLang();
   return (
     <Tabs
+      screenListeners={{ tabPress: () => tick('select') }}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: C.primary,
+        tabBarActiveTintColor: C.primaryDark,
         tabBarInactiveTintColor: C.textSub,
-        tabBarStyle: { height: 62 + insets.bottom, paddingBottom: 8 + insets.bottom, paddingTop: 6, borderTopColor: C.border, backgroundColor: C.surface },
-        tabBarLabelStyle: { fontSize: 12, fontFamily: FONT.bodyBold },
+        tabBarStyle: { height: 64 + insets.bottom, paddingBottom: 8 + insets.bottom, paddingTop: 6, borderTopWidth: 0, backgroundColor: C.surface, elevation: 0 },
+        tabBarItemStyle: { paddingHorizontal: 0 },
+        animation: 'fade',
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t('Home'), tabBarIcon: tabIcon('home-outline', 'home') }} />
-      <Tabs.Screen name="advisory" options={{ title: t('Advisory'), tabBarIcon: tabIcon('book-open-variant', 'book-open-page-variant') }} />
+      <Tabs.Screen name="index" options={{ title: t('Home'), tabBarLabel: tabLabel(t('Home')), tabBarIcon: tabIcon('home-outline', 'home') }} />
+      <Tabs.Screen name="advisory" options={{ title: t('Advisory'), tabBarLabel: tabLabel(t('Advisory')), tabBarIcon: tabIcon('sprout-outline', 'sprout') }} />
       <Tabs.Screen
         name="scan"
         options={{
@@ -32,16 +43,16 @@ export default function TabLayout() {
           tabBarLabel: () => null,
           tabBarStyle: { display: 'none' },
           tabBarButton: (props) => (
-            <Pressable onPress={props.onPress} accessibilityLabel={t('Scan a leaf')} style={styles.fabWrap}>
+            <Pressable onPress={props.onPress} accessibilityLabel={t('Scan a leaf')} accessibilityRole="button" style={styles.fabWrap}>
               <View style={styles.fab}>
-                <Icon name="line-scan" size={28} color={C.text} />
+                <Icon name="line-scan" size={28} color={C.gold} />
               </View>
             </Pressable>
           ),
         }}
       />
-      <Tabs.Screen name="community" options={{ title: t('Community'), tabBarIcon: tabIcon('forum-outline', 'forum') }} />
-      <Tabs.Screen name="profile" options={{ title: t('Profile'), tabBarIcon: tabIcon('account-outline', 'account') }} />
+      <Tabs.Screen name="community" options={{ title: t('Community'), tabBarLabel: tabLabel(t('Community')), tabBarIcon: tabIcon('message-text-outline', 'message-text') }} />
+      <Tabs.Screen name="profile" options={{ title: t('Profile'), tabBarLabel: tabLabel(t('Profile')), tabBarIcon: tabIcon('account-circle-outline', 'account-circle') }} />
     </Tabs>
   );
 }
@@ -49,19 +60,14 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   fabWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
   fab: {
-    width: 58,
-    height: 58,
-    borderRadius: 20,
-    backgroundColor: C.accent,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: C.primaryDark,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -22,
     borderWidth: 4,
     borderColor: C.bg,
-    shadowColor: C.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
   },
 });

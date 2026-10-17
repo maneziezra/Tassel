@@ -202,7 +202,7 @@ export default function ScanScreen() {
             ))}
           </View>
           <View style={st.tipPill}>
-            <Icon name="lightbulb-on-outline" size={14} color={C.accent} />
+            <Icon name="lightbulb-on-outline" size={14} color={C.gold} />
             <Text style={st.tipTxt}>{TIPS[tip]}</Text>
           </View>
         </View>
@@ -225,7 +225,7 @@ export default function ScanScreen() {
                   ) : (
                     <Icon name="circle-outline" size={20} color="#4B5563" />
                   )}
-                  <Text style={[st.stepTxt, !s && { color: '#6B7280' }]}>{STEP_TEXT[k]}</Text>
+                  <Text style={[st.stepTxt, !s && { color: '#9AA7A0' }]}>{STEP_TEXT[k]}</Text>
                   {finished && k !== 'done' ? <Text raw style={st.stepMs}>{`${s!.ms} ms`}</Text> : null}
                 </View>
               );
@@ -245,7 +245,7 @@ export default function ScanScreen() {
       {/* AI photo check entry (pests, deficiencies, other crops) */}
       {!photoUri ? (
         <TouchableOpacity style={[st.aiPill, { bottom: insets.bottom + 132 }]} onPress={photoCheck} accessibilityRole="button">
-          <Icon name="bug-check-outline" size={18} color={C.accent} />
+          <Icon name="bug-check-outline" size={18} color={C.gold} />
           <Text raw style={st.aiPillTxt}>
             {sw ? 'Wadudu au zao jingine? Ukaguzi wa picha wa AI' : 'Pest or other crop? AI photo check'}
           </Text>
@@ -286,26 +286,26 @@ const st = StyleSheet.create({
   status: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
   frameWrap: { ...FILL, justifyContent: 'center', alignItems: 'center' },
   frame: { width: '72%', aspectRatio: 1 },
-  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: C.accent },
-  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 12 },
+  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: C.gold },
+  tl: { top: 0, left: 0, borderTopWidth: 4, borderTopLeftRadius: 12 },
   tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 12 },
-  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 12 },
+  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderBottomLeftRadius: 12 },
   br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 12 },
   tipPill: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
   tipTxt: { color: '#fff', fontSize: 13, fontWeight: '600' },
   overlay: { ...FILL, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
-  overlayCard: { backgroundColor: '#111827', borderRadius: 20, padding: 20, gap: 14 },
+  overlayCard: { backgroundColor: C.dark, borderRadius: 20, padding: 20, gap: 14 },
   overlayTitle: { color: '#fff', fontSize: 18, fontWeight: '900', marginBottom: 4 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stepTxt: { flex: 1, color: '#E5E7EB', fontSize: 14 },
+  stepTxt: { flex: 1, color: '#E8ECE9', fontSize: 14 },
   stepMs: { color: C.secondary, fontWeight: '800', fontSize: 12 },
-  errorTxt: { color: '#FCA5A5', fontSize: 14 },
+  errorTxt: { color: '#F2B8A6', fontSize: 14 },
   bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingTop: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
   sideBtn: { alignItems: 'center', width: 72, gap: 4 },
   sideTxt: { color: '#fff', fontSize: 11, fontWeight: '700' },
   shutter: { width: 78, height: 78, borderRadius: 39, borderWidth: 5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' },
   shutterInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: C.secondary },
-  permTxt: { color: '#D1D5DB', textAlign: 'center', lineHeight: 20 },
+  permTxt: { color: '#C9D2CC', textAlign: 'center', lineHeight: 20 },
   permBtn: { backgroundColor: C.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   aiPill: { position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.darkRaised, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, maxWidth: '92%' },
   aiPillTxt: { color: '#fff', fontSize: 14, fontWeight: '700', flexShrink: 1 },

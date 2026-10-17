@@ -10,7 +10,7 @@ import { getProfile, listPrices, priceReportSummary, type Price, type PriceSumma
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
 import { cropName } from '../lib/diseases';
 import { locale, useLang } from '../lib/i18n';
-import { C, SHADOW } from '../lib/theme';
+import { C } from '../lib/theme';
 
 const LINKS = [
   { name: 'KAMIS — official market prices', sub: 'Ministry of Agriculture market information system', url: 'https://kamis.kilimo.go.ke', icon: 'chart-box-outline' as const },
@@ -82,7 +82,7 @@ export default function MarketScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Header title="Market" subtitle="Reference prices, farmer prices and agro-dealers" dark />
+      <Header title="Market" subtitle="Reference prices, farmer prices and agro-dealers" />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 14 }}>
           <Chip label="Wholesale" active={level === 'wholesale'} onPress={() => { setLevel('wholesale'); setSelected(null); }} />
@@ -100,26 +100,26 @@ export default function MarketScreen() {
             const up = (change ?? 0) > 0;
             const tColor = change === null || change === 0 ? C.textSub : up ? C.primary : C.error;
             return (
-              <TouchableOpacity key={s.key} style={[st.priceCard, active && { backgroundColor: C.primary }]} onPress={() => setSelected(s.key)} activeOpacity={0.85}>
-                <Text style={[st.crop, active && { color: '#fff' }]} numberOfLines={1}>
+              <TouchableOpacity key={s.key} style={[st.priceCard, active && st.priceOn]} onPress={() => setSelected(s.key)} activeOpacity={0.85}>
+                <Text style={st.crop} numberOfLines={1}>
                   {s.crop}
                 </Text>
-                <Text style={[st.market, active && { color: 'rgba(255,255,255,0.8)' }]}>{s.market}</Text>
-                <Text raw style={[st.amount, active && { color: '#fff' }]}>
+                <Text style={st.market}>{s.market}</Text>
+                <Text raw style={st.amount}>
                   KES {last.price_kes.toLocaleString()}
-                  <Text raw style={[st.unit, active && { color: 'rgba(255,255,255,0.8)' }]}>
+                  <Text raw style={st.unit}>
                     /{t(s.unit)}
                   </Text>
                 </Text>
                 {change !== null ? (
                   <View style={st.changeRow}>
-                    <Icon name={change === 0 ? 'minus' : up ? 'trending-up' : 'trending-down'} size={13} color={active ? '#fff' : tColor} />
-                    <Text raw style={[st.change, { color: active ? '#fff' : tColor }]}>
+                    <Icon name={change === 0 ? 'minus' : up ? 'trending-up' : 'trending-down'} size={13} color={tColor} />
+                    <Text raw style={[st.change, { color: tColor }]}>
                       {t('{pct}% vs previous', { pct: `${change > 0 ? '+' : ''}${change.toFixed(1)}` })}
                     </Text>
                   </View>
                 ) : (
-                  <Text style={[st.change, { color: active ? '#fff' : C.textSub, marginTop: 6 }]}>1 observation</Text>
+                  <Text style={[st.change, { color: C.textSub, marginTop: 6 }]}>1 observation</Text>
                 )}
               </TouchableOpacity>
             );
@@ -138,7 +138,7 @@ export default function MarketScreen() {
                     <Text raw style={st.barVal}>
                       {p.price_kes}
                     </Text>
-                    <View style={[st.bar, { height: h, backgroundColor: i === current.points.length - 1 ? C.primary : C.accent }]} />
+                    <View style={[st.bar, { height: h, backgroundColor: i === current.points.length - 1 ? C.primary : '#B9CDBF' }]} />
                     <Text raw style={st.barLbl}>
                       {new Date(p.observed_on).toLocaleDateString(locale(lang), { month: 'short', year: '2-digit' })}
                     </Text>
@@ -264,29 +264,30 @@ export default function MarketScreen() {
 }
 
 const st = StyleSheet.create({
-  priceCard: { width: 170, backgroundColor: C.surface, borderRadius: 16, padding: 14, ...SHADOW },
-  crop: { fontSize: 14, fontWeight: '900', color: C.text },
-  market: { fontSize: 11, color: C.textSub, fontWeight: '600', marginBottom: 6 },
-  amount: { fontSize: 22, fontWeight: '900', color: C.text },
-  unit: { fontSize: 12, fontWeight: '600', color: C.textSub },
+  priceCard: { width: 170, backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: 2, borderColor: 'transparent' },
+  priceOn: { borderColor: C.primary },
+  crop: { fontSize: 15, fontWeight: '700', color: C.text },
+  market: { fontSize: 13, color: C.textSub, marginBottom: 6 },
+  amount: { fontSize: 24, fontWeight: '700', color: C.text },
+  unit: { fontSize: 13, color: C.textSub },
   changeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  change: { fontSize: 11, fontWeight: '800' },
+  change: { fontSize: 13, fontWeight: '700' },
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, height: 130, paddingTop: 10 },
   bar: { width: '70%', borderRadius: 6 },
-  barVal: { fontSize: 11, fontWeight: '800', color: C.text },
-  barLbl: { fontSize: 10, color: C.textSub, fontWeight: '600' },
-  source: { fontSize: 12, color: C.info, fontWeight: '700', marginTop: 12 },
-  disclaimer: { fontSize: 11, color: C.textSub, marginTop: 6, lineHeight: 16 },
+  barVal: { fontSize: 13, fontWeight: '700', color: C.text },
+  barLbl: { fontSize: 13, color: C.textSub },
+  source: { fontSize: 13, color: C.textMid, fontWeight: '700', marginTop: 12 },
+  disclaimer: { fontSize: 13, color: C.textSub, marginTop: 6, lineHeight: 19 },
   cardTitle: { fontSize: 16, fontWeight: '800', color: C.text },
-  report: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border, marginTop: 6 },
+  report: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, marginTop: 6 },
   reportPrice: { fontSize: 17, fontWeight: '900', color: C.text },
-  agro: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
-  agroIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: C.primaryTint, justifyContent: 'center', alignItems: 'center' },
-  agroName: { fontSize: 14, fontWeight: '800', color: C.text },
-  agroSub: { fontSize: 12, color: C.textSub, marginTop: 2 },
-  circle: { width: 38, height: 38, borderRadius: 19, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center' },
-  osm: { fontSize: 10, color: C.textLight, marginTop: 10, lineHeight: 15 },
-  sectionTitle: { fontSize: 12, fontWeight: '800', color: C.textSub, textTransform: 'uppercase', letterSpacing: 0.8, marginHorizontal: 20, marginTop: 22, marginBottom: 8 },
-  link: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, marginHorizontal: 16, marginBottom: 10, borderRadius: 14, padding: 14, ...SHADOW },
-  linkIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: C.primaryTint, justifyContent: 'center', alignItems: 'center' },
+  agro: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  agroIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
+  agroName: { fontSize: 15, fontWeight: '700', color: C.text },
+  agroSub: { fontSize: 13, color: C.textSub, marginTop: 2 },
+  circle: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
+  osm: { fontSize: 13, color: C.textSub, marginTop: 10, lineHeight: 18 },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: C.text, marginHorizontal: 20, marginTop: 22, marginBottom: 8 },
+  link: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, marginHorizontal: 16, marginBottom: 10, borderRadius: 14, padding: 14 },
+  linkIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
 });

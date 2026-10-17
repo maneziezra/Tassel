@@ -1,32 +1,39 @@
-// CropGuard AI — "Mche" design tokens (v2.1 redesign).
-// Cool morning greens, maize gold for the one thing to tap, chilli red only
-// when a crop is in danger. Every text colour passes 4.5:1 on its ground.
-// The names kept from v1.0 (primary, accent…) now point at the Mche values so
-// every screen picks up the new look.
+// CropGuard AI — "Shamba" design tokens (v2.2 redesign).
+//
+// Calm by default: warm paper ground, white panels, one deep forest green for
+// actions. Colour is earned — it comes from the crop artwork and photos, and
+// from clay red only when a crop is genuinely at risk. No tinted tiles behind
+// icons, no rainbow categories, no full-width divider lines: grouping comes
+// from white panels and space. Every text colour passes 4.5:1 on its ground.
+//
+// The key names kept from v1/v2.1 (primary, accent, error…) point at the
+// Shamba values so every screen picks up the new look.
 
 export const C = {
-  bg: '#EEF3F0', // Ukungu (mist): the ground behind every screen
-  surface: '#FFFFFF', // Karatasi (paper): panels and rows
-  primary: '#137A5A', // Chai (tea-estate green): actions, links, healthy. White text 5.3:1
-  primaryDark: '#0E5C43',
-  primaryTint: '#DCEFE7',
-  secondary: '#3DBB8C', // Chai on dark grounds (camera)
-  accent: '#F2B630', // Mahindi (maize gold): the scan action and "today". Ink text only
-  accentDark: '#7A5300', // maize text on light grounds
-  accentTint: '#FCF0CF',
-  error: '#C62F2F', // Pilipili (chilli red): disease, outbreaks, act today. White text 5.5:1
-  errorTint: '#F8DEDB',
-  warn: '#A15C07', // act within 48 h
-  warnTint: '#FBE8D3',
-  info: '#24609B', // Anga (sky): weather and information
-  infoTint: '#DCE8F4',
-  text: '#0F2A24', // Usiku (ink)
-  textMid: '#2C4A41',
-  textSub: '#4E625B',
-  textLight: '#6A7D76',
-  border: '#D5DED9', // Mstari (line)
-  dark: '#0B1E1A', // night ground for the camera
-  darkRaised: '#183B33',
+  bg: '#F4F2EC', // paper: the ground behind every screen
+  surface: '#FFFFFF', // panels and rows
+  sunken: '#EFECE4', // wells, tracks, inactive segments
+  primary: '#2E6A4F', // forest green: actions, links, healthy. White text 6.6:1
+  primaryDark: '#1F4D39', // the scan action and dark panels
+  primaryTint: '#E3EDE6',
+  secondary: '#8FC2A5', // green on dark grounds (camera, dark panels)
+  accent: '#1F4D39', // the one signature action (scan). Was maize gold in v2.1
+  accentDark: '#7A5A14', // ochre text for "medium" states on light grounds
+  accentTint: '#F3EEDF',
+  gold: '#E8C25A', // maize gold: only the scan glyph and today's marker on dark grounds
+  error: '#A8472A', // clay: disease, outbreaks, act today. White text 5.6:1
+  errorTint: '#F6E7E0',
+  warn: '#7A5A14', // act within 48 h (ochre text)
+  warnTint: '#F3EEDF',
+  info: '#3F5560', // weather and information: a quiet slate, not a second brand colour
+  infoTint: '#EBEFEF',
+  text: '#1E2E26', // ink
+  textMid: '#34443C',
+  textSub: '#5E6B64',
+  textLight: '#7A867F',
+  border: '#E3DFD5', // only for input outlines and focus, never for dividers
+  dark: '#14231C', // night ground for the camera
+  darkRaised: '#1F4D39',
   whatsapp: '#25D366',
 };
 
@@ -38,42 +45,49 @@ export const FONT = {
   bodyBold: 'AtkinsonHyperlegible_700Bold',
 };
 
-/** Type scale: 13 smallest, 14 supporting, 16 body, 20 section, 28 title, 48 numbers. */
-export const TYPE = { caption: 13, small: 14, body: 16, section: 20, title: 28, number: 48 };
+/** Type scale: 13 smallest, 15 supporting, 16 body, 22 section, 32 title, 44 numbers. */
+export const TYPE = { caption: 13, small: 15, body: 16, section: 22, title: 32, number: 44 };
 
-// Separation comes from paper on mist and 1 px lines, not shadows; only floating controls are lifted.
+/** Spacing steps. Screens use 16 side margins and 28 between sections. */
+export const SPACE = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, section: 28 };
+
+// Panels sit on paper without shadows; only floating controls are lifted.
 export const SHADOW = {
-  shadowColor: '#0F2A24',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.05,
-  shadowRadius: 3,
-  elevation: 1,
+  shadowColor: '#1E2E26',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06,
+  shadowRadius: 6,
+  elevation: 2,
 };
 
-export const RADIUS = { sm: 8, md: 14, lg: 20, xl: 24, full: 999 };
+/** Three radii only: small controls, panels, the big actions. Pills for chips. */
+export const RADIUS = { sm: 10, md: 16, lg: 16, xl: 20, full: 999 };
 
-export const CATEGORY_COLOR: Record<string, string> = { Pests: '#A33A1F', Diseases: '#C62F2F', Market: '#137A5A', General: '#24609B' };
+/** Community categories: told apart by their word, not by colour. */
+export const CATEGORY_COLOR: Record<string, string> = { Pests: C.textMid, Diseases: C.error, Market: C.primary, General: C.textMid };
 
 /** One confidence scale used everywhere in the app (and by the advisor prompt). */
 export function confidenceBand(c: number): { label: string; color: string; tint: string } {
   if (c >= 0.9) return { label: 'High confidence', color: C.primaryDark, tint: C.primaryTint };
   if (c >= 0.75) return { label: 'Medium confidence', color: C.accentDark, tint: C.accentTint };
-  return { label: 'Low confidence', color: '#9E1F1F', tint: C.errorTint };
+  return { label: 'Low confidence', color: C.error, tint: C.errorTint };
 }
 
 export const URGENCY_META: Record<string, { label: string; color: string; tint: string }> = {
   low: { label: 'Low urgency', color: C.primaryDark, tint: C.primaryTint },
   medium: { label: 'Act this week', color: C.accentDark, tint: C.accentTint },
-  high: { label: 'Act within 48 h', color: C.warn, tint: C.warnTint },
-  critical: { label: 'Act today', color: '#9E1F1F', tint: C.errorTint },
+  high: { label: 'Act within 48 h', color: C.error, tint: C.errorTint },
+  critical: { label: 'Act today', color: C.error, tint: C.errorTint },
 };
 
+/** Kinds of problem: one neutral style, the icon and word tell them apart. */
+const NEUTRAL = { color: C.textMid, tint: C.sunken };
 export const KIND_META: Record<string, { color: string; tint: string; icon: string }> = {
-  Fungal: { color: '#A33A1F', tint: '#F6E1D9', icon: 'mushroom-outline' },
-  Oomycete: { color: '#5B4BA0', tint: '#E7E3F4', icon: 'water-outline' },
-  Bacterial: { color: '#A15C07', tint: '#FBE8D3', icon: 'bacteria-outline' },
-  Viral: { color: '#7A5300', tint: '#FCF0CF', icon: 'virus-outline' },
-  Pest: { color: '#24609B', tint: '#DCE8F4', icon: 'bug-outline' },
-  Disorder: { color: '#4E625B', tint: '#E4EAE7', icon: 'flask-outline' },
-  Healthy: { color: '#137A5A', tint: '#DCEFE7', icon: 'check-circle-outline' },
+  Fungal: { ...NEUTRAL, icon: 'mushroom-outline' },
+  Oomycete: { ...NEUTRAL, icon: 'water-outline' },
+  Bacterial: { ...NEUTRAL, icon: 'bacteria-outline' },
+  Viral: { ...NEUTRAL, icon: 'virus-outline' },
+  Pest: { ...NEUTRAL, icon: 'bug-outline' },
+  Disorder: { ...NEUTRAL, icon: 'flask-outline' },
+  Healthy: { color: C.primary, tint: C.primaryTint, icon: 'check-circle-outline' },
 };

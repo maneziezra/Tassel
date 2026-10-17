@@ -74,7 +74,7 @@ const TYPE: Record<ProblemType, Pair & { icon: IconName }> = {
 const CONF: Record<PhotoCheck['confidence'], Pair & { color: string; tint: string }> = {
   high: { en: 'AI is fairly sure', sw: 'AI ina uhakika kiasi', color: C.primaryDark, tint: C.primaryTint },
   medium: { en: 'AI is partly sure', sw: 'AI ina uhakika kidogo', color: C.accentDark, tint: C.accentTint },
-  low: { en: 'AI is not sure', sw: 'AI haina uhakika', color: '#9E1F1F', tint: C.errorTint },
+  low: { en: 'AI is not sure', sw: 'AI haina uhakika', color: C.error, tint: C.errorTint },
 };
 
 export default function PhotoCheckScreen() {
@@ -140,7 +140,7 @@ export default function PhotoCheckScreen() {
       ? r.urgency === 'high' || r.see_expert
         ? { title: r.problem_name || L(TXT.problem), color: C.error, tint: C.errorTint, icon: 'alert-circle' as IconName }
         : { title: r.problem_name || L(TXT.problem), color: C.warn, tint: C.warnTint, icon: 'alert' as IconName }
-      : { title: L(TXT.unclear), color: C.textSub, tint: '#E4EAE7', icon: 'help-circle' as IconName };
+      : { title: L(TXT.unclear), color: C.textSub, tint: C.sunken, icon: 'help-circle' as IconName };
 
   const listenText = () =>
     r
@@ -250,7 +250,7 @@ export default function PhotoCheckScreen() {
           <Card style={{ backgroundColor: C.errorTint }}>
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
               <Icon name="alert-circle-outline" size={22} color={C.error} />
-              <Text raw style={[st.body, { flex: 1, color: '#9E1F1F' }]}>
+              <Text raw style={[st.body, { flex: 1, color: C.error }]}>
                 {error}
               </Text>
             </View>
@@ -288,7 +288,7 @@ export default function PhotoCheckScreen() {
               <Card style={{ backgroundColor: C.errorTint }}>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <Icon name="account-tie-voice-outline" size={22} color={C.error} />
-                  <Text raw style={[st.body, { flex: 1, color: '#9E1F1F', fontFamily: FONT.bodyBold }]}>
+                  <Text raw style={[st.body, { flex: 1, color: C.error, fontFamily: FONT.bodyBold }]}>
                     {L(TXT.expert)}
                   </Text>
                 </View>

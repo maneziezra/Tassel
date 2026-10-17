@@ -11,7 +11,7 @@ import { AuthField } from '../components/AuthField';
 import { saveProfile } from '../lib/data';
 import { COUNTIES } from '../lib/counties';
 import { upgradeAccount } from '../lib/session';
-import { C, SHADOW } from '../lib/theme';
+import { C } from '../lib/theme';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -84,7 +84,7 @@ export default function RegisterScreen() {
 }
 
 const st = StyleSheet.create({
-  card: { backgroundColor: C.surface, marginHorizontal: 16, borderRadius: 20, padding: 20, ...SHADOW },
+  card: { backgroundColor: C.surface, marginHorizontal: 16, borderRadius: 20, padding: 20 },
   section: { fontSize: 11, fontWeight: '800', color: C.textSub, letterSpacing: 0.8, marginBottom: 10, marginTop: 4 },
   terms: { fontSize: 12, color: C.textSub, textAlign: 'center', marginTop: 14, lineHeight: 18 },
 });

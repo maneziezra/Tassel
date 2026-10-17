@@ -5,11 +5,11 @@ import React, { useCallback, useState } from 'react';
 import { FlatList, Image, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Btn, Chip, Empty, ErrorNote, Icon, Loading, Text, timeAgo } from '../../components/ui';
+import { Btn, Chip, CropIcon, Empty, ErrorNote, Icon, Loading, Text, timeAgo } from '../../components/ui';
 import { listPosts, photoUrl, type Post } from '../../lib/data';
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { useLang } from '../../lib/i18n';
-import { C, CATEGORY_COLOR, SHADOW } from '../../lib/theme';
+import { C, CATEGORY_COLOR } from '../../lib/theme';
 
 const CATEGORIES = ['All', 'Pests', 'Diseases', 'Market', 'General'];
 
@@ -38,7 +38,7 @@ export default function CommunityScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <View style={[st.header, { paddingTop: insets.top + 14 }]}>
+      <View style={[st.header, { paddingTop: insets.top + 18 }]}>
         <View style={{ flex: 1 }}>
           <Text style={st.title}>Community</Text>
           <Text style={st.sub}>Ask, share and learn with Kenyan farmers</Text>
@@ -102,8 +102,8 @@ export default function CommunityScreen() {
             return (
               <TouchableOpacity style={st.card} onPress={() => router.push({ pathname: '/post/[id]', params: { id: item.id } })} activeOpacity={0.85}>
                 <View style={st.authorRow}>
-                  <View style={[st.avatar, { backgroundColor: color + '22' }]}>
-                    <Text raw style={[st.initial, { color }]}>
+                  <View style={st.avatar}>
+                    <Text raw style={st.initial}>
                       {item.author_name.charAt(0).toUpperCase()}
                     </Text>
                   </View>
@@ -115,7 +115,7 @@ export default function CommunityScreen() {
                       {timeAgo(item.created_at)}
                     </Text>
                   </View>
-                  <View style={[st.cat, { backgroundColor: color + '1A' }]}>
+                  <View style={st.cat}>
                     <Text style={[st.catTxt, { color }]}>{item.category}</Text>
                   </View>
                 </View>
@@ -123,7 +123,7 @@ export default function CommunityScreen() {
                   <View style={{ flex: 1 }}>
                     {item.crop ? (
                       <View style={st.cropTag}>
-                        <Icon name="leaf" size={11} color={C.primary} />
+                        <CropIcon crop={item.crop} size={22} />
                         <Text raw style={st.cropTxt}>
                           {cropName(item.crop)}
                         </Text>
@@ -165,26 +165,26 @@ export default function CommunityScreen() {
 }
 
 const st = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 14, backgroundColor: C.surface },
-  title: { fontSize: 26, fontWeight: '900', color: C.text, letterSpacing: -0.5 },
-  sub: { fontSize: 13, color: C.textSub, marginTop: 2, fontWeight: '500' },
-  newBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center', ...SHADOW },
-  tabBar: { backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
-  card: { backgroundColor: C.surface, borderRadius: 16, padding: 16, ...SHADOW },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 8, backgroundColor: C.bg },
+  title: { fontSize: 32, lineHeight: 38, fontWeight: '700', color: C.text },
+  sub: { fontSize: 15, color: C.textSub, marginTop: 2 },
+  newBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: C.primaryDark, justifyContent: 'center', alignItems: 'center' },
+  tabBar: { backgroundColor: C.bg },
+  card: { backgroundColor: C.surface, borderRadius: 16, padding: 16 },
   authorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  avatar: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center' },
-  initial: { fontSize: 16, fontWeight: '800' },
-  author: { fontSize: 14, fontWeight: '700', color: C.text },
-  time: { fontSize: 12, color: C.textLight, marginTop: 1 },
-  cat: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  catTxt: { fontSize: 11, fontWeight: '800' },
-  cropTag: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
-  cropTxt: { fontSize: 12, color: C.primary, fontWeight: '700' },
-  postTitle: { fontSize: 16, fontWeight: '800', color: C.text, marginBottom: 6, lineHeight: 22 },
-  body: { fontSize: 13, color: C.textMid, lineHeight: 20 },
-  thumb: { width: 76, height: 76, borderRadius: 12, backgroundColor: C.border },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border },
-  footerTxt: { fontSize: 12, color: C.textSub, fontWeight: '600' },
+  avatar: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center', backgroundColor: C.primaryTint },
+  initial: { fontSize: 16, fontWeight: '700', color: C.primaryDark },
+  author: { fontSize: 15, fontWeight: '700', color: C.text },
+  time: { fontSize: 13, color: C.textSub, marginTop: 1 },
+  cat: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: C.bg },
+  catTxt: { fontSize: 13, fontWeight: '700' },
+  cropTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  cropTxt: { fontSize: 13, color: C.textMid, fontWeight: '700' },
+  postTitle: { fontSize: 17, fontWeight: '700', color: C.text, marginBottom: 6, lineHeight: 23 },
+  body: { fontSize: 15, color: C.textMid, lineHeight: 21 },
+  thumb: { width: 76, height: 76, borderRadius: 12, backgroundColor: C.sunken },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 14, paddingTop: 12 },
+  footerTxt: { fontSize: 13, color: C.textSub },
   scanTag: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
-  scanTxt: { fontSize: 11, color: C.primary, fontWeight: '700', flexShrink: 1 },
+  scanTxt: { fontSize: 13, color: C.primary, fontWeight: '700', flexShrink: 1 },
 });

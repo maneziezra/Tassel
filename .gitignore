@@ -46,3 +46,5 @@ scripts/*.log
 android/app/.cxx/
 *.keystore
 
+scripts/shots/
+scripts/refs/

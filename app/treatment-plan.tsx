@@ -98,21 +98,21 @@ export default function TreatmentPlanScreen() {
           const stepDone = step.tasks.every((x) => done.includes(x.id));
           return (
             <View key={step.id} style={st.step}>
-              <TouchableOpacity style={[st.stepHead, isOpen && { backgroundColor: C.primary }]} onPress={() => setOpen(isOpen ? null : step.id)} activeOpacity={0.85}>
-                <View style={[st.stepNum, { backgroundColor: isOpen ? 'rgba(255,255,255,0.2)' : meta.tint }]}>
+              <TouchableOpacity style={st.stepHead} onPress={() => setOpen(isOpen ? null : step.id)} activeOpacity={0.85}>
+                <View style={[st.stepNum, { backgroundColor: isOpen ? C.primary : C.bg }]}>
                   {stepDone ? (
                     <Icon name="check" size={16} color={isOpen ? '#fff' : C.primary} />
                   ) : (
-                    <Text raw style={[st.stepNumTxt, { color: isOpen ? '#fff' : meta.color }]}>
+                    <Text raw style={[st.stepNumTxt, { color: isOpen ? '#fff' : C.textMid }]}>
                       {idx + 1}
                     </Text>
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text raw style={[st.stepWhen, isOpen && { color: 'rgba(255,255,255,0.8)' }]}>
+                  <Text raw style={st.stepWhen}>
                     {step.when}
                   </Text>
-                  <Text raw style={[st.stepTitle, isOpen && { color: '#fff' }]}>
+                  <Text raw style={st.stepTitle}>
                     {step.title}
                   </Text>
                 </View>
@@ -138,7 +138,7 @@ export default function TreatmentPlanScreen() {
           );
         })}
 
-        <Card style={{ backgroundColor: C.accentTint }}>
+        <Card>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Icon name="shield-alert-outline" size={18} color={C.warn} />
             <Text raw style={{ flex: 1, color: C.textMid, fontSize: 13, lineHeight: 19 }}>
@@ -157,20 +157,20 @@ export default function TreatmentPlanScreen() {
 }
 
 const st = StyleSheet.create({
-  iconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.primaryTint, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 20, fontWeight: '900', color: C.text, flex: 1, marginRight: 8 },
-  summary: { fontSize: 14, color: C.textMid, lineHeight: 20, marginTop: 8 },
+  iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.surface, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: '700', color: C.text, flex: 1, marginRight: 8 },
+  summary: { fontSize: 16, color: C.textMid, lineHeight: 23, marginTop: 8 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
-  barBg: { flex: 1, height: 10, borderRadius: 5, backgroundColor: C.bg, overflow: 'hidden' },
+  barBg: { flex: 1, height: 8, borderRadius: 4, backgroundColor: C.sunken, overflow: 'hidden' },
   barFill: { height: '100%', backgroundColor: C.primary, borderRadius: 5 },
-  progressTxt: { fontSize: 12, fontWeight: '800', color: C.textSub },
-  step: { marginHorizontal: 16, marginTop: 10, borderRadius: 16, overflow: 'hidden', backgroundColor: C.surface, elevation: 2 },
+  progressTxt: { fontSize: 14, fontWeight: '700', color: C.textSub },
+  step: { marginHorizontal: 16, marginTop: 10, borderRadius: 16, overflow: 'hidden', backgroundColor: C.surface },
   stepHead: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   stepNum: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   stepNumTxt: { fontSize: 14, fontWeight: '900' },
-  stepWhen: { fontSize: 12, fontWeight: '700', color: C.textSub },
-  stepTitle: { fontSize: 16, fontWeight: '800', color: C.text },
+  stepWhen: { fontSize: 14, color: C.textSub },
+  stepTitle: { fontSize: 17, fontWeight: '700', color: C.text },
   task: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 8 },
   box: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: C.border, justifyContent: 'center', alignItems: 'center', marginTop: 1 },
-  taskTxt: { flex: 1, fontSize: 14, color: C.text, lineHeight: 20 },
+  taskTxt: { flex: 1, fontSize: 16, color: C.text, lineHeight: 22 },
 });

@@ -7,6 +7,7 @@ import { ArchivoNarrow_600SemiBold, ArchivoNarrow_700Bold } from '@expo-google-f
 import { AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold } from '@expo-google-fonts/atkinson-hyperlegible';
 import { ensureSession } from '../lib/session';
 import { loadLang } from '../lib/i18n';
+import { loadPrefs } from '../lib/prefs';
 import { onNotificationTap } from '../lib/notify';
 import { C } from '../lib/theme';
 
@@ -17,7 +18,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     // Language first (it decides every label), then the session in the background.
-    loadLang().finally(() => setReady(true));
+    Promise.all([loadLang(), loadPrefs()]).finally(() => setReady(true));
     // Start (or restore) this phone's session. Scanning works offline regardless.
     ensureSession().catch(() => {});
     // Tapping a reminder or outbreak alert opens the right screen.
@@ -29,7 +30,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: 'slide_from_right' }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: 'ios_from_right' }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="result" />
         <Stack.Screen name="chat" />
@@ -44,6 +45,7 @@ export default function RootLayout() {
         <Stack.Screen name="report-price" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="outbreaks" />
         <Stack.Screen name="calendar" />
+        <Stack.Screen name="fertiliser" />
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
         <Stack.Screen name="methodology" />

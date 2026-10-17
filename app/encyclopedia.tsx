@@ -5,13 +5,13 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
-import { Badge, Chip, Header, Icon, ListenButton, Text, type IconName } from '../components/ui';
+import { Btn, Chip, CropIcon, Dot, Header, Icon, ListenButton, Text } from '../components/ui';
 import { getLibrary, LIBRARY_FILTERS } from '../lib/encyclopedia';
 import { cropName } from '../lib/diseases';
 import { useLang } from '../lib/i18n';
-import { C, KIND_META, SHADOW } from '../lib/theme';
+import { C, FONT } from '../lib/theme';
 
-const SEV_COLOR: Record<string, string> = { Critical: C.error, High: C.warn, Medium: C.accent, Low: C.textSub };
+const SEV_COLOR: Record<string, string> = { Critical: C.error, High: C.error, Medium: C.accentDark, Low: C.textSub };
 
 export default function EncyclopediaScreen() {
   const { t, lang } = useLang();
@@ -35,7 +35,7 @@ export default function EncyclopediaScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Header title="Disease & pest library" subtitle={t('{n} entries, scanner detects {s} diseases', { n: library.length, s: scannable })} dark />
+      <Header title="Disease & pest library" subtitle={t('{n} entries, scanner detects {s} diseases', { n: library.length, s: scannable })} />
       <View style={st.searchWrap}>
         <View style={st.search}>
           <Icon name="magnify" size={20} color={C.textSub} />
@@ -47,8 +47,8 @@ export default function EncyclopediaScreen() {
           ) : null}
         </View>
       </View>
-      <View style={{ backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 8 }}>
           {LIBRARY_FILTERS.map((f) => (
             <Chip key={f} label={f} active={filter === f} onPress={() => setFilter(f)} />
           ))}
@@ -58,59 +58,49 @@ export default function EncyclopediaScreen() {
         data={list}
         keyExtractor={(d) => d.id}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 60 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 10, paddingBottom: 60 }}
         ListHeaderComponent={<Text style={st.count}>{t('{n} results', { n: list.length })}</Text>}
         renderItem={({ item: d }) => {
-          const km = KIND_META[d.kind] ?? KIND_META.Disorder;
           const isOpen = open === d.id;
           const sev = SEV_COLOR[d.severity];
           return (
-            <TouchableOpacity style={[st.card, { borderLeftColor: km.color }]} onPress={() => setOpen(isOpen ? null : d.id)} activeOpacity={0.85}>
+            <TouchableOpacity style={st.card} onPress={() => setOpen(isOpen ? null : d.id)} activeOpacity={0.85} accessibilityRole="button" accessibilityState={{ expanded: isOpen }}>
               <View style={st.top}>
-                <View style={[st.kindIcon, { backgroundColor: km.tint }]}>
-                  <Icon name={km.icon as IconName} size={20} color={km.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={st.nameRow}>
-                    <Text raw style={st.name}>
-                      {d.name}
-                    </Text>
-                    <Badge label={d.severity} color={sev} tint={sev + '1A'} />
-                  </View>
+                <CropIcon crop={d.crops[0]} size={44} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text raw style={st.name}>
+                    {d.name}
+                  </Text>
                   <Text raw style={st.sci} numberOfLines={1}>
-                    {d.sci ? `${d.sci}, ${t(d.kind)}` : t(d.kind)}
+                    {[d.crops.map(crop).join(', '), t(d.kind)].join(' · ')}
                   </Text>
                   <View style={st.tags}>
-                    <View style={st.tag}>
-                      <Icon name="leaf" size={11} color={C.primary} />
-                      <Text raw style={st.tagTxt}>
-                        {d.crops.map(crop).join(', ')}
-                      </Text>
-                    </View>
+                    <Dot color={sev} size={7} />
+                    <Text style={[st.tagTxt, { color: sev }]}>{d.severity}</Text>
                     {d.scanLabel ? (
-                      <View style={[st.tag, { backgroundColor: C.primary }]}>
-                        <Icon name="line-scan" size={11} color="#fff" />
-                        <Text style={[st.tagTxt, { color: '#fff' }]}>Scanner can detect</Text>
-                      </View>
-                    ) : (
-                      <View style={[st.tag, { backgroundColor: C.bg }]}>
-                        <Text style={[st.tagTxt, { color: C.textSub }]}>Reference only</Text>
-                      </View>
-                    )}
+                      <>
+                        <Text raw style={st.tagTxt}>·</Text>
+                        <Icon name="line-scan" size={14} color={C.primary} />
+                        <Text style={[st.tagTxt, { color: C.primary }]}>Scanner can detect</Text>
+                      </>
+                    ) : null}
                     {d.notifiable ? (
-                      <View style={[st.tag, { backgroundColor: C.errorTint }]}>
+                      <>
+                        <Text raw style={st.tagTxt}>·</Text>
                         <Text style={[st.tagTxt, { color: C.error }]}>Report it</Text>
-                      </View>
+                      </>
                     ) : null}
                   </View>
                 </View>
-                <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={C.textSub} />
+                <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={22} color={C.textLight} />
               </View>
               {isOpen ? (
                 <View style={st.body}>
-                  <View style={{ marginBottom: 10 }}>
-                    <ListenButton text={() => [d.name, d.desc, d.symptoms.join('. '), d.management].filter(Boolean).join('. ')} />
-                  </View>
+                  {d.sci ? (
+                    <Text raw style={[st.sci, { fontStyle: 'italic', marginBottom: 10 }]}>
+                      {d.sci}
+                    </Text>
+                  ) : null}
                   {d.desc ? (
                     <Text raw style={st.desc}>
                       {d.desc}
@@ -119,27 +109,24 @@ export default function EncyclopediaScreen() {
                   <Text style={st.label}>Symptoms</Text>
                   {d.symptoms.map((s) => (
                     <View key={s} style={st.symRow}>
-                      <View style={st.dot} />
+                      <View style={{ paddingTop: 8 }}>
+                        <Dot color={C.textLight} size={5} />
+                      </View>
                       <Text raw style={st.symTxt}>
                         {s}
                       </Text>
                     </View>
                   ))}
-                  <View style={st.manage}>
-                    <Text style={[st.label, { color: C.primary }]}>Management</Text>
-                    <Text raw style={st.manageTxt}>
-                      {d.management}
-                    </Text>
+                  <Text style={[st.label, { marginTop: 14 }]}>Management</Text>
+                  <Text raw style={st.desc}>
+                    {d.management}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 4 }}>
+                    <ListenButton text={() => [d.name, d.desc, d.symptoms.join('. '), d.management].filter(Boolean).join('. ')} />
                     {d.scanLabel ? (
-                      <TouchableOpacity style={st.planBtn} onPress={() => router.push({ pathname: '/treatment-plan', params: { label: d.scanLabel! } })}>
-                        <Icon name="clipboard-list-outline" size={16} color="#fff" />
-                        <Text style={st.planTxt}>View full treatment plan</Text>
-                      </TouchableOpacity>
+                      <Btn label="Treatment plan" icon="clipboard-list-outline" kind="secondary" style={{ flex: 1, minHeight: 44 }} onPress={() => router.push({ pathname: '/treatment-plan', params: { label: d.scanLabel! } })} />
                     ) : (
-                      <TouchableOpacity style={st.planBtn} onPress={() => router.push({ pathname: '/chat' })}>
-                        <Icon name="robot-outline" size={16} color="#fff" />
-                        <Text style={st.planTxt}>Ask the AI advisor about it</Text>
-                      </TouchableOpacity>
+                      <Btn label="Ask the AI advisor" icon="chat-processing-outline" kind="secondary" style={{ flex: 1, minHeight: 44 }} onPress={() => router.push({ pathname: '/chat' })} />
                     )}
                   </View>
                 </View>
@@ -153,27 +140,19 @@ export default function EncyclopediaScreen() {
 }
 
 const st = StyleSheet.create({
-  searchWrap: { backgroundColor: C.primary, paddingHorizontal: 16, paddingBottom: 14 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
-  searchInput: { flex: 1, fontSize: 15, color: C.text, padding: 0 },
-  count: { fontSize: 12, color: C.textSub, fontWeight: '600', marginBottom: 4 },
-  card: { backgroundColor: C.surface, borderRadius: 14, padding: 14, borderLeftWidth: 4, ...SHADOW },
+  searchWrap: { paddingHorizontal: 16, paddingBottom: 4 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderRadius: 14, paddingHorizontal: 14, minHeight: 48 },
+  searchInput: { flex: 1, fontSize: 16, color: C.text, padding: 0, fontFamily: FONT.body },
+  count: { fontSize: 14, color: C.textSub, marginBottom: 4 },
+  card: { backgroundColor: C.surface, borderRadius: 16, padding: 14 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  kindIcon: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 },
-  name: { fontSize: 15, fontWeight: '800', color: C.text },
-  sci: { fontSize: 12, color: C.textSub, fontStyle: 'italic', marginBottom: 6 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primaryTint, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  tagTxt: { fontSize: 11, color: C.primary, fontWeight: '700' },
-  body: { marginTop: 12, borderTopWidth: 1, borderTopColor: C.border, paddingTop: 12 },
-  desc: { fontSize: 13, color: C.textMid, lineHeight: 20, marginBottom: 12 },
-  label: { fontSize: 10, fontWeight: '800', color: C.textSub, letterSpacing: 0.8, marginBottom: 8 },
-  symRow: { flexDirection: 'row', gap: 8, marginBottom: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.primary, marginTop: 7 },
-  symTxt: { flex: 1, fontSize: 13, color: C.text, lineHeight: 20 },
-  manage: { backgroundColor: C.primaryTint, borderRadius: 10, padding: 12, marginTop: 10 },
-  manageTxt: { fontSize: 13, color: C.primaryDark, lineHeight: 20, marginBottom: 12 },
-  planBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11 },
-  planTxt: { fontSize: 13, fontWeight: '800', color: '#fff' },
+  name: { fontSize: 17, fontFamily: FONT.bodyBold, color: C.text },
+  sci: { fontSize: 14, color: C.textSub },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
+  tagTxt: { fontSize: 14, color: C.textSub, fontFamily: FONT.bodyBold },
+  body: { marginTop: 14 },
+  desc: { fontSize: 15, color: C.textMid, lineHeight: 22, marginBottom: 6 },
+  label: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, marginBottom: 6 },
+  symRow: { flexDirection: 'row', gap: 10, marginBottom: 6 },
+  symTxt: { flex: 1, fontSize: 15, color: C.textMid, lineHeight: 22 },
 });

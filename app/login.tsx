@@ -8,7 +8,7 @@ import { Btn, Header, Icon, Text } from '../components/ui';
 import { tr as t } from '../lib/i18n';
 import { AuthField } from '../components/AuthField';
 import { sendPasswordReset, signIn } from '../lib/session';
-import { C, SHADOW } from '../lib/theme';
+import { C } from '../lib/theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -80,10 +80,10 @@ export default function LoginScreen() {
 
 const st = StyleSheet.create({
   logoBlock: { alignItems: 'center', paddingTop: 28, paddingBottom: 24 },
-  logo: { width: 80, height: 80, borderRadius: 40, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 14, ...SHADOW },
+  logo: { width: 80, height: 80, borderRadius: 40, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 14 },
   app: { fontSize: 30, fontWeight: '900', color: C.text, letterSpacing: -1 },
   tag: { fontSize: 15, color: C.textSub, fontWeight: '500', marginTop: 4 },
-  card: { backgroundColor: C.surface, marginHorizontal: 16, borderRadius: 20, padding: 20, ...SHADOW },
+  card: { backgroundColor: C.surface, marginHorizontal: 16, borderRadius: 20, padding: 20 },
   cardTitle: { fontSize: 24, fontWeight: '900', color: C.text },
   cardSub: { fontSize: 14, color: C.textSub, marginTop: 4, marginBottom: 20 },
   link: { fontSize: 13, color: C.primary, fontWeight: '800' },

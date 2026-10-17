@@ -164,7 +164,7 @@ export default function AddFarmScreen() {
 }
 
 const st = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, backgroundColor: C.surface },
   title: { fontSize: 18, fontWeight: '800', color: C.text },
   label: { fontSize: 13, fontWeight: '800', color: C.textMid, marginTop: 12 },
   hint: { fontSize: 12, color: C.textSub, marginTop: 6 },

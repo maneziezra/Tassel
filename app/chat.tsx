@@ -11,7 +11,7 @@ import { Header, Icon, ListenButton, Text } from '../components/ui';
 import { askAdvisor, detectionPrompt, type ChatTurn, type ScanContext } from '../lib/advisor';
 import { ALL_DISEASES, cropName, localizeDisease } from '../lib/diseases';
 import { useLang } from '../lib/i18n';
-import { C, SHADOW } from '../lib/theme';
+import { C } from '../lib/theme';
 
 type Msg = { id: string; role: 'user' | 'assistant'; content: string; display?: string; error?: boolean; local?: boolean };
 
@@ -202,13 +202,13 @@ const st = StyleSheet.create({
   avatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center' },
   bubble: { maxWidth: '82%', borderRadius: 16, padding: 12 },
   mine: { backgroundColor: C.primary, borderBottomRightRadius: 4 },
-  theirs: { backgroundColor: C.surface, borderBottomLeftRadius: 4, ...SHADOW },
+  theirs: { backgroundColor: C.surface, borderBottomLeftRadius: 4 },
   errBubble: { backgroundColor: C.errorTint },
   text: { fontSize: 15, lineHeight: 22, color: C.text },
-  quickLabel: { fontSize: 11, color: C.textSub, paddingHorizontal: 16, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '700' },
+  quickLabel: { fontSize: 15, color: C.textSub, paddingHorizontal: 16, marginBottom: 8, fontWeight: '700' },
   quick: { backgroundColor: C.surface, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: C.primaryTint },
   quickTxt: { fontSize: 13, color: C.primary, fontWeight: '700' },
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingTop: 10, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border },
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingTop: 10, backgroundColor: C.surface },
   input: { flex: 1, minHeight: 44, maxHeight: 120, backgroundColor: C.bg, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: C.text, borderWidth: 1, borderColor: C.border },
   send: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center' },
 });
