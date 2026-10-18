@@ -10,6 +10,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Btn, CropIcon, Dot, Icon, Press, ProgressBar, SectionLabel, Sheet, StatusShade, Text, tick, timeAgo, type IconName } from '../../components/ui';
 import { getProfile, listFarms, listIncidents, listOutbreaks, type Farm, type Incident, type Outbreak, type Profile } from '../../lib/data';
+import { STRESS, classMeta, latestByFarm as latestSatellite } from '../../lib/satellite';
 import { DETECTABLE_CROPS, cropName, getDiseaseL } from '../../lib/diseases';
 import { getPosition } from '../../lib/geo';
 import { describeCode, getWeather, type Weather } from '../../lib/weather';
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [sat, setSat] = useState<Awaited<ReturnType<typeof latestSatellite>>>({});
   const [outbreaks, setOutbreaks] = useState<Outbreak[]>([]);
   const [ticks, setTicks] = useState<Record<string, string[]>>({});
   const [weather, setWeather] = useState<(Weather & { place: string }) | null>(null);
@@ -114,6 +116,7 @@ export default function HomeScreen() {
       setTicks(tk);
       loadWeather(f);
       loadOutbreaks(p.county);
+      latestSatellite().then(setSat).catch(() => {});
     } catch {
       setOffline(true);
       loadWeather([]);
@@ -377,6 +380,14 @@ export default function HomeScreen() {
                       <Dot color={status.c} size={7} />
                       <Text raw style={st.small} numberOfLines={1}>
                         {status.txt}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {sat[f.id] && sat[f.id].baseline_n >= 3 ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Icon name="satellite-variant" size={13} color={STRESS.has(sat[f.id].dominant_class) && sat[f.id].quality !== 'limited' ? C.error : C.textSub} />
+                      <Text raw style={st.small} numberOfLines={1}>
+                        {t(classMeta(sat[f.id].dominant_class).short)}, {timeAgo(sat[f.id].observed_at)}
                       </Text>
                     </View>
                   ) : null}

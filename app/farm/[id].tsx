@@ -12,7 +12,7 @@ import { calendarFor, currentStage, fieldTasks, loadTicks, saveTicks, type Field
 import { cancelFieldReminders, countFieldReminders, ensurePermission, scheduleFieldReminders } from '../../lib/notify';
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { locale, useLang } from '../../lib/i18n';
-import { C, confidenceBand } from '../../lib/theme';
+import { C, FONT, confidenceBand } from '../../lib/theme';
 
 export default function FarmScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -139,7 +139,12 @@ export default function FarmScreen() {
               <Fact label={t('Size')} value={farm.size_acres ? `${Number(farm.size_acres).toFixed(2)} ac` : '—'} />
               <Fact label={t('Planted')} value={farm.planting_date ? formatDate(farm.planting_date, lang) : '—'} />
             </View>
-            {farm.location ? <Text raw style={st.meta}>📍 {farm.location}</Text> : null}
+            {farm.location ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                <Icon name="map-marker-outline" size={16} color={C.textSub} />
+                <Text raw style={[st.meta, { marginTop: 0 }]}>{farm.location}</Text>
+              </View>
+            ) : null}
             {farm.notes ? <Text raw style={st.meta}>{farm.notes}</Text> : null}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
               <Btn
@@ -152,6 +157,18 @@ export default function FarmScreen() {
               <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={() => router.navigate('/scan')} />
             </View>
           </Card>
+
+          {/* Crop health from space */}
+          <TouchableOpacity style={st.sat} onPress={() => router.push({ pathname: '/satellite/[id]', params: { id: farm.id } })} accessibilityRole="button">
+            <View style={st.satIcon}>
+              <Icon name="satellite-variant" size={24} color={C.secondary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={st.satTitle}>Crop health from space</Text>
+              <Text style={st.satSub}>{farm.polygon ? 'Green cover and leaf water from Sentinel-2, every few days' : 'Map the field to switch this on'}</Text>
+            </View>
+            <Icon name="chevron-right" size={22} color={C.textLight} />
+          </TouchableOpacity>
 
           {/* Crop calendar */}
           <Card>
@@ -244,5 +261,9 @@ const st = StyleSheet.create({
   section: { fontSize: 20, fontWeight: '700', color: C.text, marginHorizontal: 20, marginTop: 20, marginBottom: 4 },
   item: { backgroundColor: C.surface, borderRadius: 14, padding: 16, marginHorizontal: 16, marginTop: 10 },
   conf: { fontSize: 12, fontWeight: '800' },
+  sat: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 12 },
+  satIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.primaryDark, alignItems: 'center', justifyContent: 'center' },
+  satTitle: { fontSize: 18, fontFamily: FONT.display, color: C.text },
+  satSub: { fontSize: 14, color: C.textSub, marginTop: 2 },
   disease: { fontSize: 16, fontWeight: '800', color: C.text, marginTop: 8 },
 });

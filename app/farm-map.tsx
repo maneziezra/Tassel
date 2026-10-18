@@ -14,6 +14,7 @@ import { tr, useLang } from '../lib/i18n';
 import { listFarms, updateFarm, type Farm, type LatLng } from '../lib/data';
 import { centroid, getPosition, polygonAcres } from '../lib/geo';
 import { C, SHADOW } from '../lib/theme';
+import { CLASSES, getGrid } from '../lib/satellite';
 
 const HTML = `<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -21,7 +22,8 @@ const HTML = `<!DOCTYPE html><html><head>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>html,body,#map{height:100%;margin:0;background:#F4F2EC}
 .lbl{background:rgba(31,77,57,.92);color:#fff;border:0;border-radius:8px;font:700 12px sans-serif;padding:2px 6px;box-shadow:none}
-.lbl:before{display:none}</style></head><body><div id="map"></div><script>
+.lbl:before{display:none}
+.px{image-rendering:pixelated;image-rendering:crisp-edges}</style></head><body><div id="map"></div><script>
 var send=function(o){window.ReactNativeWebView.postMessage(JSON.stringify(o))};
 var map=L.map('map',{zoomControl:false,attributionControl:true,maxZoom:21,bounceAtZoomLimits:false,zoomSnap:0.5}).setView([-0.6,37.0],7);
 var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:18,attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
@@ -34,10 +36,10 @@ function redraw(){drawLayer.clearLayers();
  send({type:'points',points:pts});}
 map.on('click',function(e){if(mode!=='draw')return;pts.push([e.latlng.lat,e.latlng.lng]);redraw();});
 window.cg={
- setFarms:function(list,fit){farmsLayer.clearLayers();var b=[];
+ setFarms:function(list,fit,outline){farmsLayer.clearLayers();var b=[];
   list.forEach(function(f){
-   if(f.polygon&&f.polygon.length>2){var pg=L.polygon(f.polygon,{color:f.color,weight:3,fillOpacity:.3}).addTo(farmsLayer);
-    pg.bindTooltip(f.label,{permanent:true,direction:'center',className:'lbl'});pg.on('click',function(){send({type:'farm',id:f.id})});b=b.concat(f.polygon);}
+   if(f.polygon&&f.polygon.length>2){var pg=L.polygon(f.polygon,{color:outline?'#fff':f.color,weight:outline?2:3,dashArray:outline?'5,4':null,fillOpacity:outline?0:.3}).addTo(farmsLayer);
+    if(!outline)pg.bindTooltip(f.label,{permanent:true,direction:'center',className:'lbl'});pg.on('click',function(){send({type:'farm',id:f.id})});b=b.concat(f.polygon);}
    else if(f.center){var m=L.circleMarker(f.center,{radius:9,color:'#fff',weight:2,fillColor:f.color,fillOpacity:1}).addTo(farmsLayer);
     m.bindTooltip(f.label,{direction:'top',className:'lbl'});m.on('click',function(){send({type:'farm',id:f.id})});b.push(f.center);}
   });
@@ -47,7 +49,11 @@ window.cg={
  clear:function(){pts=[];redraw();},
  base:function(b){if(b==='sat'){map.removeLayer(street);sat.addTo(map);}else{map.removeLayer(sat);street.addTo(map);}},
  locate:function(lat,lng){if(me)map.removeLayer(me);me=L.circleMarker([lat,lng],{radius:8,color:'#fff',weight:3,fillColor:'#24609B',fillOpacity:1}).addTo(map);map.setView([lat,lng],17);},
- focus:function(poly){if(poly&&poly.length)map.fitBounds(poly,{padding:[40,40],maxZoom:19});}
+ focus:function(poly){if(poly&&poly.length)map.fitBounds(poly,{padding:[40,40],maxZoom:19});},
+ overlay:function(g,colors,op){if(window._ov)map.removeLayer(window._ov);var c=document.createElement('canvas');c.width=g.w;c.height=g.h;var x=c.getContext('2d');
+  for(var r=0;r<g.h;r++)for(var k=0;k<g.w;k++){var v=g.cls[r*g.w+k];if(v===255)continue;x.globalAlpha=v===0?0.35:1;x.fillStyle=colors[v];x.fillRect(k,r,1,1);}
+  window._ov=L.imageOverlay(c.toDataURL(),g.bounds,{opacity:op,className:'px',interactive:false}).addTo(map);var fit=function(){map.invalidateSize();map.fitBounds(g.bounds,{padding:[40,40],maxZoom:20});};fit();setTimeout(fit,400);setTimeout(fit,1200);},
+ opacity:function(o){if(window._ov)window._ov.setOpacity(o);}
 };
 send({type:'ready'});
 </script></body></html>`;
@@ -62,7 +68,9 @@ const esc = (t: string) => t.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '
 export default function FarmMapScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useLang();
-  const { farmId } = useLocalSearchParams<{ farmId?: string }>();
+  const { farmId, sat, focus } = useLocalSearchParams<{ farmId?: string; sat?: string; focus?: string }>();
+  const [satOpacity, setSatOpacity] = useState(0.8);
+  const [satDate, setSatDate] = useState<string | null>(null);
   const web = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -83,9 +91,9 @@ export default function FarmMapScreen() {
         polygon: f.polygon,
         center: f.center_lat != null && f.center_lng != null ? [f.center_lat, f.center_lng] : null,
       }));
-      js(`window.cg.setFarms(${JSON.stringify(data)}, ${fit})`);
+      js(`window.cg.setFarms(${JSON.stringify(data)}, ${fit && !sat}, ${sat ? 'true' : 'false'})`);
     },
-    []
+    [sat]
   );
 
   const load = useCallback(async () => {
@@ -107,7 +115,16 @@ export default function FarmMapScreen() {
         setReady(true);
         pushFarms(farms, true);
         if (drawing) js(`window.cg.setMode('draw')`);
-        if (!farms.some((f) => f.polygon || f.center_lat != null)) locate(true);
+        if (sat) {
+          getGrid(Number(sat)).then((g) => {
+            if (!g) return;
+            js(`window.cg.overlay(${JSON.stringify({ w: g.w, h: g.h, cls: g.cls, bounds: g.bounds })}, ${JSON.stringify(CLASSES.map((c) => c.color))}, ${satOpacity})`);
+            setSatDate('ok');
+          });
+        } else if (focus) {
+          const f = farms.find((x) => x.id === focus);
+          if (f?.polygon) js(`window.cg.focus(${JSON.stringify(f.polygon)})`);
+        } else if (!farms.some((f) => f.polygon || f.center_lat != null)) locate(true);
       } else if (msg.type === 'points') {
         setPoints(msg.points);
       } else if (msg.type === 'farm') {
@@ -189,7 +206,26 @@ export default function FarmMapScreen() {
           </TouchableOpacity>
         </View>
 
-        {drawing ? (
+        {sat ? (
+          <View style={[st.satBar, { paddingBottom: insets.bottom + 12 }]}>
+            <Text style={st.drawInfo}>{satDate ? 'Satellite health layer: each square is 10 × 10 m' : 'Loading the satellite layer…'}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+              {CLASSES.filter((c) => c.code !== 0).map((c) => (
+                <View key={c.code} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c.color }} />
+                  <Text style={st.fieldSub}>{c.short}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+              {[0, 0.5, 0.8, 1].map((o) => (
+                <TouchableOpacity key={o} onPress={() => { setSatOpacity(o); js(`window.cg.opacity(${o})`); }} style={[st.opBtn, satOpacity === o && { backgroundColor: C.primaryDark }]}>
+                  <Text raw style={[st.drawBtnTxt, { color: satOpacity === o ? '#fff' : C.textMid }]}>{o === 0 ? t('Off') : `${Math.round(o * 100)}%`}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ) : drawing ? (
           <View style={[st.drawBar, { paddingBottom: insets.bottom + 12 }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text raw style={st.drawInfo}>{points.length === 1 ? t('1 point') : t('{n} points', { n: points.length })}</Text>
@@ -252,4 +288,6 @@ const st = StyleSheet.create({
   fieldName: { fontSize: 14, fontWeight: '800', color: C.text },
   fieldSub: { fontSize: 12, color: C.textSub },
   hint: { fontSize: 11, color: C.textLight, textAlign: 'center', marginTop: 8 },
+  satBar: { backgroundColor: C.surface, padding: 16, borderTopLeftRadius: 20, borderTopRightRadius: 20, ...SHADOW, elevation: 10 },
+  opBtn: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 10, backgroundColor: C.sunken },
 });

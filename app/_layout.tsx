@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="farm-map" />
         <Stack.Screen name="add-farm" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="farm/[id]" />
+        <Stack.Screen name="satellite/[id]" />
         <Stack.Screen name="post/[id]" />
         <Stack.Screen name="new-post" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="report-price" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
