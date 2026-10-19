@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Btn, CropIcon, Dot, Icon, Press, ProgressBar, SectionLabel, Sheet, StatusShade, Text, tick, timeAgo, type IconName } from '../../components/ui';
 import { getProfile, listFarms, listIncidents, listOutbreaks, type Farm, type Incident, type Outbreak, type Profile } from '../../lib/data';
 import { STRESS, classMeta, latestByFarm as latestSatellite } from '../../lib/satellite';
-import { DETECTABLE_CROPS, cropName, getDiseaseL } from '../../lib/diseases';
+import { DETECTABLE_CROPS, SCANNABLE_DISEASES, cropName, getDiseaseL } from '../../lib/diseases';
 import { getPosition } from '../../lib/geo';
 import { describeCode, getWeather, type Weather } from '../../lib/weather';
 import { loadCached, saveCached } from '../../lib/store';
@@ -325,7 +325,7 @@ export default function HomeScreen() {
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={st.scanTitle}>Scan a leaf</Text>
             <Text raw style={st.scanSub}>
-              {[t('38 diseases'), t('{n} crops', { n: DETECTABLE_CROPS.length }), t('works offline')].join(' · ')}
+              {[t('{n} diseases', { n: SCANNABLE_DISEASES }), t('{n} crops', { n: DETECTABLE_CROPS.length }), t('works offline')].join(' · ')}
             </Text>
           </View>
           <View style={st.scanIcon}>

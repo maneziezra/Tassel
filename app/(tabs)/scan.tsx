@@ -10,7 +10,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTensorflowModel } from 'react-native-fast-tflite';
 import { classifyPhoto, type ScanStep } from '../../lib/classifier';
-import { DETECTABLE_CROPS } from '../../lib/diseases';
+import { DETECTABLE_CROPS, SCANNABLE_DISEASES } from '../../lib/diseases';
 import { Icon, Text } from '../../components/ui';
 import { useLang } from '../../lib/i18n';
 import { C } from '../../lib/theme';
@@ -153,7 +153,7 @@ export default function ScanScreen() {
     tflite.state === 'error'
       ? t('The disease model failed to load')
       : modelReady
-      ? t('38 leaf conditions, {n} crops, works offline', { n: DETECTABLE_CROPS.length })
+      ? t('{d} diseases, {n} crops, works offline', { d: SCANNABLE_DISEASES, n: DETECTABLE_CROPS.length })
       : t('Loading disease model…');
 
   let viewport: React.ReactNode;

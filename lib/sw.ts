@@ -726,7 +726,7 @@ export const SW: Record<string, string> = {
   'upload the photo': 'kupakia picha',
 
   // ── Added with the scan / sign-in / farm-map pass ──────────────────────
-  '38 leaf conditions, {n} crops, works offline': 'Hali 38 za majani, mazao {n}, inafanya kazi bila mtandao',
+  '{d} diseases, {n} crops, works offline': 'Magonjwa {d}, mazao {n}, inafanya kazi bila mtandao',
   'We sent a link to {email}. Open it to finish backing up. You can keep using the app meanwhile.':
     'Tumetuma kiungo kwa {email}. Kifungue kumaliza kuhifadhi nakala. Unaweza kuendelea kutumia programu wakati huo.',
   'Welcome, {name}! Your fields and scans are now backed up.': 'Karibu, {name}! Mashamba na skani zako sasa zimehifadhiwa nakala.',
@@ -755,7 +755,7 @@ export const SW: Record<string, string> = {
   "Wind {n} km/h": "Upepo km {n}/saa",
   "None": "Hakuna",
   "{disease} on {crop} near you · {n} farmers": "{disease} kwenye {crop} karibu nawe · wakulima {n}",
-  "38 diseases": "magonjwa 38",
+  "{n} diseases": "magonjwa {n}",
   "works offline": "hufanya kazi bila mtandao",
   "Unclear scan, {when}": "Skani haiko wazi, {when}",
   "Healthy, {when}": "Ni nzima, {when}",

@@ -537,6 +537,9 @@ const LIST: DiseaseInfo[] = [
 export const DISEASES: Record<string, DiseaseInfo> = Object.fromEntries(LIST.map((d) => [d.label, d]));
 export const ALL_DISEASES = LIST;
 export const DETECTABLE_CROPS = Array.from(new Set(LIST.map((d) => d.crop)));
+// Diseases/pests the on-device scanner can name. The model has 38 output
+// classes in total; the other 12 are "healthy" classes, not diseases.
+export const SCANNABLE_DISEASES = LIST.length;
 
 export function getDisease(label: string): DiseaseInfo | undefined {
   return DISEASES[label];

@@ -4,6 +4,7 @@
 {county} County
 {crop} field
 {crop}: {disease}?
+{d} diseases, {n} crops, works offline
 {disease} on {crop} near you · {n} farmers
 {disease} on {crop} reported by {n} farmers nearby. Check your crop and open the treatment guide.
 {done}/{total} done
@@ -16,6 +17,7 @@
 {n} d ago
 {n} dates
 {n} days ago
+{n} diseases
 {n} entries, scanner detects {s} diseases
 {n} fields
 {n} fields have no calendar yet — add the crop and planting date.
@@ -43,8 +45,6 @@
 14 days
 20 m cell
 30 days
-38 diseases
-38 leaf conditions, {n} crops, works offline
 A crop calendar is available for maize, beans, potato, tomato and wheat.
 A season guide for each crop
 About
@@ -271,6 +271,7 @@ Inspect {zone} when you next visit the field.
 Inspect {zone} within 24–48 hours: check soil moisture at root depth and look for wilting or rolled leaves.
 Its saved scans stay in your scan history.
 just now
+Kagua kwanza · Check first
 Keep your fields and scans if you change phone
 KES {v} per {unit} looks unusual. Please check the number and the unit.
 Kiswahili
@@ -482,7 +483,6 @@ Signed in
 Signing in switches this phone to that account. Anything saved as a guest on this phone stays in the guest account.
 Size
 Size (acres)
-Smart farming for Kenyan farmers
 Soil at root depth
 Something else
 Something went wrong.

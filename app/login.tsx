@@ -53,7 +53,7 @@ export default function LoginScreen() {
             <Icon name="sprout" size={40} color="#fff" />
           </View>
           <Text style={st.app}>Tassel</Text>
-          <Text style={st.tag}>Smart farming for Kenyan farmers</Text>
+          <Text raw style={st.tag}>Kagua kwanza · Check first</Text>
         </View>
         <View style={st.card}>
           <Text style={st.cardTitle}>Welcome back</Text>
