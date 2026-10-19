@@ -118,7 +118,9 @@ export default function FarmMapScreen() {
         if (sat) {
           getGrid(Number(sat)).then((g) => {
             if (!g) return;
-            js(`window.cg.overlay(${JSON.stringify({ w: g.w, h: g.h, cls: g.cls, bounds: g.bounds })}, ${JSON.stringify(CLASSES.map((c) => c.color))}, ${satOpacity})`);
+            // the joint stress mask is a 20 m product: drawn as its own 20 m cells
+            const m = g.grid20;
+            js(`window.cg.overlay(${JSON.stringify({ w: m.w, h: m.h, cls: m.cls, bounds: m.bounds })}, ${JSON.stringify(CLASSES.map((c) => c.color))}, ${satOpacity})`);
             setSatDate('ok');
           });
         } else if (focus) {
@@ -208,7 +210,7 @@ export default function FarmMapScreen() {
 
         {sat ? (
           <View style={[st.satBar, { paddingBottom: insets.bottom + 12 }]}>
-            <Text style={st.drawInfo}>{satDate ? 'Satellite health layer: each square is 10 × 10 m' : 'Loading the satellite layer…'}</Text>
+            <Text style={st.drawInfo}>{satDate ? 'Joint stress mask · 20 m effective resolution, drawn as 20 m squares' : 'Loading the satellite layer…'}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
               {CLASSES.filter((c) => c.code !== 0).map((c) => (
                 <View key={c.code} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>

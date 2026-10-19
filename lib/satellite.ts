@@ -1,70 +1,21 @@
 // CropGuard AI — crop health from space (Sentinel-2 NDVI + NDWI).
 //
 // The satellite-health Edge Function reads free ESA Sentinel-2 images of the
-// field (10 m pixels; the water reading uses the 20 m SWIR band), masks cloud,
+// field, masks cloud,
 // cloud shadow and haze, and compares each clear date with the field's own
 // recent normal. This file loads those results (owner-only tables) and turns
 // them into plain advice. The rule throughout: satellite readings show WHERE
 // to look. They never diagnose; the farmer confirms on the ground.
+// NDVI and open-water NDWI are 10 m products; crop-water NDWI, the joint stress
+// mask and every farm-level change below are 20 m products (see satelliteCore.ts).
 
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { ensureSession } from './session';
 import { tr } from './i18n';
 
-export type Quality = 'excellent' | 'good' | 'limited' | 'unusable';
-
-export type Observation = {
-  id: number;
-  farm_id: string;
-  scene_id: string;
-  observed_at: string;
-  scene_cloud_pct: number | null;
-  total_px: number;
-  valid_px: number;
-  haze_px: number;
-  valid_pct: number;
-  quality: Quality;
-  suspect: boolean;
-  ndvi_median: number | null;
-  ndvi_p10: number | null;
-  ndvi_p90: number | null;
-  ndwi_crop_median: number | null;
-  ndwi_crop_p10: number | null;
-  ndwi_crop_p90: number | null;
-  ndwi_water_median: number | null;
-  crop_fraction: number | null;
-  baseline_n: number;
-  ndvi_baseline: number | null;
-  ndwi_baseline: number | null;
-  ndvi_spread: number | null;
-  ndwi_spread: number | null;
-  ndvi_delta: number | null;
-  ndwi_delta: number | null;
-  ndvi_anomaly: number | null;
-  ndwi_anomaly: number | null;
-  rain_mm_21d: number | null;
-  et0_mm_21d: number | null;
-  rain_deficit: number | null;
-  water_stress_score: number | null;
-  dominant_class: number;
-  stressed_fraction: number | null;
-  class_fractions: number[];
-  method_version: string;
-};
-
-export type Grid = {
-  w: number;
-  h: number;
-  res: number;
-  epsg: number;
-  x0: number;
-  y0: number;
-  bounds: [[number, number], [number, number]];
-  cls: number[]; // 255 = outside the field
-  ndvi: (number | null)[]; // ×1000
-  ndwi: (number | null)[]; // ×1000
-};
+import { STRESS, type Observation, type Quality, type Grid } from './satelliteCore';
+export * from './satelliteCore';
 
 export type ZoneStat = {
   observation_id: number;
@@ -100,23 +51,6 @@ export type Validation = {
   created_at: string;
 };
 
-// ------------------------------------------------------------------ classes
-
-/** The joint crop-health and water-stress classes, with map colours in the Shamba palette. */
-export const CLASSES: { code: number; label: string; short: string; color: string }[] = [
-  { code: 0, label: 'No clear view (cloud or haze)', short: 'No data', color: '#B9BDB8' },
-  { code: 1, label: 'Bare soil or not crop', short: 'Bare', color: '#CDBB9A' },
-  { code: 2, label: 'Normal for this field', short: 'Normal', color: '#2E6A4F' },
-  { code: 3, label: 'Possible mild water stress', short: 'Mild water stress', color: '#D9A93A' },
-  { code: 4, label: 'Possible severe water stress', short: 'Water stress', color: '#A8472A' },
-  { code: 5, label: 'Strong decline, water normal: possible pest, disease or nutrient problem', short: 'Decline', color: '#3E4C6E' },
-  { code: 6, label: 'Some decline: possible pest, disease, nutrient or physical damage', short: 'Some decline', color: '#7D8DB3' },
-  { code: 7, label: 'Open water or flooding', short: 'Water', color: '#3D7EA6' },
-  { code: 8, label: 'Recovering', short: 'Recovering', color: '#8FC2A5' },
-];
-export const classMeta = (c: number) => CLASSES[c] ?? CLASSES[0];
-export const STRESS = new Set([3, 4, 5, 6]);
-
 export const ZONE_NAMES: Record<string, string> = {
   ALL: 'the whole field', N: 'the north end', S: 'the south end', E: 'the east side', W: 'the west side', C: 'the centre',
   NE: 'the north-east corner', NW: 'the north-west corner', SE: 'the south-east corner', SW: 'the south-west corner',
@@ -134,7 +68,7 @@ export const QUALITY_META: Record<Quality, { label: string; color: string; note:
 
 const OBS_COLS =
   'id, farm_id, scene_id, observed_at, scene_cloud_pct, total_px, valid_px, haze_px, valid_pct, quality, suspect, ' +
-  'ndvi_median, ndvi_p10, ndvi_p90, ndwi_crop_median, ndwi_crop_p10, ndwi_crop_p90, ndwi_water_median, crop_fraction, ' +
+  'total_px10, valid_px10, ndvi20_median, resolution, ndvi_median, ndvi_p10, ndvi_p90, ndwi_crop_median, ndwi_crop_p10, ndwi_crop_p90, ndwi_water_median, crop_fraction, ' +
   'baseline_n, ndvi_baseline, ndwi_baseline, ndvi_spread, ndwi_spread, ndvi_delta, ndwi_delta, ndvi_anomaly, ndwi_anomaly, ' +
   'rain_mm_21d, et0_mm_21d, rain_deficit, water_stress_score, dominant_class, stressed_fraction, class_fractions, method_version';
 
@@ -159,7 +93,9 @@ export async function listObservations(farmId: string): Promise<Observation[]> {
 export async function getGrid(obsId: number): Promise<Grid | null> {
   const { data, error } = await supabase.from('satellite_observations').select('grid').eq('id', obsId).maybeSingle();
   if (error) return null;
-  return (data?.grid ?? null) as Grid | null;
+  const g = data?.grid as Grid | null;
+  // grids from method v1 (B11 resampled to 10 m) are not shown; the next check recomputes them
+  return g && g.grid20 && g.grid10 ? g : null;
 }
 
 export async function listZones(obsId: number): Promise<ZoneStat[]> {
@@ -403,86 +339,4 @@ export function interpret(obs: Observation[], zones: ZoneStat[], crop: string | 
     body: tr('Crop vigour and leaf water match this field\'s last {n} clear images.', { n: latest.baseline_n }) + staleNote,
     action: null,
   };
-}
-
-// ------------------------------------------------------------------ geometry for drawing and export
-
-const A = 6378137.0, F = 1 / 298.257223563, K0 = 0.9996, E2 = F * (2 - F), EP2 = E2 / (1 - E2);
-const rad = (d: number) => (d * Math.PI) / 180;
-
-/** WGS84 → UTM in a given EPSG zone (same formulas as the server). */
-export function toUtm(lat: number, lng: number, epsg: number): [number, number] {
-  const zone = epsg % 100, south = Math.floor(epsg / 100) === 327;
-  const phi = rad(lat), lam0 = rad((zone - 1) * 6 - 180 + 3);
-  const n = A / Math.sqrt(1 - E2 * Math.sin(phi) ** 2);
-  const t = Math.tan(phi) ** 2, c = EP2 * Math.cos(phi) ** 2, a = Math.cos(phi) * (rad(lng) - lam0);
-  const e4 = E2 * E2, e6 = e4 * E2;
-  const m = A * ((1 - E2 / 4 - (3 * e4) / 64 - (5 * e6) / 256) * phi - ((3 * E2) / 8 + (3 * e4) / 32 + (45 * e6) / 1024) * Math.sin(2 * phi) +
-    ((15 * e4) / 256 + (45 * e6) / 1024) * Math.sin(4 * phi) - ((35 * e6) / 3072) * Math.sin(6 * phi));
-  const x = K0 * n * (a + ((1 - t + c) * a ** 3) / 6 + ((5 - 18 * t + t * t + 72 * c - 58 * EP2) * a ** 5) / 120) + 500000;
-  let y = K0 * (m + n * Math.tan(phi) * (a * a / 2 + ((5 - t + 9 * c + 4 * c * c) * a ** 4) / 24 + ((61 - 58 * t + t * t + 600 * c - 330 * EP2) * a ** 6) / 720));
-  if (south) y += 10000000;
-  return [x, y];
-}
-
-/** UTM → WGS84 [lat, lng]. */
-export function fromUtm(x: number, y: number, epsg: number): [number, number] {
-  const zone = epsg % 100, south = Math.floor(epsg / 100) === 327;
-  const lam0 = rad((zone - 1) * 6 - 180 + 3);
-  const m = (south ? y - 10000000 : y) / K0;
-  const mu = m / (A * (1 - E2 / 4 - (3 * E2 * E2) / 64 - (5 * E2 ** 3) / 256));
-  const e1 = (1 - Math.sqrt(1 - E2)) / (1 + Math.sqrt(1 - E2));
-  const p1 = mu + ((3 * e1) / 2 - (27 * e1 ** 3) / 32) * Math.sin(2 * mu) + ((21 * e1 * e1) / 16 - (55 * e1 ** 4) / 32) * Math.sin(4 * mu) +
-    ((151 * e1 ** 3) / 96) * Math.sin(6 * mu) + ((1097 * e1 ** 4) / 512) * Math.sin(8 * mu);
-  const n1 = A / Math.sqrt(1 - E2 * Math.sin(p1) ** 2), t1 = Math.tan(p1) ** 2, c1 = EP2 * Math.cos(p1) ** 2;
-  const r1 = (A * (1 - E2)) / (1 - E2 * Math.sin(p1) ** 2) ** 1.5, d = (x - 500000) / (n1 * K0);
-  const lat = p1 - ((n1 * Math.tan(p1)) / r1) * (d * d / 2 - ((5 + 3 * t1 + 10 * c1 - 4 * c1 * c1 - 9 * EP2) * d ** 4) / 24 +
-    ((61 + 90 * t1 + 298 * c1 + 45 * t1 * t1 - 252 * EP2 - 3 * c1 * c1) * d ** 6) / 720);
-  const lng = lam0 + (d - ((1 + 2 * t1 + c1) * d ** 3) / 6 + ((5 - 2 * c1 + 28 * t1 - 3 * c1 * c1 + 8 * EP2 + 24 * t1 * t1) * d ** 5) / 120) / Math.cos(p1);
-  return [(lat * 180) / Math.PI, (lng * 180) / Math.PI];
-}
-
-// ------------------------------------------------------------------ exports
-
-const num = (v: number | null | undefined, d = 3) => (v === null || v === undefined ? '' : v.toFixed(d));
-
-export function toCsv(obs: Observation[], fieldName: string): string {
-  const head = 'field,date,quality,valid_pct,ndvi_median,ndwi_crop_median,ndwi_water_median,ndvi_baseline,ndwi_baseline,ndvi_delta,ndwi_delta,water_stress_score,rain_mm_21d,et0_mm_21d,class,suspect_haze,scene,method';
-  const rows = obs.map((o) => [
-    `"${fieldName.replace(/"/g, '""')}"`, o.observed_at.slice(0, 10), o.quality, num(o.valid_pct, 0), num(o.ndvi_median), num(o.ndwi_crop_median), num(o.ndwi_water_median),
-    num(o.ndvi_baseline), num(o.ndwi_baseline), num(o.ndvi_delta), num(o.ndwi_delta), num(o.water_stress_score, 2), num(o.rain_mm_21d, 0), num(o.et0_mm_21d, 0),
-    classMeta(o.dominant_class).short, o.suspect ? 'yes' : 'no', o.scene_id, o.method_version,
-  ].join(','));
-  return [head, ...rows].join('\n');
-}
-
-/** Pixel squares of one date as GeoJSON (class, NDVI, NDWI per 10 m pixel). */
-export function toGeoJson(grid: Grid, obs: Observation, fieldName: string): string {
-  const features = [];
-  for (let r = 0; r < grid.h; r++) {
-    for (let c = 0; c < grid.w; c++) {
-      const i = r * grid.w + c;
-      if (grid.cls[i] === 255) continue;
-      const x0 = grid.x0 + c * grid.res, y0 = grid.y0 - r * grid.res;
-      const ring = [[x0, y0], [x0 + grid.res, y0], [x0 + grid.res, y0 - grid.res], [x0, y0 - grid.res], [x0, y0]]
-        .map(([x, y]) => {
-          const [la, lo] = fromUtm(x, y, grid.epsg);
-          return [Math.round(lo * 1e7) / 1e7, Math.round(la * 1e7) / 1e7];
-        });
-      features.push({
-        type: 'Feature',
-        geometry: { type: 'Polygon', coordinates: [ring] },
-        properties: {
-          class_code: grid.cls[i], class: classMeta(grid.cls[i]).short,
-          ndvi: grid.ndvi[i] === null ? null : grid.ndvi[i]! / 1000, ndwi_crop: grid.ndwi[i] === null ? null : grid.ndwi[i]! / 1000,
-        },
-      });
-    }
-  }
-  return JSON.stringify({
-    type: 'FeatureCollection',
-    name: `${fieldName} ${obs.observed_at.slice(0, 10)}`,
-    properties: { source: 'ESA Copernicus Sentinel-2 L2A via Earth Search', method: obs.method_version, quality: obs.quality, note: 'NDWI uses the 20 m SWIR band resampled to 10 m.' },
-    features,
-  });
 }
