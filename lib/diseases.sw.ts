@@ -1,4 +1,4 @@
-// CropGuard AI — Kiswahili version of the treatment knowledge base (lib/diseases.ts).
+// Tassel — Kiswahili version of the treatment knowledge base (lib/diseases.ts).
 // Same rules as the English text: active ingredients only, no doses, PCPB 2025
 // restrictions kept. Active-ingredient and pathogen names stay in their
 // scientific form so farmers can match them to product labels.

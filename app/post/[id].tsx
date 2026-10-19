@@ -54,7 +54,7 @@ export default function PostScreen() {
 
   const share = () => {
     if (!post) return;
-    Share.share({ message: `${t('CropGuard Community')}\n\n${post.title}\n\n${post.body}\n\n${t('Posted by {name} on CropGuard AI', { name: post.author_name })}` });
+    Share.share({ message: `${t('Tassel Community')}\n\n${post.title}\n\n${post.body}\n\n${t('Posted by {name} on Tassel', { name: post.author_name })}` });
   };
 
   const report = () =>

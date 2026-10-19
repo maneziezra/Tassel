@@ -92,9 +92,9 @@ export default function ResultScreen() {
   };
 
   const shareText = () =>
-    `${t('CropGuard AI scan')}\n${t('Crop')}: ${crop}\n${t('Result')}: ${uncertain ? t('Uncertain (best guess: {d})', { d: disease }) : disease}\n${t('Confidence')}: ${pct}\n` +
+    `${t('Tassel scan')}\n${t('Crop')}: ${crop}\n${t('Result')}: ${uncertain ? t('Uncertain (best guess: {d})', { d: disease }) : disease}\n${t('Confidence')}: ${pct}\n` +
     (info && !healthy ? `${t('What to do first')}: ${info.cultural[0]}\n` : '') +
-    t('Checked on-device with CropGuard AI. Confirm with your extension officer.');
+    t('Checked on-device with Tassel. Confirm with your extension officer.');
 
   const shareWhatsApp = async () => {
     const url = `whatsapp://send?text=${encodeURIComponent(shareText())}`;

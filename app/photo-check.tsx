@@ -28,8 +28,8 @@ const TXT = {
   notePh: { en: 'e.g. holes in young leaves, started last week', sw: 'mf. matundu kwenye majani machanga, ilianza wiki iliyopita' },
   privacyTitle: { en: 'Before you send', sw: 'Kabla ya kutuma' },
   privacy: {
-    en: 'This photo is shrunk on your phone and sent over the internet to the CropGuard server and the Claude AI (Anthropic) to be checked. It is not kept or shown to anyone else. The offline scanner never sends photos.',
-    sw: 'Picha hii hupunguzwa ukubwa kwenye simu yako na kutumwa kupitia intaneti kwa seva ya CropGuard na AI ya Claude (Anthropic) ili ikaguliwe. Haihifadhiwi wala kuonyeshwa kwa mtu mwingine. Skana ya bila intaneti haitumi picha kamwe.',
+    en: 'This photo is shrunk on your phone and sent over the internet to the Tassel server and the Claude AI (Anthropic) to be checked. It is not kept or shown to anyone else. The offline scanner never sends photos.',
+    sw: 'Picha hii hupunguzwa ukubwa kwenye simu yako na kutumwa kupitia intaneti kwa seva ya Tassel na AI ya Claude (Anthropic) ili ikaguliwe. Haihifadhiwi wala kuonyeshwa kwa mtu mwingine. Skana ya bila intaneti haitumi picha kamwe.',
   },
   agree: { en: 'Agree and check photo', sw: 'Nakubali, kagua picha' },
   check: { en: 'Check this photo', sw: 'Kagua picha hii' },

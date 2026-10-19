@@ -52,7 +52,7 @@ export default function LoginScreen() {
           <View style={st.logo}>
             <Icon name="sprout" size={40} color="#fff" />
           </View>
-          <Text style={st.app}>CropGuard AI</Text>
+          <Text style={st.app}>Tassel</Text>
           <Text style={st.tag}>Smart farming for Kenyan farmers</Text>
         </View>
         <View style={st.card}>

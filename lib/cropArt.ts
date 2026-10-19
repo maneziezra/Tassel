@@ -1,5 +1,5 @@
-// CropGuard crop artwork: flat two-tone, one shared leaf green, harmonised muted palette.
-// 48×48 viewBox. Drawn for the design canvas "CropGuard colour directions"; keep this style when adding a crop.
+// Tassel crop artwork: flat two-tone, one shared leaf green, harmonised muted palette.
+// 48×48 viewBox. Drawn for the design canvas "Tassel colour directions"; keep this style when adding a crop.
 
 export const CROP_ART: Record<string, string> = {
   "Maize": "<path d=\"M30 6c4 3 6 9 5 16-1 9-5 17-11 20-6-3-10-11-11-20-1-7 1-13 5-16 3-2 9-2 12 0z\" fill=\"#E2B64A\"/> <path d=\"M24 42c-6-3-10-11-11-20-1-7 1-13 5-16 1-.7 2.3-1.2 3.6-1.5C19.5 9 18.5 15 19 22c.6 8 2.4 15 5 20z\" fill=\"#C9973A\"/> <g fill=\"#F0CF77\"><circle cx=\"24\" cy=\"12\" r=\"1.6\"/><circle cx=\"28.5\" cy=\"13\" r=\"1.6\"/><circle cx=\"24\" cy=\"17\" r=\"1.6\"/><circle cx=\"28.8\" cy=\"18.2\" r=\"1.6\"/><circle cx=\"24.2\" cy=\"22.2\" r=\"1.6\"/><circle cx=\"28.6\" cy=\"23.6\" r=\"1.6\"/><circle cx=\"24.4\" cy=\"27.4\" r=\"1.6\"/><circle cx=\"28\" cy=\"29\" r=\"1.6\"/><circle cx=\"24.6\" cy=\"32.4\" r=\"1.6\"/></g> <path d=\"M24 44c-7-1-13-7-15-16 5 2 9 6 11 11 0-7 2-13 6-17-1 8 0 16-2 22z\" fill=\"#6E9B5A\"/> <path d=\"M24 44c5-2 10-7 12-15-4 2-7 5-9 9z\" fill=\"#557F45\"/>",

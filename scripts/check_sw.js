@@ -43,7 +43,7 @@ for (const f of ['strings.txt', 'strings2.txt']) {
 // L('...') strings in buildPlan
 const plan = all.match(/\bL\(\s*'((?:[^'\\\n]|\\.)*)'/g) || [];
 plan.forEach((s) => cand.add(s.replace(/^L\(\s*'/, '').replace(/'$/, '').replace(/\\'/g, "'")));
-const ignore = /^(CropGuard AI|EN|SW|Kiswahili|Nairobi|NCPB|Mkulima Young|PGRST\d+|\(tabs\)|.*\[id\].*|LIVE)$|^[a-z_]+=|^&|^\$\{|^:|window\.|width=|^id, |^\{crop\}: \{disease\}\?$|___|_\(|^\\n|^1\.2 acres|^Hello |^Habari |^Cherry|^Corn|^Pepper,|Imagery ©|^© Open|^Spider|^Late blight$|^Common rust$|^Grey leaf|^Haunglongbing|^Citrus|^Cercospora|^size unknown|^Tomato___|^\d\. |^1\. |accuracy|^']/i;
+const ignore = /^(Tassel|EN|SW|Kiswahili|Nairobi|NCPB|Mkulima Young|PGRST\d+|\(tabs\)|.*\[id\].*|LIVE)$|^[a-z_]+=|^&|^\$\{|^:|window\.|width=|^id, |^\{crop\}: \{disease\}\?$|___|_\(|^\\n|^1\.2 acres|^Hello |^Habari |^Cherry|^Corn|^Pepper,|Imagery ©|^© Open|^Spider|^Late blight$|^Common rust$|^Grey leaf|^Haunglongbing|^Citrus|^Cercospora|^size unknown|^Tomato___|^\d\. |^1\. |accuracy|^']/i;
 const missing = [...cand].filter((s) => s && SW[s] === undefined && SW[s.trim()] === undefined && !ignore.test(s));
 console.log('keys', Object.keys(SW).length);
 console.log('DUPLICATES', JSON.stringify(dups));

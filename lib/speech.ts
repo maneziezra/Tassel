@@ -1,4 +1,4 @@
-// CropGuard AI — read advice aloud with the phone's own text-to-speech
+// Tassel — read advice aloud with the phone's own text-to-speech
 // (works offline once a voice is installed). Kiswahili uses a Swahili voice
 // when the phone has one.
 

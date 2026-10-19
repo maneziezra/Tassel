@@ -1,4 +1,6 @@
-# CropGuard AI — handoff brief (19 Oct 2026)
+# Tassel (formerly CropGuard AI) — handoff brief (19 Oct 2026)
+
+> Renamed on 19 Oct 2026: the app is now **Tassel** (v2.4.0, versionCode 4), package `ke.tassel.app`, deep-link scheme `tassel://`. Folder and repo names still say CropGuard, and internal ids (model file `cropguard.tflite`, storage keys, SQL file names) were kept on purpose. Brand files: `docs/brand/`.
 
 Ezra ("Archlord", Eldoret)'s KSEF 2027 Computer Science entry. It also anchors a Harvard Fall 2028 application.
 The app is an offline crop-disease scanner with an AI advisor, crop calendar, fertiliser planner and Sentinel-2 crop health from space, for Kenyan smallholders, in English and Kiswahili.
@@ -27,14 +29,14 @@ This brief replaces the 16 Oct version. Work moved here from a claude.ai cloud s
   - Last commit `d4f1b53` "v2.3.1 Resolution-honest satellite layers".
   - Earlier: `83e892f` v2.3 satellite dashboard; `aa6bd84` v2.2 Shamba redesign.
 - **Backend:** `C:\Users\Archlord\Desktop\cropguard-proxy` → github.com/maneziezra/cropguard-proxy. Last commit `6deae5d` "satellite-health v2".
-- **Latest APK:** `C:\Users\Archlord\Desktop\CropGuard-AI-v2.3.1.apk`.
+- **Latest APK:** `C:\Users\Archlord\Desktop\Tassel-v2.4.0.apk`.
   - Release build, arm64, debug-signed, built 19 Oct 08:49.
   - Built with `scripts\build-apk.ps1`, which takes about 30 minutes on this PC and logs to `scripts\build.log`.
 
 ## Stack
 - Expo SDK 57, React Native 0.86.2, expo-router, NativeWind 4 / Tailwind 3.4, TypeScript. `npx tsc --noEmit` must stay clean.
 - Native modules added in v2.2: `react-native-svg` 15.15.4 (SvgXml, charts) and `expo-haptics` ~57.0.3.
-- Package `com.anonymous.CropGuardAI`, scheme `cropguard-ai`.
+- Package `ke.tassel.app`, scheme `tassel` (until v2.3.1: `ke.tassel.app`, `cropguard-ai`).
 - On-device model: react-native-fast-tflite 3.0.1, `assets/model/cropguard.tflite`.
   - **MobileNetV2, 38 PlantVillage classes, 14 crops**, 224x224.
   - Preprocessing `x/127.5 - 1` (NOT /255).
@@ -123,10 +125,10 @@ This brief replaces the 16 Oct version. Work moved here from a claude.ai cloud s
 
 ## Phone testing (TECNO CAMON 15, serial `050162503I019840`, arm64-v8a, Android 10, 720×1600)
 - adb is at `C:\Users\Archlord\AppData\Local\Android\Sdk\platform-tools\adb.exe`.
-- Dev build: start Metro (`npx expo start --dev-client --port 8081 --clear`), then `adb reverse tcp:8081 tcp:8081`, then open `cropguard-ai://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081`.
-  - Fast refresh sometimes misses edits: `adb shell am force-stop com.anonymous.CropGuardAI` and reopen.
+- Dev build: start Metro (`npx expo start --dev-client --port 8081 --clear`), then `adb reverse tcp:8081 tcp:8081`, then open `tassel://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081`.
+  - Fast refresh sometimes misses edits: `adb shell am force-stop ke.tassel.app` and reopen.
 - `scripts\tour.ps1 -steps "name|deeplink,scroll,tap:x:y,text:Label,sleep:N"` drives the phone and saves `screenrecord` mp4s to `scripts\shots` (screencap returns blank on this phone; take the last frame with ffmpeg).
-- Deep links: `cropguard-ai://satellite/<farmId>`, `cropguard-ai://farm/<id>`, `cropguard-ai://farm-map?sat=<obsId>`.
+- Deep links: `tassel://satellite/<farmId>`, `tassel://farm/<id>`, `tassel://farm-map?sat=<obsId>`.
 - Native builds:
   - Arch-specific: `gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a`.
   - Release: `scripts\build-apk.ps1`.
@@ -134,10 +136,10 @@ This brief replaces the 16 Oct version. Work moved here from a claude.ai cloud s
   - If CMake breaks, delete `android/app/.cxx`. NDK r27b; ninja 1.12.1.
 
 ## Open work (in order)
-1. Install `Desktop\CropGuard-AI-v2.3.1.apk` on the phone. Open the Eldoret field: it recomputes with v2, about 1 minute.
+1. Install `Desktop\Tassel-v2.4.0.apk` on the phone. Open the Eldoret field: it recomputes with v2, about 1 minute.
    - Check the four layer chips, captions and scale bar, the "On the map" overlay (20 m squares, zoom), the Technical panel and the CSV/GeoJSON share.
 2. Test saving a field check (the "What did you find?" sheet) on the phone and the 10-day follow-up card.
-3. Signed release: create an upload keystore, back it up off-machine, set versionName 2.3.1 and versionCode up, make a QR code for the judges.
+3. Signed release: create an upload keystore, back it up off-machine, set versionName 2.4.0 and versionCode up, make a QR code for the judges.
 4. Model card and validation report for the 38-class MobileNetV2. Confirm whether the field-test claim (86% vs 40%, 50 samples) used the shipped model.
 5. Kenyan field validation: 100+ agronomist-labelled photos. Use the satellite field checks to calibrate `CROP_CONFIG`.
 6. Write-up v3 (the claude.ai Project holds v1/v2 .docx, the competitor teardown, the revision report and the design-system doc). Native-speaker review of about 200 new Kiswahili strings.

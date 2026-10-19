@@ -1,5 +1,5 @@
-# Opens CropGuard screens on the phone by deep link and screenshots each one.
-#   tour.ps1 -steps "home|cropguard-ai://,scroll" "cal|cropguard-ai://calendar"
+# Opens Tassel screens on the phone by deep link and screenshots each one.
+#   tour.ps1 -steps "home|tassel://,scroll" "cal|tassel://calendar"
 param([string[]]$steps, [int]$wait = 4)
 $adb = "C:\Users\Archlord\AppData\Local\Android\Sdk\platform-tools\adb.exe"
 $s = '050162503I019840'
@@ -12,7 +12,7 @@ foreach ($step in $steps) {
   $parts = $step.Split('|')
   $name = $parts[0]; $act = $parts[1]
   foreach ($a in $act.Split(',')) {
-    if ($a -like 'cropguard-ai://*') { & $adb -s $s shell am start -a android.intent.action.VIEW -d "'$a'" com.anonymous.CropGuardAI | Out-Null; Start-Sleep $wait }
+    if ($a -like 'tassel://*') { & $adb -s $s shell am start -a android.intent.action.VIEW -d "'$a'" ke.tassel.app | Out-Null; Start-Sleep $wait }
     elseif ($a -eq 'scroll') { & $adb -s $s shell input swipe 360 1250 360 450 350; Start-Sleep 1 }
     elseif ($a -eq 'up') { & $adb -s $s shell input swipe 360 450 360 1350 250; & $adb -s $s shell input swipe 360 450 360 1350 250; Start-Sleep 1 }
     elseif ($a -eq 'back') { & $adb -s $s shell input keyevent KEYCODE_BACK; Start-Sleep 2 }

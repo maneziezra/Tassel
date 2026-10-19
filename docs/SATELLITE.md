@@ -1,9 +1,9 @@
 # Crop health from space: method, assumptions and limits
 
-CropGuard v2.3.1 · method `s2-joint-v2` · 19 October 2026
+Tassel v2.4.0 (formerly CropGuard) · method `s2-joint-v2` · 19 October 2026
 
 ## What it does
-For every mapped field, CropGuard reads free ESA Copernicus Sentinel-2 Level-2A images from the last 90 days. A new image arrives every 2–3 days (Sentinel-2A, 2B and 2C). For each image it:
+For every mapped field, Tassel reads free ESA Copernicus Sentinel-2 Level-2A images from the last 90 days. A new image arrives every 2–3 days (Sentinel-2A, 2B and 2C). For each image it:
 - masks out cloud, cloud shadow and haze;
 - works out NDVI and open-water NDWI for every 10 m pixel, and crop-water NDWI for every 20 m cell, in the field;
 - compares the field with its own recent normal;

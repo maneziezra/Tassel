@@ -1,4 +1,4 @@
-// CropGuard AI — on-device leaf disease classifier
+// Tassel — on-device leaf disease classifier
 //
 // Model: assets/model/cropguard.tflite — trained on the PlantVillage dataset
 // (Kaggle), 38 classes, input 1×224×224×3 float32 RGB, softmax output.

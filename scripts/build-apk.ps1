@@ -11,7 +11,8 @@ for ($try = 1; $try -le 2; $try++) {
 }
 $apk = "$root\android\app\build\outputs\apk\release\app-release.apk"
 if (Test-Path $apk) {
-  Copy-Item $apk 'C:\Users\Archlord\Desktop\CropGuard-AI-v2.3.1.apk' -Force
+  $ver = (Get-Content "$root\app.json" -Raw | ConvertFrom-Json).expo.version
+  Copy-Item $apk "C:\Users\Archlord\Desktop\Tassel-v$ver.apk" -Force
   "DONE copied to Desktop $(Get-Date)" | Out-File -Append $log
 } else {
   "FAILED $(Get-Date)" | Out-File -Append $log

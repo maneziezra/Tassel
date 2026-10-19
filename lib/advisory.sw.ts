@@ -1,4 +1,4 @@
-// CropGuard AI — Kiswahili version of the crop advisory guides (lib/advisory.ts).
+// Tassel — Kiswahili version of the crop advisory guides (lib/advisory.ts).
 // Same agronomy as the English text; no pesticide doses.
 
 import type { CropGuide } from './advisory';

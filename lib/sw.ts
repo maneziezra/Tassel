@@ -1,4 +1,4 @@
-// CropGuard AI — Kiswahili dictionary.
+// Tassel — Kiswahili dictionary.
 //
 // Keys are the English strings exactly as they appear in the code; values are
 // simple Kenyan Kiswahili for farmers. Placeholders like {n} stay as they are.
@@ -177,7 +177,7 @@ export const SW: Record<string, string> = {
   // ── Home ───────────────────────────────────────────────────────────────
   'My Farm': 'Shamba Langu',
   'Smart farming for Kenyan farmers': 'Kilimo cha kisasa kwa wakulima wa Kenya',
-  'Welcome to CropGuard. Scan a leaf to check your crop.': 'Karibu CropGuard. Skani jani kukagua zao lako.',
+  'Welcome to Tassel. Scan a leaf to check your crop.': 'Karibu Tassel. Skani jani kukagua zao lako.',
   'Welcome back': 'Karibu tena',
   'Check a sick leaf in seconds': 'Kagua jani gonjwa kwa sekunde chache',
   'Works offline': 'Inafanya kazi bila mtandao',
@@ -270,8 +270,8 @@ export const SW: Record<string, string> = {
   'Camera off': 'Kamera imezimwa',
   'Allow camera': 'Ruhusu kamera',
   'Allow camera access to take a photo.': 'Ruhusu kamera ili upige picha.',
-  'CropGuard needs the camera to photograph leaves. You can also choose a photo from your gallery.':
-    'CropGuard inahitaji kamera kupiga picha za majani. Unaweza pia kuchagua picha kutoka kwenye matunzio.',
+  'Tassel needs the camera to photograph leaves. You can also choose a photo from your gallery.':
+    'Tassel inahitaji kamera kupiga picha za majani. Unaweza pia kuchagua picha kutoka kwenye matunzio.',
   'Could not take a photo. Please try again.': 'Imeshindikana kupiga picha. Tafadhali jaribu tena.',
   'Could not analyse this photo.': 'Imeshindikana kuchambua picha hii.',
   'Could not read the photo.': 'Imeshindikana kusoma picha.',
@@ -318,9 +318,9 @@ export const SW: Record<string, string> = {
   'Save failed': 'Kuhifadhi kumeshindikana',
   'Share on WhatsApp': 'Shiriki kwenye WhatsApp',
   'Scan another leaf': 'Skani jani lingine',
-  'CropGuard AI scan': 'Skani ya CropGuard AI',
-  'Checked on-device with CropGuard AI. Confirm with your extension officer.':
-    'Imekaguliwa kwenye simu na CropGuard AI. Thibitisha na afisa wako wa ugani.',
+  'Tassel scan': 'Skani ya Tassel',
+  'Checked on-device with Tassel. Confirm with your extension officer.':
+    'Imekaguliwa kwenye simu na Tassel. Thibitisha na afisa wako wa ugani.',
   'Find agro-dealers near me': 'Tafuta maduka ya pembejeo karibu nami',
   'Nearby agro-dealers': 'Maduka ya pembejeo yaliyo karibu',
   'Agro-dealers near me': 'Maduka ya pembejeo karibu nami',
@@ -336,7 +336,7 @@ export const SW: Record<string, string> = {
 
   // ── Treatment plan (lib/diseases.ts buildPlan) ─────────────────────────
   'Treatment plan': 'Mpango wa matibabu',
-  'CropGuard AI treatment plan': 'Mpango wa matibabu wa CropGuard AI',
+  'Tassel treatment plan': 'Mpango wa matibabu wa Tassel',
   'No plan for this result': 'Hakuna mpango wa matokeo haya',
   'Scan a leaf first, then open the plan from the result screen.': 'Skani jani kwanza, kisha fungua mpango kutoka skrini ya matokeo.',
   'Ask the AI advisor about this plan': 'Muulize mshauri wa AI kuhusu mpango huu',
@@ -390,8 +390,8 @@ export const SW: Record<string, string> = {
   'No crop calendar yet': 'Bado hakuna kalenda ya zao',
   'A crop calendar is available for maize, beans, potato, tomato and wheat.':
     'Kalenda ya zao inapatikana kwa mahindi, maharagwe, viazi, nyanya na ngano.',
-  'Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. CropGuard then plans weeding, top-dressing, scouting and harvest for you.':
-    'Ongeza shamba pamoja na zao lake (mahindi, maharagwe, viazi, nyanya au ngano) na tarehe ya kupanda. CropGuard itakupangia kupalilia, kuweka mbolea ya juu, ukaguzi na mavuno.',
+  'Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. Tassel then plans weeding, top-dressing, scouting and harvest for you.':
+    'Ongeza shamba pamoja na zao lake (mahindi, maharagwe, viazi, nyanya au ngano) na tarehe ya kupanda. Tassel itakupangia kupalilia, kuweka mbolea ya juu, ukaguzi na mavuno.',
   '{n} fields have no calendar yet — add the crop and planting date.': 'Mashamba {n} bado hayana kalenda — weka zao na tarehe ya kupanda.',
   'Add a planting date': 'Weka tarehe ya kupanda',
   'Set the crop for this field to get a crop calendar.': 'Weka zao la shamba hili upate kalenda ya zao.',
@@ -409,8 +409,8 @@ export const SW: Record<string, string> = {
   '{n} reminders scheduled at 7:00 on the first day of each task.': 'Vikumbusho {n} vimepangwa saa 1:00 asubuhi siku ya kwanza ya kila kazi.',
   'There are no upcoming tasks to remind you about.': 'Hakuna kazi zijazo za kukukumbusha.',
   'Notifications are off': 'Arifa zimezimwa',
-  'Allow notifications for CropGuard in your phone settings to get reminders.':
-    'Ruhusu arifa za CropGuard kwenye mipangilio ya simu upate vikumbusho.',
+  'Allow notifications for Tassel in your phone settings to get reminders.':
+    'Ruhusu arifa za Tassel kwenye mipangilio ya simu upate vikumbusho.',
   'Farm reminders and alerts': 'Vikumbusho na tahadhari za shamba',
   'Turn this guide into dated tasks for your own field.': 'Geuza mwongozo huu kuwa kazi zenye tarehe kwa shamba lako.',
 
@@ -472,8 +472,8 @@ export const SW: Record<string, string> = {
   'Outbreak alerts': 'Tahadhari za milipuko',
   'My county': 'Kaunti yangu',
   'All of Kenya': 'Kenya nzima',
-  'Built from confident scans that farmers saved in CropGuard. A disease appears only when at least 2 different farmers found it, and no names or farm locations are shared.':
-    'Inatokana na skani zenye uhakika ambazo wakulima walihifadhi kwenye CropGuard. Ugonjwa huonekana tu wakulima angalau 2 tofauti wakiupata, na hakuna majina wala maeneo ya mashamba yanayoshirikiwa.',
+  'Built from confident scans that farmers saved in Tassel. A disease appears only when at least 2 different farmers found it, and no names or farm locations are shared.':
+    'Inatokana na skani zenye uhakika ambazo wakulima walihifadhi kwenye Tassel. Ugonjwa huonekana tu wakulima angalau 2 tofauti wakiupata, na hakuna majina wala maeneo ya mashamba yanayoshirikiwa.',
   'No outbreaks reported': 'Hakuna milipuko iliyoripotiwa',
   'No disease has been confirmed by 2 or more farmers here recently. Keep scanning and saving your results — it helps your neighbours.':
     'Hakuna ugonjwa uliothibitishwa na wakulima 2 au zaidi hapa hivi karibuni. Endelea kuskani na kuhifadhi matokeo yako — kunawasaidia majirani zako.',
@@ -540,7 +540,7 @@ export const SW: Record<string, string> = {
   'Pest Control Products Board ↗': 'Bodi ya Kudhibiti Bidhaa za Wadudu (PCPB) ↗',
 
   // ── Community ──────────────────────────────────────────────────────────
-  'CropGuard Community': 'Jamii ya CropGuard',
+  'Tassel Community': 'Jamii ya Tassel',
   'Ask, share and learn with Kenyan farmers': 'Uliza, shiriki na ujifunze na wakulima wa Kenya',
   'Post a question': 'Uliza swali',
   'New post': 'Chapisho jipya',
@@ -553,7 +553,7 @@ export const SW: Record<string, string> = {
   'Add a title (at least 3 letters) and some details.': 'Andika kichwa (angalau herufi 3) na maelezo kidogo.',
   'Almost there': 'Karibu kumaliza',
   'Attach the scan result': 'Ambatisha matokeo ya skani',
-  'The CropGuard scanner suggested {d} ({pct}% confidence). What I see: ': 'Skana ya CropGuard ilipendekeza {d} (uhakika {pct}%). Ninachokiona: ',
+  'The Tassel scanner suggested {d} ({pct}% confidence). What I see: ': 'Skana ya Tassel ilipendekeza {d} (uhakika {pct}%). Ninachokiona: ',
   'Help: what is wrong with my {crop}?': 'Msaada: zao langu la {crop} lina shida gani?',
   'Remove photo': 'Ondoa picha',
   'Photo sharing is not switched on yet (the database update is pending).':
@@ -581,15 +581,15 @@ export const SW: Record<string, string> = {
   'Delete your post?': 'Futa chapisho lako?',
   'This also deletes its replies.': 'Hii pia itafuta majibu yake.',
   'Could not delete': 'Imeshindikana kufuta',
-  'Posted by {name} on CropGuard AI': 'Imechapishwa na {name} kwenye CropGuard AI',
+  'Posted by {name} on Tassel': 'Imechapishwa na {name} kwenye Tassel',
 
   // ── AI advisor ─────────────────────────────────────────────────────────
   'AI farm advisor': 'Mshauri wa shamba wa AI',
   'Ask AI': 'Uliza AI',
   'Ask the AI advisor': 'Uliza mshauri wa AI',
   'Powered by Claude, answers may be imperfect': 'Inaendeshwa na Claude, majibu yanaweza kuwa na makosa',
-  'Habari! I am the CropGuard farm advisor. Ask me about crop diseases, pests, fertiliser or planting — in English or Kiswahili.':
-    'Habari! Mimi ni mshauri wa shamba wa CropGuard. Niulize kuhusu magonjwa ya mazao, wadudu, mbolea au upandaji — kwa Kiingereza au Kiswahili.',
+  'Habari! I am the Tassel farm advisor. Ask me about crop diseases, pests, fertiliser or planting — in English or Kiswahili.':
+    'Habari! Mimi ni mshauri wa shamba wa Tassel. Niulize kuhusu magonjwa ya mazao, wadudu, mbolea au upandaji — kwa Kiingereza au Kiswahili.',
   'Ask about your crop… (English or Kiswahili)': 'Uliza kuhusu zao lako… (Kiingereza au Kiswahili)',
   'Quick questions': 'Maswali ya haraka',
   'Have a question about your {crop}?': 'Una swali kuhusu {crop}?',
@@ -643,13 +643,13 @@ export const SW: Record<string, string> = {
   'Test the read-aloud voice': 'Jaribu sauti ya kusoma',
   'Your phone will read the Kiswahili text with its default voice. For a better voice, open Settings → Language → Text-to-speech and install Kiswahili.':
     'Simu yako itasoma maandishi ya Kiswahili kwa sauti yake ya kawaida. Kwa sauti bora, fungua Mipangilio → Lugha → Maandishi-hadi-sauti na usakinishe Kiswahili.',
-  'How CropGuard works': 'Jinsi CropGuard inavyofanya kazi',
-  'How CropGuard works (methodology)': 'Jinsi CropGuard inavyofanya kazi (mbinu)',
+  'How Tassel works': 'Jinsi Tassel inavyofanya kazi',
+  'How Tassel works (methodology)': 'Jinsi Tassel inavyofanya kazi (mbinu)',
   'Methods, limits and sources': 'Mbinu, mipaka na vyanzo',
   Privacy: 'Faragha',
   'Your data': 'Data yako',
-  'Leaf photos are analysed on this phone and are not uploaded unless you attach one to a community post or choose the AI photo check (that photo is checked by the AI and not kept). Your profile, fields, saved scans, price reports and forum posts are stored in your CropGuard account (Supabase, EU region). Outbreak alerts and farmer prices only show anonymous totals. Chat questions are sent to the AI advisor to answer them. No ads. We do not sell your data.':
-    'Picha za majani huchambuliwa kwenye simu hii na hazipakiwi isipokuwa ukiambatisha moja kwenye chapisho la jamii au ukichagua ukaguzi wa picha wa AI (picha hiyo hukaguliwa na AI na haihifadhiwi). Wasifu wako, mashamba, skani zilizohifadhiwa, ripoti za bei na machapisho ya jukwaa huhifadhiwa kwenye akaunti yako ya CropGuard (Supabase, eneo la EU). Tahadhari za milipuko na bei za wakulima huonyesha jumla zisizo na majina tu. Maswali ya gumzo hutumwa kwa mshauri wa AI ili kujibiwa. Hakuna matangazo. Hatuuzi data yako.',
+  'Leaf photos are analysed on this phone and are not uploaded unless you attach one to a community post or choose the AI photo check (that photo is checked by the AI and not kept). Your profile, fields, saved scans, price reports and forum posts are stored in your Tassel account (Supabase, EU region). Outbreak alerts and farmer prices only show anonymous totals. Chat questions are sent to the AI advisor to answer them. No ads. We do not sell your data.':
+    'Picha za majani huchambuliwa kwenye simu hii na hazipakiwi isipokuwa ukiambatisha moja kwenye chapisho la jamii au ukichagua ukaguzi wa picha wa AI (picha hiyo hukaguliwa na AI na haihifadhiwi). Wasifu wako, mashamba, skani zilizohifadhiwa, ripoti za bei na machapisho ya jukwaa huhifadhiwa kwenye akaunti yako ya Tassel (Supabase, eneo la EU). Tahadhari za milipuko na bei za wakulima huonyesha jumla zisizo na majina tu. Maswali ya gumzo hutumwa kwa mshauri wa AI ili kujibiwa. Hakuna matangazo. Hatuuzi data yako.',
   'Your farm data stays private to your account. Forum posts show your name to other farmers.':
     'Data ya shamba lako ni siri ya akaunti yako. Machapisho ya jukwaa huonyesha jina lako kwa wakulima wengine.',
   'App version': 'Toleo la programu',
@@ -769,7 +769,7 @@ export const SW: Record<string, string> = {
   "Your fields": "Mashamba yako",
   "Add planting date": "Weka tarehe ya kupanda",
   "Add your first field": "Ongeza shamba lako la kwanza",
-  "Draw it on the map or type its size. CropGuard then plans the season for you.": "Lichore kwenye ramani au andika ukubwa wake. CropGuard itakupangia msimu mzima.",
+  "Draw it on the map or type its size. Tassel then plans the season for you.": "Lichore kwenye ramani au andika ukubwa wake. Tassel itakupangia msimu mzima.",
   "Walk your potato and tomato rows and look for dark, water-soaked patches on leaves.": "Tembea kwenye mistari ya viazi na nyanya, utafute mabaka meusi yenye unyevu kwenye majani.",
   "If you plan to spray a protectant, do it before the wet days, in a spray window.": "Ukipanga kunyunyizia dawa ya kinga, fanya hivyo kabla ya siku za mvua, katika muda mzuri wa kunyunyizia.",
   "Based on the Hutton criteria: two days in a row with a minimum of 10 °C and at least 6 hours of humidity above 90%.": "Kwa kufuata vigezo vya Hutton: siku mbili mfululizo zenye joto la chini la angalau 10 °C na angalau saa 6 za unyevu zaidi ya 90%.",
@@ -815,7 +815,7 @@ export const SW: Record<string, string> = {
   "Add": "Ongeza",
   "transplanted {date}": "ilipandikizwa {date}",
   "planted {date}": "ilipandwa {date}",
-  "Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. CropGuard then plans the whole season.": "Ongeza shamba pamoja na zao lake (mahindi, maharagwe, viazi, nyanya au ngano) na tarehe ya kupanda. CropGuard itapanga msimu mzima.",
+  "Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. Tassel then plans the whole season.": "Ongeza shamba pamoja na zao lake (mahindi, maharagwe, viazi, nyanya au ngano) na tarehe ya kupanda. Tassel itapanga msimu mzima.",
   "{n} bags + {kg} kg": "mifuko {n} + kilo {kg}",
   "{kg} kg": "kilo {kg}",
   "Fertiliser for {crop}": "Mbolea ya {crop}",
@@ -873,7 +873,7 @@ export const SW: Record<string, string> = {
   "Map this field first": "Chora shamba hili kwenye ramani kwanza",
   "The satellite needs the field's boundary to know which squares to read.": "Setilaiti inahitaji mpaka wa shamba ili ijue miraba ipi isome.",
   "Satellite checks are not switched on yet": "Ukaguzi wa setilaiti bado haujawashwa",
-  "The database update for satellite results (v2.3) has not been applied. Ask the CropGuard admin to run it.": "Sasisho la hifadhidata la matokeo ya setilaiti (v2.3) bado halijawekwa. Muombe msimamizi wa CropGuard aliweke.",
+  "The database update for satellite results (v2.3) has not been applied. Ask the Tassel admin to run it.": "Sasisho la hifadhidata la matokeo ya setilaiti (v2.3) bado halijawekwa. Muombe msimamizi wa Tassel aliweke.",
   "Check now": "Kagua sasa",
   "I inspected it": "Nimekagua",
   "{q} image": "Picha {q}",
@@ -910,7 +910,7 @@ export const SW: Record<string, string> = {
   "Share data (CSV)": "Shiriki data (CSV)",
   "Share map (GeoJSON)": "Shiriki ramani (GeoJSON)",
   "Satellite readings show where to look. They do not diagnose a problem. Always confirm in the field, and ask your extension officer before acting on a large area.": "Vipimo vya setilaiti vinaonyesha mahali pa kuangalia. Havitambui tatizo. Thibitisha shambani kila mara, na umwulize afisa wa ugani kabla ya kuchukua hatua kwenye eneo kubwa.",
-  "Contains modified Copernicus Sentinel-2 data, processed by CropGuard AI.": "Ina data ya Copernicus Sentinel-2 iliyorekebishwa na CropGuard AI.",
+  "Contains modified Copernicus Sentinel-2 data, processed by Tassel.": "Ina data ya Copernicus Sentinel-2 iliyorekebishwa na Tassel.",
   "Scan a leaf now to find out what it is?": "Skani jani sasa ili ujue ni nini?",
   "Later": "Baadaye",
   "Tap a square to see its reading.": "Gusa mraba uone kipimo chake.",
@@ -1008,7 +1008,7 @@ export const SW: Record<string, string> = {
   "The satellite sees little green cover in this field.": "Setilaiti inaona ukijani kidogo katika shamba hili.",
   "If a crop is planted, walk the field and check how many seeds came up.": "Ikiwa umepanda, tembea shambani uangalie mbegu ngapi zimeota.",
   "Crop visible. Learning this field": "Zao linaonekana. Inajifunza shamba hili",
-  "CropGuard compares each image with this field's own normal. It needs 3 clear images of the crop first; {n} so far.": "CropGuard inalinganisha kila picha na hali ya kawaida ya shamba hili. Inahitaji picha 3 safi za zao kwanza; {n} hadi sasa.",
+  "Tassel compares each image with this field's own normal. It needs 3 clear images of the crop first; {n} so far.": "Tassel inalinganisha kila picha na hali ya kawaida ya shamba hili. Inahitaji picha 3 safi za zao kwanza; {n} hadi sasa.",
   "Clouds or haze covered part of the field, so treat this as a hint and check the next clear image.": "Mawingu au ukungu yalifunika sehemu ya shamba, kwa hivyo chukua hii kama dokezo na uangalie picha safi inayofuata.",
   "The last clear image is {n} days old.": "Picha safi ya mwisho ina siku {n}.",
   "Crop vigour and water content are rising again after a drop.": "Nguvu ya zao na maji yake yanapanda tena baada ya kushuka.",
@@ -1074,4 +1074,6 @@ export const SW: Record<string, string> = {
   "Products that use B11 or SCL have 20 m effective resolution. They may be drawn on a 10 m map, but contain no 10 m information.": "Vipimo vinavyotumia B11 au SCL vina ubora halisi wa mita 20. Vinaweza kuchorwa kwenye ramani ya mita 10, lakini havina taarifa ya mita 10.",
   "Joint stress mask · 20 m effective resolution, drawn as 20 m squares": "Ramani ya pamoja ya mkazo · ubora halisi wa mita 20, imechorwa kama miraba ya mita 20",
   "This field is smaller than two 20 m satellite squares (800 m²), too small to measure from space.": "Shamba hili ni dogo kuliko miraba miwili ya setilaiti ya mita 20 (m² 800), ni dogo mno kupimwa kutoka angani.",
+  "Loading the forecast…": "Inapakia utabiri wa hali ya hewa…",
+  "Session expired. Restart the app and try again.": "Muda wa kuingia umeisha. Fungua programu upya kisha ujaribu tena.",
 };

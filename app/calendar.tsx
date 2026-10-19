@@ -92,7 +92,7 @@ export default function CalendarScreen() {
           icon="calendar-blank-outline"
           crop="Crop"
           title="No crop calendar yet"
-          text="Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. CropGuard then plans the whole season."
+          text="Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. Tassel then plans the whole season."
           action={
             <Btn
               label={farms.length ? 'Add a planting date' : 'Add a field'}

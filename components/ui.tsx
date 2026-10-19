@@ -126,7 +126,7 @@ export function cropArtKey(crop: string | null | undefined): string {
   return CROP_MATCH.find(([re]) => re.test(c))?.[1] ?? 'Crop';
 }
 
-/** The crop's own illustration on a soft paper disc (Plantix-style, in CropGuard's palette). */
+/** The crop's own illustration on a soft paper disc (Plantix-style, in Tassel's palette). */
 export function CropIcon({ crop, size = 44, disc = true, discColor = '#F1EEE6' }: { crop: string | null | undefined; size?: number; disc?: boolean; discColor?: string }) {
   const art = CROP_ART[cropArtKey(crop)];
   const inner = disc ? Math.round(size * 0.7) : size;

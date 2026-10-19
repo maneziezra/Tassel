@@ -203,7 +203,7 @@ export default function SatelliteScreen() {
       ) : !satelliteReady() ? (
         <Card>
           <Text style={st.h}>Satellite checks are not switched on yet</Text>
-          <Text style={st.p}>The database update for satellite results (v2.3) has not been applied. Ask the CropGuard admin to run it.</Text>
+          <Text style={st.p}>The database update for satellite results (v2.3) has not been applied. Ask the Tassel admin to run it.</Text>
         </Card>
       ) : noBoundary ? (
         <Card>
@@ -358,7 +358,7 @@ export default function SatelliteScreen() {
           <Text style={[st.note, { marginHorizontal: 20, marginTop: 16 }]}>
             Satellite readings show where to look. They do not diagnose a problem. Always confirm in the field, and ask your extension officer before acting on a large area.
           </Text>
-          <Text style={[st.note, { marginHorizontal: 20, marginTop: 6, color: C.textLight }]}>Contains modified Copernicus Sentinel-2 data, processed by CropGuard AI.</Text>
+          <Text style={[st.note, { marginHorizontal: 20, marginTop: 6, color: C.textLight }]}>Contains modified Copernicus Sentinel-2 data, processed by Tassel.</Text>
         </ScrollView>
       )}
       <InspectSheet

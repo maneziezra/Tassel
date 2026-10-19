@@ -1,4 +1,4 @@
-// CropGuard AI — English / Kiswahili.
+// Tassel — English / Kiswahili.
 //
 // Strings are written in English in the code and looked up in the Kiswahili
 // dictionary (lib/sw.ts). Anything missing falls back to English, so a new

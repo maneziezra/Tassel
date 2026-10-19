@@ -1,4 +1,4 @@
-// CropGuard AI — AI photo check client.
+// Tassel — AI photo check client.
 //
 // For what the offline scanner cannot do (insect pests, nutrient deficiencies,
 // crops outside its 38 classes, or an uncertain scan) the farmer can choose to

@@ -80,7 +80,7 @@ export default function ProfileScreen() {
 
   const toggleNotify = async (on: boolean) => {
     if (on && !(await ensurePermission())) {
-      Alert.alert(t('Notifications are off'), t('Allow notifications for CropGuard in your phone settings to get reminders.'));
+      Alert.alert(t('Notifications are off'), t('Allow notifications for Tassel in your phone settings to get reminders.'));
       return;
     }
     setNotify(on);
@@ -267,7 +267,7 @@ export default function ProfileScreen() {
                 icon="volume-high"
                 label="Test the read-aloud voice"
                 sub={lang === 'sw' ? (swVoice ? t('Kiswahili voice installed') : t('No Kiswahili voice — install it in phone settings for a better voice')) : undefined}
-                onPress={() => speak(t('Welcome to CropGuard. Scan a leaf to check your crop.'), { lang })}
+                onPress={() => speak(t('Welcome to Tassel. Scan a leaf to check your crop.'), { lang })}
               />
             </View>
 
@@ -307,7 +307,7 @@ export default function ProfileScreen() {
             <View style={st.card}>
               <Row icon="book-open-variant" label="Disease & pest library" onPress={() => router.push('/encyclopedia')} />
               <Row icon="chart-line" label="Market prices & agro-dealers" onPress={() => router.push('/market')} />
-              <Row icon="flask-outline" label="How CropGuard works (methodology)" onPress={() => router.push('/methodology')} />
+              <Row icon="flask-outline" label="How Tassel works (methodology)" onPress={() => router.push('/methodology')} />
               <Row icon="web" label="Ministry of Agriculture" sub="kilimo.go.ke" onPress={() => Linking.openURL('https://kilimo.go.ke')} />
               <Row icon="shield-check-outline" label="Check if a pesticide is registered" sub="Pest Control Products Board — pcpb.go.ke" onPress={() => Linking.openURL('https://www.pcpb.go.ke')} />
             </View>
@@ -323,7 +323,7 @@ export default function ProfileScreen() {
                   Alert.alert(
                     t('Your data'),
                     t(
-                      'Leaf photos are analysed on this phone and are not uploaded unless you attach one to a community post or choose the AI photo check (that photo is checked by the AI and not kept). Your profile, fields, saved scans, price reports and forum posts are stored in your CropGuard account (Supabase, EU region). Outbreak alerts and farmer prices only show anonymous totals. Chat questions are sent to the AI advisor to answer them. No ads. We do not sell your data.'
+                      'Leaf photos are analysed on this phone and are not uploaded unless you attach one to a community post or choose the AI photo check (that photo is checked by the AI and not kept). Your profile, fields, saved scans, price reports and forum posts are stored in your Tassel account (Supabase, EU region). Outbreak alerts and farmer prices only show anonymous totals. Chat questions are sent to the AI advisor to answer them. No ads. We do not sell your data.'
                     )
                   )
                 }

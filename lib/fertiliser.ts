@@ -1,4 +1,4 @@
-// CropGuard AI — fertiliser planner.
+// Tassel — fertiliser planner.
 //
 // Common guide rates for Kenyan smallholders (kg per acre), the same ones the
 // season guides use. A soil test from a county soil lab or KALRO always beats

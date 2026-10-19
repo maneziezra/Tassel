@@ -405,7 +405,7 @@ export default function HomeScreen() {
           <View style={[st.panel, { alignItems: 'center', gap: 10 }]}>
             <CropIcon crop="Crop" size={64} />
             <Text style={st.emptyTitle}>Add your first field</Text>
-            <Text style={[st.small, { textAlign: 'center' }]}>Draw it on the map or type its size. CropGuard then plans the season for you.</Text>
+            <Text style={[st.small, { textAlign: 'center' }]}>Draw it on the map or type its size. Tassel then plans the season for you.</Text>
             <Btn label="Add a field" icon="plus" onPress={() => router.push('/add-farm')} style={{ alignSelf: 'stretch', marginTop: 4 }} />
           </View>
         )}

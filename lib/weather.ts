@@ -1,4 +1,4 @@
-// CropGuard AI — real weather and a weather-based late blight risk indicator.
+// Tassel — real weather and a weather-based late blight risk indicator.
 //
 // Weather: Open-Meteo forecast API (free, no API key).
 // Blight risk: the Hutton Criteria (AHDB, UK, 2017) — a "Hutton period" is two

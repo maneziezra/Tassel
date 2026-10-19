@@ -1,4 +1,4 @@
-// CropGuard AI — small on-device storage helpers (AsyncStorage).
+// Tassel — small on-device storage helpers (AsyncStorage).
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

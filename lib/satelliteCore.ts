@@ -1,4 +1,4 @@
-// CropGuard AI — satellite core: types, classes, resolution labels, geometry and exports.
+// Tassel — satellite core: types, classes, resolution labels, geometry and exports.
 //
 // Pure (no imports), so scripts/test-satellite-export.mjs can test it with plain Node.
 //
@@ -161,7 +161,7 @@ const num = (v: number | null | undefined, d = 3) => (v === null || v === undefi
 export function toCsv(obs: Observation[], fieldName: string): string {
   const meta = obs.find((o) => o.resolution)?.resolution ?? RESOLUTION;
   const head = [
-    `# CropGuard AI Sentinel-2 export — ${fieldName.replace(/[\r\n]/g, ' ')}`,
+    `# Tassel Sentinel-2 export — ${fieldName.replace(/[\r\n]/g, ' ')}`,
     `# method ${meta.method_version}; analysis grid ${meta.analysis_grid_m} m; display grid ${meta.display_grid_m} m`,
     ...(['NDVI', 'NDWI_CROP', 'JOINT_MASK', 'NDWI_WATER', 'WATER_STRESS_SCORE'] as ProductId[]).map((id) => {
       const p = meta.products[id] ?? RESOLUTION.products[id];

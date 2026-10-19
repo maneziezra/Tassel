@@ -75,7 +75,7 @@ export default function FarmScreen() {
       return;
     }
     if (!(await ensurePermission())) {
-      Alert.alert(t('Notifications are off'), t('Allow notifications for CropGuard in your phone settings to get reminders.'));
+      Alert.alert(t('Notifications are off'), t('Allow notifications for Tassel in your phone settings to get reminders.'));
       return;
     }
     const n = await scheduleFieldReminders(farm.id, tasks);

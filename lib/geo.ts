@@ -1,4 +1,4 @@
-// CropGuard AI — location, field geometry and nearby agro-dealers.
+// Tassel — location, field geometry and nearby agro-dealers.
 
 import * as Location from 'expo-location';
 import type { LatLng } from './data';
@@ -70,7 +70,7 @@ export async function findAgrovets(at: Coords, radiusKm = 15): Promise<Agrovet[]
   try {
     const res = await fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'CropGuardAI/2.0 (KSEF 2027 student project)' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Tassel/2.4 (KSEF 2027 student project)' },
       body: 'data=' + encodeURIComponent(query),
     });
     if (res.ok) {
@@ -101,7 +101,7 @@ export async function findAgrovets(at: Coords, radiusKm = 15): Promise<Agrovet[]
     const url =
       'https://nominatim.openstreetmap.org/search?q=agrovet&format=json&limit=8&countrycodes=ke&bounded=1' +
       `&viewbox=${at.lng - d},${at.lat + d},${at.lng + d},${at.lat - d}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'CropGuardAI/2.0 (KSEF 2027 student project)' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'Tassel/2.4 (KSEF 2027 student project)' } });
     if (res.ok) {
       const j = (await res.json()) as { place_id: number; name?: string; display_name: string; lat: string; lon: string }[];
       places = j.map((p) => ({

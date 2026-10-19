@@ -1,4 +1,4 @@
-// CropGuard AI — sessions
+// Tassel — sessions
 // Every phone gets an anonymous Supabase session on first launch, so scans,
 // farms and forum posts work without a sign-up. A farmer can later attach an
 // email + password to the same account (their data is kept) or sign in on a

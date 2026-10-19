@@ -1,4 +1,4 @@
-// CropGuard AI — crop calendar: what to do on each field, worked out from its
+// Tassel — crop calendar: what to do on each field, worked out from its
 // planting date (transplanting date for tomato). Timings follow the advisory
 // guides (lib/advisory.ts) and are typical for Kenyan conditions; varieties and
 // altitude change them, so tasks are shown as windows, not exact days.

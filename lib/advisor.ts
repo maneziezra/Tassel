@@ -1,4 +1,4 @@
-// CropGuard AI — advisor client
+// Tassel — advisor client
 // Calls the `advisor-chat` Supabase Edge Function, which holds the Claude
 // API key on the server. The app never sees that key. Each phone has a
 // Supabase session (anonymous by default) so the function can rate-limit per device.
@@ -53,5 +53,5 @@ export function detectionPrompt(crop: string, disease: string, confidence?: numb
   if (disease === 'Healthy') {
     return `My ${crop} leaf was scanned and looks healthy (${pct}% confidence). What should I do to keep this crop healthy this season?`;
   }
-  return `CropGuard detected ${disease} on my ${crop} with ${pct}% confidence. Please explain: 1) what this disease is, 2) what I should do today, 3) treatment options, starting with low-cost cultural and organic methods, then registered chemical options, 4) how to prevent it next season.`;
+  return `Tassel detected ${disease} on my ${crop} with ${pct}% confidence. Please explain: 1) what this disease is, 2) what I should do today, 3) treatment options, starting with low-cost cultural and organic methods, then registered chemical options, 4) how to prevent it next season.`;
 }

@@ -69,7 +69,7 @@ export default function OutbreaksScreen() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Icon name="shield-account-outline" size={20} color={C.info} />
             <Text style={st.note}>
-              Built from confident scans that farmers saved in CropGuard. A disease appears only when at least 2 different farmers found it, and no names or farm locations are shared.
+              Built from confident scans that farmers saved in Tassel. A disease appears only when at least 2 different farmers found it, and no names or farm locations are shared.
             </Text>
           </View>
         </Card>

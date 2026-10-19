@@ -83,7 +83,7 @@ export default function FertiliserScreen() {
       const b = toBags(kg);
       return `• ${FERTS[id].name} ${FERTS[id].grade}: ${bagText(b.bags, b.extraKg)} (${kg} kg)`;
     });
-    Share.share({ message: [head, ...body, cost ? t('About KES {n}', { n: Math.round(cost).toLocaleString() }) : '', '— CropGuard AI'].filter(Boolean).join('\n') });
+    Share.share({ message: [head, ...body, cost ? t('About KES {n}', { n: Math.round(cost).toLocaleString() }) : '', '— Tassel'].filter(Boolean).join('\n') });
   };
 
   return (

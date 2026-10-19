@@ -1,4 +1,4 @@
-// CropGuard AI — disease & pest encyclopedia.
+// Tassel — disease & pest encyclopedia.
 //
 // v1.0 listed "44 diseases" with a "detection %" next to each, but the scanner
 // model was never trained on most of them (e.g. fall armyworm, maize lethal

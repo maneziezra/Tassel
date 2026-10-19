@@ -1,4 +1,4 @@
-// CropGuard AI — reminders and alerts as local notifications (scheduled on the
+// Tassel — reminders and alerts as local notifications (scheduled on the
 // phone; no push server and no phone number needed).
 
 import { Platform } from 'react-native';

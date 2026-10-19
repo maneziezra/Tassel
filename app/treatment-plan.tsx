@@ -45,7 +45,7 @@ export default function TreatmentPlanScreen() {
 
   const share = () => {
     const lines = [
-      `${t('CropGuard AI treatment plan')} — ${info.crop}: ${info.disease}`,
+      `${t('Tassel treatment plan')} — ${info.crop}: ${info.disease}`,
       '',
       ...plan.flatMap((s) => [`${s.when}: ${s.title}`, ...s.tasks.map((x) => `${done.includes(x.id) ? '[x]' : '[ ]'} ${x.text}`), '']),
       chemicalRules(lang),

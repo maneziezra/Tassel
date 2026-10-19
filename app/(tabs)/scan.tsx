@@ -165,7 +165,7 @@ export default function ScanScreen() {
     viewport = (
       <View style={{ alignItems: 'center', paddingHorizontal: 32, gap: 12 }}>
         <Icon name="camera-off-outline" size={44} color="#9CA3AF" />
-        <Text style={st.permTxt}>CropGuard needs the camera to photograph leaves. You can also choose a photo from your gallery.</Text>
+        <Text style={st.permTxt}>Tassel needs the camera to photograph leaves. You can also choose a photo from your gallery.</Text>
         <TouchableOpacity style={st.permBtn} onPress={requestPermission}>
           <Text style={{ color: '#fff', fontWeight: '800' }}>Allow camera</Text>
         </TouchableOpacity>

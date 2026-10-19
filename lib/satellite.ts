@@ -1,4 +1,4 @@
-// CropGuard AI — crop health from space (Sentinel-2 NDVI + NDWI).
+// Tassel — crop health from space (Sentinel-2 NDVI + NDWI).
 //
 // The satellite-health Edge Function reads free ESA Sentinel-2 images of the
 // field, masks cloud,
@@ -287,7 +287,7 @@ export function interpret(obs: Observation[], zones: ZoneStat[], crop: string | 
   if (latest.baseline_n < 3 || latest.ndvi_delta === null || latest.ndwi_delta === null) {
     return {
       ...out, tone: 'none', headline: tr('Crop visible. Learning this field'),
-      body: tr('CropGuard compares each image with this field\'s own normal. It needs 3 clear images of the crop first; {n} so far.', { n: Math.min(2, latest.baseline_n + 1) }),
+      body: tr('Tassel compares each image with this field\'s own normal. It needs 3 clear images of the crop first; {n} so far.', { n: Math.min(2, latest.baseline_n + 1) }),
       action: null,
     };
   }

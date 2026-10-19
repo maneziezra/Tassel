@@ -1,25 +1,26 @@
 {
   "expo": {
-    "name": "CropGuard AI",
-    "slug": "CropGuard-AI",
-    "version": "2.1.0",
-    "scheme": "cropguard-ai",
+    "name": "Tassel",
+    "slug": "tassel",
+    "version": "2.4.0",
+    "scheme": "tassel",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ke.tassel.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#137A5A",
+        "backgroundColor": "#1E3A2A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.CropGuardAI",
-      "versionCode": 3,
+      "package": "ke.tassel.app",
+      "versionCode": 4,
       "permissions": [
         "CAMERA",
         "ACCESS_COARSE_LOCATION",
@@ -35,22 +36,31 @@
       "expo-status-bar",
       "react-native-fast-tflite",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1E3A2A"
+        }
+      ],
+      [
         "expo-camera",
         {
-          "cameraPermission": "CropGuard uses the camera to photograph crop leaves and detect diseases.",
+          "cameraPermission": "Tassel uses the camera to photograph crop leaves and detect diseases.",
           "recordAudioAndroid": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "CropGuard lets you choose a leaf photo from your gallery to check for diseases."
+          "photosPermission": "Tassel lets you choose a leaf photo from your gallery to check for diseases."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "CropGuard uses your location for the local weather forecast, blight risk, mapping your fields and finding nearby agro-dealers."
+          "locationWhenInUsePermission": "Tassel uses your location for the local weather forecast, blight risk, mapping your fields and finding nearby agro-dealers."
         }
       ],
       "@react-native-community/datetimepicker",

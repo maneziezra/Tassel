@@ -1,4 +1,4 @@
-// CropGuard AI — "Shamba" design tokens (v2.2 redesign).
+// Tassel — "Shamba" design tokens (v2.2 redesign).
 //
 // Calm by default: warm paper ground, white panels, one deep forest green for
 // actions. Colour is earned — it comes from the crop artwork and photos, and

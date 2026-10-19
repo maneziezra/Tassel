@@ -1,4 +1,4 @@
-// CropGuard AI — crop calendar advisory (Maize, Tomato, Beans, Wheat, Potato).
+// Tassel — crop calendar advisory (Maize, Tomato, Beans, Wheat, Potato).
 //
 // Revised from v1.0:
 // - Pesticide doses removed ("follow the label"); restricted products replaced.

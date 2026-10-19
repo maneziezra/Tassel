@@ -1,4 +1,4 @@
-// "How CropGuard works" — the methodology, its limits and the data sources,
+// "How Tassel works" — the methodology, its limits and the data sources,
 // written for farmers, teachers and KSEF judges. Each line is written in both
 // English and Kiswahili here (too long for the shared dictionary).
 
@@ -45,8 +45,8 @@ const SECTIONS: { icon: IconName; title: L; lines: L[] }[] = [
         sw: 'Skana inajua madaraja 38 tu. Haiwezi kutambua wadudu (mf. viwavijeshi vamizi), ugonjwa wa MLN wa mahindi, magonjwa ya maharagwe au muhogo. Maktaba inayaonyesha haya kama "marejeleo tu".',
       },
       {
-        en: 'CropGuard supports, but does not replace, an agricultural extension officer.',
-        sw: 'CropGuard inamsaidia, lakini haichukui nafasi ya, afisa wa ugani wa kilimo.',
+        en: 'Tassel supports, but does not replace, an agricultural extension officer.',
+        sw: 'Tassel inamsaidia, lakini haichukui nafasi ya, afisa wa ugani wa kilimo.',
       },
     ],
   },
@@ -188,7 +188,7 @@ export default function MethodologyScreen() {
   const { lang } = useLang();
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Header title="How CropGuard works" subtitle="Methods, limits and sources" />
+      <Header title="How Tassel works" subtitle="Methods, limits and sources" />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         {SECTIONS.map((s) => (
           <Card key={s.title.en}>

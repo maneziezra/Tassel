@@ -25,7 +25,7 @@ export default function NewPostScreen() {
   const [title, setTitle] = useState(prm.title ?? '');
   const [body, setBody] = useState(
     prm.scanLabel
-      ? t('The CropGuard scanner suggested {d} ({pct}% confidence). What I see: ', { d: scanInfo?.disease ?? prm.scanLabel, pct: scanPct ?? 0 })
+      ? t('The Tassel scanner suggested {d} ({pct}% confidence). What I see: ', { d: scanInfo?.disease ?? prm.scanLabel, pct: scanPct ?? 0 })
       : ''
   );
   const [crop, setCrop] = useState(prm.crop && CROP_CHOICES.includes(prm.crop) ? prm.crop : prm.crop ?? '');

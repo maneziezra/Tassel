@@ -1,4 +1,4 @@
-// CropGuard AI — treatment knowledge base for the 38 classes the scanner can detect.
+// Tassel — treatment knowledge base for the 38 classes the scanner can detect.
 //
 // v2.0 methodology (replaces the v1.0 free-text advice + keyword "3-pillar" parser):
 // - Every class has explicit cultural, biological and chemical options written

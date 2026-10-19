@@ -1,4 +1,4 @@
-// CropGuard AI — data layer (Supabase tables with row-level security).
+// Tassel — data layer (Supabase tables with row-level security).
 // Replaces the v1.0 FirebaseService stubs, which returned fake data.
 // v2.1 features (outbreak alerts, planting dates, photo posts, farmer prices)
 // degrade gracefully if the v2.1 database update has not been applied yet.
