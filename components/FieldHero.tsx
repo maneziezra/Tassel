@@ -7,6 +7,7 @@
 // Reduce-motion shows the final picture at once.
 
 import React, { useEffect, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Canvas, Group, LinearGradient, Path, Rect, Skia, vec } from '@shopify/react-native-skia';
 import {
   Easing,
@@ -19,8 +20,10 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import type { Grid } from '../lib/satelliteCore';
-import { layoutField } from '../lib/fieldArt';
-import { C } from '../lib/theme';
+import { layoutField, ndviColor } from '../lib/fieldArt';
+import { C, FONT } from '../lib/theme';
+import { Text } from './ui';
+import { useLang } from '../lib/i18n';
 
 export function FieldHero({
   polygon,
@@ -29,6 +32,8 @@ export function FieldHero({
   height,
   checking,
   playKey,
+  flagStress,
+  showKey,
 }: {
   polygon: [number, number][] | null;
   grid: Grid | null;
@@ -38,8 +43,15 @@ export function FieldHero({
   checking?: boolean;
   /** Change it to replay the reveal (e.g. when the farmer switches field). */
   playKey?: string;
+  /** Pulse the 20 m stress squares. Only when the verdict itself says watch/act,
+   *  so a "looks normal" field never shows alarm marks (scattered cells under the
+   *  20 % rule in lib/satellite.ts interpret()). */
+  flagStress?: boolean;
+  /** Show the colour key under the field (Home hero). */
+  showKey?: boolean;
 }) {
   const reduce = useReducedMotion();
+  const { t } = useLang();
   const art = useMemo(() => layoutField(polygon, grid, width, height), [polygon, grid, width, height]);
 
   const outlinePath = useMemo(() => {
@@ -81,13 +93,22 @@ export function FieldHero({
   const sweepOpacity = useDerivedValue(() => (checking ? 1 : 1 - Math.max(0, (sweep.value - 0.85) / 0.15)));
 
   if (!art) return null;
-  return (
+  const hasCloud = art.cells.some((c) => c.noData);
+  const canvas = (
     <Canvas style={{ width, height }} accessible={false}>
       <Group clip={clip}>
-        {art.cells.map((c, i) => (
-          <Rect key={i} x={c.x + 0.75} y={c.y + 0.75} width={Math.max(1, c.s - 1.5)} height={Math.max(1, c.s - 1.5)} color={c.color} opacity={c.noData ? 0.5 : 1} />
-        ))}
-        {art.stress.length ? (
+        {/* The field sits on a paper plate: dense green (#1F4D39) would vanish into the
+            dark hero, and the healthiest part of the field would read as empty. */}
+        {art.outline.length ? <Path path={outlinePath} color={art.cells.length ? C.bg : 'rgba(244,241,230,0.07)'} /> : null}
+        {art.cells.map((c, i) =>
+          c.noData ? (
+            // No clear view (cloud): an empty square, so it never reads as bare soil or dense crop
+            <Rect key={i} x={c.x + 1.25} y={c.y + 1.25} width={Math.max(1, c.s - 2.5)} height={Math.max(1, c.s - 2.5)} color={C.textLight} style="stroke" strokeWidth={0.75} opacity={0.6} />
+          ) : (
+            <Rect key={i} x={c.x + 0.75} y={c.y + 0.75} width={Math.max(1, c.s - 1.5)} height={Math.max(1, c.s - 1.5)} color={c.color} />
+          )
+        )}
+        {flagStress && art.stress.length ? (
           <Group opacity={pulse}>
             {art.stress.map((c, i) => (
               <Rect key={i} x={c.x + 1} y={c.y + 1} width={c.s - 2} height={c.s - 2} color={C.error} style="stroke" strokeWidth={2} />
@@ -106,4 +127,35 @@ export function FieldHero({
       </Group>
     </Canvas>
   );
+  if (!showKey || !art.cells.length) return canvas;
+  return (
+    <View style={{ alignItems: 'center' }}>
+      {canvas}
+      <View
+        style={st.key}
+        accessible
+        accessibilityLabel={t('Lighter squares: bare soil. Darker: dense crop.') + (hasCloud ? ' ' + t('Empty squares: no clear view.') : '')}
+      >
+        <Text style={st.keyText}>Bare</Text>
+        {[0.1, 0.3, 0.5, 0.65, 0.85].map((v) => (
+          <View key={v} style={[st.sq, { backgroundColor: ndviColor(v) }]} />
+        ))}
+        <Text style={st.keyText}>Dense</Text>
+        {hasCloud ? (
+          <>
+            <View style={[st.sq, st.sqCloud]} />
+            <Text style={st.keyText}>Cloud</Text>
+          </>
+        ) : null}
+      </View>
+    </View>
+  );
 }
+
+const st = StyleSheet.create({
+  // a small paper pill: the dense-green swatch would vanish on the dark hero
+  key: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: C.bg },
+  sq: { width: 12, height: 12, borderRadius: 2 },
+  sqCloud: { borderWidth: 1, borderColor: C.textLight, marginLeft: 8 },
+  keyText: { fontSize: 13, fontFamily: FONT.bodyBold, color: C.textMid, marginHorizontal: 3 },
+});

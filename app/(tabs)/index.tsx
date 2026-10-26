@@ -409,6 +409,8 @@ export default function HomeScreen() {
                     height={HERO_ART_H}
                     checking={!activeGrid}
                     playKey={activeFarm.id}
+                    flagStress={fieldVerdict?.tone === 'watch' || fieldVerdict?.tone === 'act'}
+                    showKey
                   />
                 ) : (
                   <SatellitePassArt size={150} />
@@ -787,7 +789,7 @@ const st = StyleSheet.create({
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   heroGreeting: { fontSize: 28, fontFamily: FONT.display, color: C.brandCream },
   heroSub: { fontSize: 15, color: C.secondary, marginTop: 2 },
-  heroArt: { height: HERO_ART_H, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
+  heroArt: { minHeight: HERO_ART_H, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
   heroVerdict: { fontSize: 32, lineHeight: 36, fontFamily: FONT.display, color: C.brandCream, marginTop: 14 },
   heroMeta: { fontSize: 15, color: C.secondary, marginTop: 6 },
   fieldPillsContainer: { gap: 8, paddingTop: 14 },

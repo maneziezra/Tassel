@@ -66,7 +66,7 @@ export default function PesticideCalcScreen() {
           }
         })
         .catch(() => {});
-      getPosition().then((pos) => {
+      getPosition(false).then((pos) => {
         if (pos) getWeather(pos.lat, pos.lng).then(setWeather).catch(() => {});
       });
     }, [fieldId, prm.crop])

@@ -6,14 +6,16 @@ import type { LatLng } from './data';
 export type Coords = { lat: number; lng: number };
 
 /** Returns the phone's position, or null if refused/unavailable.
- * With ask=false it never shows the permission prompt (for screens that load automatically). */
+ * With ask=false it never shows the permission prompt or Android's "Location Accuracy"
+ * settings dialog (for screens that load automatically; on the TECNO that dialog
+ * otherwise came up on every Home refresh). */
 export async function getPosition(ask = true): Promise<Coords | null> {
   const { status } = ask ? await Location.requestForegroundPermissionsAsync() : await Location.getForegroundPermissionsAsync();
   if (status !== 'granted') return null;
   try {
     const last = await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 });
     if (last) return { lat: last.coords.latitude, lng: last.coords.longitude };
-    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, mayShowUserSettingsDialog: ask });
     return { lat: pos.coords.latitude, lng: pos.coords.longitude };
   } catch {
     return null;

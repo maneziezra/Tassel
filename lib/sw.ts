@@ -1325,6 +1325,13 @@ export const SW: Record<string, string> = {
 
   // ── v2.7 Home: the field from space (Direction A) ── flagged for native-speaker review
   "Open the field from space": "Fungua shamba kutoka angani",
+  // v2.7 hero key (flagged for native-speaker review)
+  "Dense crop": "Zao nene",
+  "Lighter squares: bare soil. Darker: dense crop.": "Miraba myeupe: udongo mtupu. Myeusi zaidi: zao nene.",
+  "No clear view": "Haionekani vizuri",
+  "Dense": "Nene",
+  "Cloud": "Mawingu",
+  "Empty squares: no clear view.": "Miraba mitupu: haionekani vizuri.",
   "Clear picture from space · {date} · tap to open": "Picha safi kutoka angani · {date} · gusa kufungua",
   "Tap to open the field from space": "Gusa kufungua shamba kutoka angani",
   "Draw this field to see it from space": "Chora shamba hili ulione kutoka angani",
