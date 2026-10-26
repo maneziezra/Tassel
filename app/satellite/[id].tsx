@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Btn, Card, Chip, Dot, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Segmented, Sheet, StatusShade, Text, tick } from '../../components/ui';
 import { getFarm, type Farm } from '../../lib/data';
 import { locale, useLang } from '../../lib/i18n';
@@ -31,6 +32,15 @@ const LAYER: Record<Layer, { product: ProductId; grid: 10 | 20 }> = {
   ndwi_water: { product: 'NDWI_WATER', grid: 10 },
 };
 type View_ = 'farmer' | 'technical';
+
+/** Farmer-view layer names. The resolution is always shown next to them (resolution rule). */
+const PLAIN: Record<Layer, string> = { mask: 'Where to look', ndvi: 'Green cover', ndwi_crop: 'Leaf water', ndwi_water: 'Open water' };
+const PLAIN_CAPTION: Record<Layer, string> = {
+  mask: 'Coloured squares show where the crop looks different from its own normal. Each square is 20 × 20 m.',
+  ndvi: 'Greener squares mean more growing leaves. Each square is 10 × 10 m.',
+  ndwi_crop: 'Bluer squares mean more water in the leaves. Each square is 20 × 20 m.',
+  ndwi_water: 'Shows standing water or flooding. Each square is 10 × 10 m.',
+};
 
 const lastAuto: Record<string, number> = {}; // farm id → time of the last automatic check this session
 
@@ -189,6 +199,9 @@ export default function SatelliteScreen() {
   }
 
   const tone = TONE[reading.tone];
+  // Honest gaps: newer passes than the last clear one were all clouded.
+  const lastClear = reading.latest?.observed_at ?? null;
+  const cloudGap = lastClear && obs.some((o) => o.observed_at > lastClear && o.quality === 'unusable') ? lastClear : null;
   const noBoundary = farm && (!farm.polygon || farm.polygon.length < 3);
 
   return (
@@ -240,6 +253,12 @@ export default function SatelliteScreen() {
               </View>
             ) : null}
 
+            {cloudGap ? (
+              <View style={[st.qualityRow, { marginTop: 2 }]}>
+                <Icon name="weather-cloudy" size={14} color={C.brandGold} />
+                <Text raw style={[st.qualityTxt, { color: C.brandCream }]}>{t('No clear picture since {date} — clouds', { date: dateLabel(cloudGap) })}</Text>
+              </View>
+            ) : null}
             {reading.latest ? (
               <View style={[st.qualityRow, { marginTop: 2 }]}>
                 <Icon name="satellite-variant" size={14} color={C.brandGold} />
@@ -266,6 +285,30 @@ export default function SatelliteScreen() {
             )}
           </View>
 
+          {/* 2. The field, square by square */}
+          {sel && grid && farm ? (
+            <Card>
+              <SectionLabel action={t('On the map')} onAction={() => router.push({ pathname: '/farm-map', params: { focus: farm.id, sat: String(sel.id) } })}>
+                Your field
+              </SectionLabel>
+              <LayerPicker plain={view === 'farmer'} layer={layer} meta={grid.resolution} onChange={(l) => { setLayer(l); setCell(null); }} />
+              <LayerCaption plain={view === 'farmer'} layer={layer} meta={grid.resolution} />
+              <Animated.View key={`${sel.id}:${layer}`} entering={FadeIn.duration(320)}>
+                <FieldMask grid={grid} farm={farm} layer={layer} selected={cell} onCell={setCell} />
+              </Animated.View>
+              <CellInfo grid={grid} layer={layer} cell={cell} />
+              <Legend grid={grid} layer={layer} />
+              <DateStrip obs={obs} sel={sel} onSel={(o) => { tick('select'); setSel(o); }} label={dateLabel} />
+              {sel.quality === 'unusable' ? <Text style={st.note}>Clouds covered the field on this date. Grey squares are not readings.</Text> : null}
+              {sel.suspect ? <Text style={st.note}>This date was probably hazy: it disagrees with the clear images either side of it.</Text> : null}
+              {latestZones.length <= 1 ? <Text style={[st.note, { marginTop: 10 }]}>Small field: Tassel reads it as one zone.</Text> : null}
+              {view === 'technical' ? <Text style={[st.note, { marginTop: 10 }]}>{t('Square size on screen follows each product: 10 m pixels for NDVI and open water, 20 m cells for crop water and the stress mask. B11 is never sharpened to 10 m.')}</Text> : null}
+            </Card>
+          ) : usable.length === 0 && !busy ? null : sel ? <Loading /> : null}
+
+          <Segmented<View_> value={view} onChange={setView} style={{ marginHorizontal: 16, marginTop: 16 }}
+            options={[{ value: 'farmer', label: 'Farmer view' }, { value: 'technical', label: 'Technical' }]} />
+
           {/* follow-ups that are due */}
           {due.map((c) => (
             <Card key={c.id}>
@@ -280,26 +323,6 @@ export default function SatelliteScreen() {
             </Card>
           ))}
 
-          <Segmented<View_> value={view} onChange={setView} style={{ marginHorizontal: 16, marginTop: 16 }}
-            options={[{ value: 'farmer', label: 'Farmer view' }, { value: 'technical', label: 'Technical' }]} />
-
-          {/* 2. The field, square by square */}
-          {sel && grid && farm ? (
-            <Card>
-              <SectionLabel action={t('On the map')} onAction={() => router.push({ pathname: '/farm-map', params: { focus: farm.id, sat: String(sel.id) } })}>
-                Your field
-              </SectionLabel>
-              <LayerPicker layer={layer} meta={grid.resolution} onChange={(l) => { setLayer(l); setCell(null); }} />
-              <LayerCaption layer={layer} meta={grid.resolution} />
-              <FieldMask grid={grid} farm={farm} layer={layer} selected={cell} onCell={setCell} />
-              <CellInfo grid={grid} layer={layer} cell={cell} />
-              <Legend grid={grid} layer={layer} />
-              <DateStrip obs={obs} sel={sel} onSel={(o) => { tick('select'); setSel(o); }} label={dateLabel} />
-              {sel.quality === 'unusable' ? <Text style={st.note}>Clouds covered the field on this date. Grey squares are not readings.</Text> : null}
-              {sel.suspect ? <Text style={st.note}>This date was probably hazy: it disagrees with the clear images either side of it.</Text> : null}
-              <Text style={[st.note, { marginTop: 10 }]}>{t('Square size on screen follows each product: 10 m pixels for NDVI and open water, 20 m cells for crop water and the stress mask. B11 is never sharpened to 10 m.')}</Text>
-            </Card>
-          ) : usable.length === 0 && !busy ? null : sel ? <Loading /> : null}
 
           {/* 3. Over time */}
           {usable.length >= 2 ? (
@@ -399,13 +422,13 @@ export default function SatelliteScreen() {
 
 // ------------------------------------------------------------------ field mask
 
-function LayerPicker({ layer, meta, onChange }: { layer: Layer; meta: ResolutionMeta; onChange: (l: Layer) => void }) {
+function LayerPicker({ layer, meta, onChange, plain }: { layer: Layer; meta: ResolutionMeta; onChange: (l: Layer) => void; plain: boolean }) {
   const { t } = useLang();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
       {(Object.keys(LAYER) as Layer[]).map((l) => {
         const p = meta.products[LAYER[l].product] ?? RESOLUTION.products[LAYER[l].product];
-        return <Chip key={l} raw label={`${t(p.label)} · ${p.effective_resolution_m} m`} active={layer === l} onPress={() => onChange(l)} />;
+        return <Chip key={l} raw label={`${t(plain ? PLAIN[l] : p.label)} · ${p.effective_resolution_m} m`} active={layer === l} onPress={() => { tick('select'); onChange(l); }} />;
       })}
     </ScrollView>
   );
@@ -418,9 +441,16 @@ const CAPTION: Record<Layer, string> = {
   ndwi_water: 'Green–NIR index from B3 and B8 for open water and flooding only. Native 10 m pixels.',
 };
 
-function LayerCaption({ layer, meta }: { layer: Layer; meta: ResolutionMeta }) {
+function LayerCaption({ layer, meta, plain }: { layer: Layer; meta: ResolutionMeta; plain: boolean }) {
   const { t } = useLang();
   const p = meta.products[LAYER[layer].product] ?? RESOLUTION.products[LAYER[layer].product];
+  if (plain) {
+    return (
+      <View style={st.caption}>
+        <Text raw style={st.captionTxt}>{t(PLAIN_CAPTION[layer])}</Text>
+      </View>
+    );
+  }
   return (
     <View style={st.caption}>
       <Text raw style={st.captionTitle}>{t(p.label)} · {t('{n} m effective resolution', { n: p.effective_resolution_m })}</Text>

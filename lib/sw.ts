@@ -1355,4 +1355,12 @@ export const SW: Record<string, string> = {
   "Quick choices": "Chaguo za haraka",
   "Main Shamba": "Shamba Kuu",
   "Remind me of season tasks (weeding, fertilising, scouting)": "Nikumbushe kazi za msimu (palizi, mbolea, ukaguzi)",
+
+  // ── v2.7 Field Health farmer view ── flagged for native-speaker review
+  "Coloured squares show where the crop looks different from its own normal. Each square is 20 × 20 m.": "Miraba yenye rangi inaonyesha mahali zao linaonekana tofauti na hali yake ya kawaida. Kila mraba ni mita 20 × 20.",
+  "Greener squares mean more growing leaves. Each square is 10 × 10 m.": "Miraba ya kijani zaidi inamaanisha majani mengi yanayokua. Kila mraba ni mita 10 × 10.",
+  "Bluer squares mean more water in the leaves. Each square is 20 × 20 m.": "Miraba ya buluu zaidi inamaanisha maji zaidi kwenye majani. Kila mraba ni mita 20 × 20.",
+  "Shows standing water or flooding. Each square is 10 × 10 m.": "Inaonyesha maji yaliyotuama au mafuriko. Kila mraba ni mita 10 × 10.",
+  "No clear picture since {date} — clouds": "Hakuna picha safi tangu {date} — mawingu",
+  "Small field: Tassel reads it as one zone.": "Shamba dogo: Tassel inalisoma kama sehemu moja.",
 };
