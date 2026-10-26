@@ -8,7 +8,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, type IconName } from '../components/ui';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
-import { getRegisteredProducts, PCPB_DISCLAIMER } from '../lib/pcpb';
+import { PcpbProductCard } from '../components/PcpbProductCard';
+import { cropKey, getRegisteredProducts, PCPB_DISCLAIMER, problemKey } from '../lib/pcpb';
 import { addFarm, listFarms, saveIncident, type Farm } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
 import { openScanner } from '../lib/navigation';
@@ -33,7 +34,13 @@ export default function ResultScreen() {
     }
   }, [p.alts]);
   const hints = uncertain ? pestHints([base.crop, ...alts.map(([l]) => describeLabel(l).crop)], lang) : [];
-  const pcpbProducts = useMemo(() => getRegisteredProducts(label || raw?.disease || base.disease), [label, raw, base]);
+  // Registered product examples only for a confident diagnosis (rule 3: never act on "Not sure").
+  const pcpbCrop = cropKey(base.crop);
+  const pcpbProblem = problemKey(label) ?? problemKey(raw?.disease);
+  const pcpbProducts = useMemo(
+    () => (uncertain ? [] : getRegisteredProducts(base.crop, label || raw?.disease || base.disease)),
+    [uncertain, label, raw, base]
+  );
 
   const [farms, setFarms] = useState<Farm[] | null>(null);
   const [picker, setPicker] = useState(false);
@@ -309,25 +316,18 @@ export default function ResultScreen() {
                 </Text>
 
                 {pcpbProducts.length > 0 ? (
-                  <View style={{ marginTop: 16, gap: 8 }}>
-                    <Text style={[st.h2, { fontSize: 15 }]}>Registered product examples (Kenya PCPB)</Text>
+                  <View style={{ marginTop: 16, gap: 10 }}>
+                    <Text style={[st.h2, { fontSize: 17 }]}>Registered products in Kenya</Text>
                     {pcpbProducts.map((prod) => (
-                      <View key={prod.regNo} style={st.pcpbCard}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text raw style={st.pcpbName}>{prod.name}</Text>
-                          <View style={st.pcpbBadge}>
-                            <Text raw style={st.pcpbBadgeText}>{prod.regNo}</Text>
-                          </View>
-                        </View>
-                        <Text raw style={st.pcpbActive}>Active: {prod.active}</Text>
-                        {prod.warning ? (
-                          <Text raw style={st.pcpbWarning}>{prod.warning}</Text>
-                        ) : null}
-                      </View>
+                      <PcpbProductCard key={prod.r} product={prod} crop={pcpbCrop} problem={pcpbProblem} onPanel />
                     ))}
-                    <Text style={st.pcpbDisclaimer}>
-                      Not sponsored. Commercial examples registered with Kenya's Pest Control Products Board. Always follow label.
-                    </Text>
+                    <Text style={st.pcpbDisclaimer}>{PCPB_DISCLAIMER}</Text>
+                    <Btn
+                      label="Work out the spray mix"
+                      icon="calculator-variant-outline"
+                      kind="secondary"
+                      onPress={() => router.push({ pathname: '/pesticide-calc', params: { crop: base.crop, problem: label } })}
+                    />
                   </View>
                 ) : null}
               </>
@@ -465,11 +465,5 @@ const st = StyleSheet.create({
   agroName: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
   agroIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
   farmRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
-  pcpbCard: { backgroundColor: C.sunken, padding: 12, borderRadius: 12, gap: 4, marginTop: 4 },
-  pcpbName: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text },
-  pcpbBadge: { backgroundColor: C.primaryTint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  pcpbBadgeText: { fontSize: 11, fontFamily: FONT.bodyBold, color: C.primaryDark },
-  pcpbActive: { fontSize: 13, color: C.textMid },
-  pcpbWarning: { fontSize: 12, color: C.warn, fontFamily: FONT.bodyBold, marginTop: 2 },
-  pcpbDisclaimer: { fontSize: 12, color: C.textSub, marginTop: 4, lineHeight: 17 },
+  pcpbDisclaimer: { fontSize: 13, color: C.textSub, marginTop: 4, lineHeight: 18 },
 });

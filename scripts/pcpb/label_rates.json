@@ -1,0 +1,146 @@
+{
+  "_about": "Label rates read from the PCPB-approved label PDFs linked from https://www.pcpb.go.ke/crops/ (register table of 24 Aug 2026). Each use quotes the label. phiDays and reiHours are the LONGER of the label and the register value. Products whose label could not be read unambiguously are listed in 'unverified' and show 'See the label' in the app. Never hand-edit a rate without a quote.",
+  "checkedOn": "2026-10-26",
+  "products": [
+    {
+      "regNo": "PCPB(CR)0326",
+      "name": "Ridomil Gold MZ 68 WG",
+      "reiHours": 12,
+      "ppe": ["overalls", "gumboots", "gloves", "faceShield"],
+      "uses": [
+        { "crop": "potato", "labelCrop": "Potatoes", "problem": "late_blight", "labelProblem": "P. infestans (late blight)", "perTank20": { "min": 50, "max": 50, "unit": "g" }, "waterPerHa": 500, "interval": "10-14", "maxSprays": 3, "phiDays": 7, "quote": "Potatoes | P. infestans (late blight) | 50 | 10-14 ... Knapsack 20 litre gram/knapsack 50 ... Use sufficient water of 500L/Ha ... Pre-Harvest intervals Potatoes 7 days" },
+        { "crop": "tomato", "labelCrop": "Tomatoes", "problem": "late_blight", "labelProblem": "P. infestans (late blight)", "perTank20": { "min": 50, "max": 50, "unit": "g" }, "waterPerHa": 500, "interval": "7-10", "maxSprays": 4, "phiDays": 7, "quote": "Tomatoes | P. infestans (late blight) | 50 | 7-10 ... Pre-Harvest intervals Tomatoes 7 days" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)1037-p(i)",
+      "name": "Ortiva Top 325 SC",
+      "reiHours": 12,
+      "ppe": ["gloves", "faceMask", "overalls", "hat", "gumboots"],
+      "uses": [
+        { "crop": "beans", "labelCrop": "French beans", "problem": "leaf_spot", "labelProblem": "Angular leaf spots, rust, anthracnose", "perHa": { "min": 500, "max": 500, "unit": "mL" }, "perTank20": { "min": 10, "max": 10, "unit": "mL" }, "phiDays": 7, "quote": "French Beans Angular leaf spots rust, anthracnose 0.5 lt/ha 10ml/20mL ... PHI: Snow Peas and French Beans: 7 days" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "rust", "labelProblem": "Angular leaf spots, rust, anthracnose", "perHa": { "min": 500, "max": 500, "unit": "mL" }, "perTank20": { "min": 10, "max": 10, "unit": "mL" }, "phiDays": 7, "quote": "French Beans Angular leaf spots rust, anthracnose 0.5 lt/ha 10ml/20mL ... PHI: Snow Peas and French Beans: 7 days" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)0989",
+      "name": "Nativo SC 300",
+      "reiHours": 12,
+      "ppe": ["respirator", "gloves", "goggles", "overalls", "boots"],
+      "uses": [
+        { "crop": "wheat", "labelCrop": "Wheat", "problem": "rust", "labelProblem": "Stem rust, yellow (stripe) rust", "perHa": { "min": 750, "max": 1000, "unit": "mL" }, "perTank20": { "min": 75, "max": 100, "unit": "mL" }, "waterPerHa": 200, "phiDays": 40, "quote": "Wheat | Stem rust Yellow (stripe) Rust | 1.0 L/ha in 200 L of water 100 ml / 20 litres of water 750 ml/ha in 200 L of water 75 ml/ 20 litres of water. Register: wheat ... PHI = 40 days" },
+        { "crop": "maize", "labelCrop": "Maize", "problem": "leaf_spot", "labelProblem": "Grey leaf spot", "perHa": { "min": 500, "max": 750, "unit": "mL" }, "perTank20": { "min": 50, "max": 75, "unit": "mL" }, "waterPerHa": 200, "phiDays": 35, "quote": "Maize | Grey leaf spot | 500-750 ml/ha in a spray volume of 200 L of water/ha 50-75 ml/ 20 litres of water. Register: PHI=35 days" },
+        { "crop": "coffee", "labelCrop": "Coffee", "problem": "cbd", "labelProblem": "Coffee berry disease (CBD)", "perHa": { "min": 1000, "max": 1000, "unit": "mL" }, "perTank20": { "min": 20, "max": 20, "unit": "mL" }, "waterPerHa": 1000, "phiDays": 35, "quote": "Coffee | Coffee berry disease (CBD) | 1 L/ha in a spray volume of 1000 litres of water/ha 20 ml/20 litres of water. Register: PHI=35 days" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)0518",
+      "name": "Amistar Xtra 280 SC",
+      "reiHours": 12,
+      "ppe": ["gloves", "faceMask", "overalls", "hat", "gumboots"],
+      "uses": [
+        { "crop": "wheat", "labelCrop": "Wheat", "problem": "rust", "labelProblem": "Leaf spot, stem rust, yellow rust, brown rust", "perHa": { "min": 500, "max": 750, "unit": "mL" }, "interval": "3-5 weeks", "phiDays": 42, "quote": "Wheat Target diseases: Leaf spot, Stem rust, Yellow rust, Brown rust. Rate: 0.5 lt/ha- 0.75 lt/ha Interval: 3-5 weeks ... applied at flag leaf. PHI: 42 days." }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)0025-p(ii)",
+      "name": "Amicop 50 WP",
+      "reiHours": 6,
+      "ppe": ["gloves", "faceShield", "respirator", "overalls", "boots"],
+      "uses": [
+        { "crop": "coffee", "labelCrop": "Coffee", "problem": "rust", "labelProblem": "Leaf rust", "perHa": { "min": 3.8, "max": 3.8, "unit": "kg" }, "perTank20": { "min": 70, "max": 70, "unit": "g" }, "interval": "3 weeks", "phiDays": 14, "quote": "Coffee | Leaf Rust | ... repeat at 3 weeks intervals throughout the rains | 3.8 | 70 ... Pre-harvest Period: Coffee-14 days" },
+        { "crop": "coffee", "labelCrop": "Coffee", "problem": "cbd", "labelProblem": "Coffee berry disease", "perHa": { "min": 7.7, "max": 7.7, "unit": "kg" }, "perTank20": { "min": 140, "max": 140, "unit": "g" }, "interval": "4 weeks", "phiDays": 14, "quote": "Coffee | Coffee Berry Disease | Start spraying 3 weeks before the onset of rains and repeat at 4 weeks intervals | 7.7 | 140" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "rust", "labelProblem": "Rust, anthracnose and bacterial blight", "perHa": { "min": 1.6, "max": 1.6, "unit": "kg" }, "perTank20": { "min": 40, "max": 40, "unit": "g" }, "interval": "7", "phiDays": 3, "quote": "French Beans | Rust, Anthracnose And Bacterial Blight | ... repeat at weekly interval. | 1.6 | 40 ... French Beans - 3 days" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "bacterial", "labelProblem": "Rust, anthracnose and bacterial blight", "perHa": { "min": 1.6, "max": 1.6, "unit": "kg" }, "perTank20": { "min": 40, "max": 40, "unit": "g" }, "interval": "7", "phiDays": 3, "quote": "French Beans | Rust, Anthracnose And Bacterial Blight | 1.6 | 40" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)0947",
+      "name": "Score 250 EC",
+      "ppe": ["overalls", "gloves", "gumboots", "faceShield"],
+      "uses": [
+        { "crop": "beans", "labelCrop": "French beans", "problem": "leaf_spot", "labelProblem": "Angular leaf spot", "perHa": { "min": 500, "max": 500, "unit": "mL" }, "perTank20": { "min": 20, "max": 20, "unit": "mL" }, "interval": "7-10", "phiDays": 14, "quote": "French Beans | Angular leaf spot | 0.5 | 20 ml | 7-10 ... French Beans, Snow Peas: 14 days." }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)1138",
+      "name": "Coragen 20 SC",
+      "reiHours": 12,
+      "ppe": ["overalls", "boots", "gloves"],
+      "uses": [
+        { "crop": "tomato", "labelCrop": "Tomatoes", "problem": "caterpillar", "labelProblem": "African bollworm (Helicoverpa armigera)", "perHa": { "min": 150, "max": 150, "unit": "mL" }, "perTank20": { "min": 6, "max": 6, "unit": "mL" }, "waterPerHa": 500, "phiDays": 1, "quote": "Tomatoes | African bollworm: Helicoverpa armigera | Apply on first sign of insects. | 150 ml/ha or 6 ml/20 L Knapsack Use 500 L solution per hectare | 1 day" },
+        { "crop": "tomato", "labelCrop": "Tomatoes", "problem": "tuta", "labelProblem": "Tomato leaf miner (Tuta absoluta)", "perHa": { "min": 200, "max": 200, "unit": "mL" }, "waterPerHa": 500, "phiDays": 1, "quote": "Tomatoes | Tomato leaf miner moth: Tuta absoluta | Apply on first sign of insects. | 200 ml/ha Use 500 L solution per hectare | 1 day" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "caterpillar", "labelProblem": "African bollworm (Helicoverpa armigera)", "perHa": { "min": 125, "max": 125, "unit": "mL" }, "perTank20": { "min": 5, "max": 5, "unit": "mL" }, "waterPerHa": 500, "phiDays": 3, "quote": "French beans, Snowpeas, Sugar snaps. | African bollworm | ... during flowering before pod formation. | 125 ml/ha or 5 ml/20 L Knapsack Use 500 L solution per hectare | 3 days" },
+        { "crop": "cabbage", "labelCrop": "Cabbages", "problem": "caterpillar", "labelProblem": "Diamond back moth (Plutella xylostella)", "perHa": { "min": 125, "max": 125, "unit": "mL" }, "perTank20": { "min": 5, "max": 5, "unit": "mL" }, "waterPerHa": 500, "phiDays": 3, "quote": "Cabbages | Diamond Back Moth: Plutella xylostella | Apply on first sign of insects. | 125 ml/ha or 5 ml/20 L Knapsack Use 500 L solution per hectare | 3 days" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)1048",
+      "name": "Radiant 120 SC",
+      "reiHours": 4,
+      "ppe": ["gloves", "faceShield", "gumboots", "overalls"],
+      "uses": [
+        { "crop": "maize", "labelCrop": "Maize", "problem": "faw", "labelProblem": "Fall armyworm", "perHa": { "min": 150, "max": 200, "unit": "mL" }, "perTank20": { "min": 15, "max": 20, "unit": "mL" }, "interval": "7", "phiDays": 7, "quote": "Maize | Fall Army Worm | 150-200ml/Ha 15-20ml/20L Knapsack | Spray at first signs of infestation, repeat application after 7 days if necessary ... PHI: ... Maize 7 days" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "caterpillar", "labelProblem": "Spodoptera caterpillars", "perHa": { "min": 125, "max": 160, "unit": "mL" }, "perTank20": { "min": 3, "max": 4, "unit": "mL" }, "waterPerHa": 750, "interval": "7", "phiDays": 3, "quote": "French beans | Spodoptera spp. Caterpillars | 125-160ml/ha in 750L of water 3-4ml/20L knapsack. Register: French beans ... PHI - 3 days" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "thrips", "labelProblem": "Thrips", "perHa": { "min": 150, "max": 150, "unit": "mL" }, "perTank20": { "min": 3, "max": 4, "unit": "mL" }, "waterPerHa": 750, "interval": "7", "phiDays": 3, "quote": "French beans | Thrips | 150ml/ha in 750L of water 3-4ml/20L knapsack. Register: PHI - 3 days" },
+        { "crop": "tomato", "labelCrop": "Tomatoes", "problem": "caterpillar", "labelProblem": "Helicoverpa armigera (bollworm)", "perHa": { "min": 150, "max": 150, "unit": "mL" }, "perTank20": { "min": 6, "max": 8, "unit": "mL" }, "interval": "7", "phiDays": 3, "quote": "Tomatoes | Helicoverpa armigera (bollworm) | 150ml/ha 6-8ml/20L knapsack ... PHI: ... Tomatoes 3 days" },
+        { "crop": "cabbage", "labelCrop": "Cabbage", "problem": "caterpillar", "labelProblem": "Diamond back moth", "perHa": { "min": 125, "max": 160, "unit": "mL" }, "perTank20": { "min": 3, "max": 4, "unit": "mL" }, "waterPerHa": 750, "interval": "7", "phiDays": 3, "quote": "Cabbage | Diamond black moth | 125-160ml/ha in 750L of water 3-4ml/20L knapsack ... PHI: Cabbage 3 days" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)0756",
+      "name": "Belt 480 SC",
+      "ppe": ["overalls", "boots", "gloves", "faceShield"],
+      "uses": [
+        { "crop": "maize", "labelCrop": "Maize", "problem": "faw", "labelProblem": "Fall armyworm", "perHa": { "min": 150, "max": 200, "unit": "mL" }, "perTank20": { "min": 7.5, "max": 10, "unit": "mL" }, "waterPerHa": 400, "interval": "14", "maxSprays": 2, "phiDays": 28, "quote": "Fall army worm | 150-200 ml/ha in 400 litres of water. 7.5-10 ml/20 litres of water. | ... Apply at interval of 14 days ... A maximum of 2 sprays per season. PHI: 28 days" },
+        { "crop": "maize", "labelCrop": "Maize", "problem": "stalk_borer", "labelProblem": "Maize stalk borer (Busseola fusca)", "perHa": { "min": 100, "max": 100, "unit": "mL" }, "perTank20": { "min": 10, "max": 10, "unit": "mL" }, "waterPerHa": 200, "maxSprays": 1, "phiDays": 28, "quote": "Maize stalk borer | 100 ml/ha in 200 litres of water. 10 ml/20 litres of water. | Apply at first signs of infestation. One spray per season 39 days after planting. PHI: 28 days" },
+        { "crop": "tomato", "labelCrop": "Tomatoes", "problem": "tuta", "labelProblem": "Tuta absoluta", "perHa": { "min": 100, "max": 100, "unit": "mL" }, "perTank20": { "min": 4, "max": 4, "unit": "mL" }, "waterPerHa": 500, "interval": "7", "maxSprays": 2, "phiDays": 20, "quote": "Tuta Absoluta | 100 ml/ha in 500 L of water. OR 4 ml/20 litres water. | ... maximum of 2 times per season. PHI: 3 Days. Register: Tomato ... Maize ... PHI : 20 days (longer value shown)" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)1702",
+      "name": "Ampligo 150 ZC",
+      "ppe": ["gloves", "faceMask", "overalls", "hat", "gumboots"],
+      "warning": "Toxic to bees. Do not spray on flowering crops.",
+      "uses": [
+        { "crop": "maize", "labelCrop": "Maize", "problem": "faw", "labelProblem": "Fall armyworm", "perHa": { "min": 250, "max": 300, "unit": "mL" }, "perTank20": { "min": 10, "max": 12, "unit": "mL" }, "waterPerHa": 500, "interval": "10", "maxSprays": 3, "phiDays": 14, "quote": "Maize | Fall Armyworm | 250-300 ml, *350 ml in heavy infestation | 10-12 ml | 500 L | ... spray interval of 10 days. Apply a maximum of 3 sprays per season ... Pre-Harvest Interval Maize: 14 days" },
+        { "crop": "beans", "labelCrop": "French beans", "problem": "aphids", "labelProblem": "Aphids, thrips, whiteflies", "perHa": { "min": 150, "max": 200, "unit": "mL" }, "perTank20": { "min": 6, "max": 8, "unit": "mL" }, "waterPerHa": 500, "interval": "10", "maxSprays": 3, "phiDays": 7, "quote": "French beans | Aphids, thrips, whiteflies | 150-200 ml | 6-8 ml | 500 L ... French beans and snow peas: 7 days" },
+        { "crop": "cabbage", "labelCrop": "Cabbages", "problem": "caterpillar", "labelProblem": "Diamondback moth, aphids", "perHa": { "min": 300, "max": 300, "unit": "mL" }, "perTank20": { "min": 12, "max": 12, "unit": "mL" }, "waterPerHa": 500, "interval": "10", "maxSprays": 3, "phiDays": 3, "quote": "Cabbages | Diamondback moth, Aphids | 300 ml | 12 ml | 500 L ... Tomatoes, cabbage: 3 days" },
+        { "crop": "cabbage", "labelCrop": "Cabbages", "problem": "aphids", "labelProblem": "Diamondback moth, aphids", "perHa": { "min": 300, "max": 300, "unit": "mL" }, "perTank20": { "min": 12, "max": 12, "unit": "mL" }, "waterPerHa": 500, "interval": "10", "maxSprays": 3, "phiDays": 3, "quote": "Cabbages | Diamondback moth, Aphids | 300 ml | 12 ml | 500 L" },
+        { "crop": "tomato", "labelCrop": "Tomatoes", "problem": "tuta", "labelProblem": "Tuta absoluta, aphids, whitefly nymphs, thrips, caterpillar", "perHa": { "min": 300, "max": 300, "unit": "mL" }, "perTank20": { "min": 6, "max": 6, "unit": "mL" }, "waterPerHa": 1000, "interval": "10", "maxSprays": 3, "phiDays": 3, "quote": "Tomatoes | Tuta absoluta Aphids, whitefly nymphs, thrips, caterpillar | 300 ml | 6 ml | 1000 L ... Tomatoes, cabbage: 3 days" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)1283",
+      "name": "Aceta 20 SP",
+      "reiHours": 12,
+      "ppe": ["goggles", "gloves"],
+      "uses": [
+        { "crop": "beans", "labelCrop": "French beans", "problem": "aphids", "labelProblem": "Aphids, thrips and whitefly", "perHa": { "min": 200, "max": 200, "unit": "g" }, "perTank20": { "min": 7, "max": 7, "unit": "g" }, "phiDays": 7, "quote": "French beans | Aphids, Thrips & Whitefly | 200g/ha. (7g/20L of water). Label PHI 3 days; register PHI- 7days and REI: 12hours (longer values shown)" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)0658",
+      "name": "Basagran 480 AS",
+      "reiHours": 24,
+      "ppe": ["overalls", "gumboots", "respirator", "gloves", "goggles", "faceShield"],
+      "uses": [
+        { "crop": "beans", "labelCrop": "Dry beans", "problem": "broadleaf_weeds", "labelProblem": "Broad leaf weeds", "perHa": { "min": 1500, "max": 3000, "unit": "mL" }, "perTank20": { "min": 150, "max": 300, "unit": "mL" }, "waterPerHa": 200, "maxSprays": 1, "phiDays": 42, "quote": "1.5-3.0 L/ha 150-300 ml/20L Ensure at least 10 Knapsacks/Ha. Treat after formation of the 2nd trifoliate leaf ... Pre-Harvest-Interval: Beans, Potato – 42 days, Maize – 68 days Re-Entry-Interval: 24 hours" }
+      ]
+    },
+    {
+      "regNo": "PCPB(CR)1335",
+      "name": "Fusilade Forte 150 EC",
+      "ppe": ["gloves", "overalls", "goggles"],
+      "uses": [
+        { "crop": "beans", "labelCrop": "French beans", "problem": "grass_weeds", "labelProblem": "Annual and perennial grasses", "perHa": { "min": 1500, "max": 1500, "unit": "mL" }, "perTank20": { "min": 150, "max": 150, "unit": "mL" }, "waterPerHa": 200, "phiDays": 28, "quote": "French beans | 1.5 | 150ml | 28 ... Annual weeds and volunteer cereals: 200l/ha" }
+      ]
+    }
+  ],
+  "unverified": [
+    { "regNo": "PCPB(CR)0556", "name": "Lumax 537.5 SE", "reason": "Rate unit unreadable on the scanned label ('4 t/ha')." },
+    { "regNo": "PCPB(CR)1066", "name": "Stomp 455 CS", "reason": "Scanned label shows only the sugarcane row; maize and wheat rates not readable." },
+    { "regNo": "PCPB(CR)0328", "name": "Round Up Turbo", "reason": "Rates not readable on the scanned label." },
+    { "regNo": "PCPB(CR)1077-p(i)", "name": "Agrimine 2,4 D 720 SL", "reason": "Label is internally inconsistent (2 L/ha in 1000 L vs 200 mL/20 L)." }
+  ]
+}

@@ -37,7 +37,8 @@ import { localizeGuide } from '../../lib/advisory.sw';
 import { FERTS, type FertId } from '../../lib/fertiliser';
 import { useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
-import { getRegisteredProducts, type PcpbProduct } from '../../lib/pcpb';
+import { PcpbProductCard } from '../../components/PcpbProductCard';
+import { cropKey, getRegisteredProducts, problemKey, type PcpbProduct, type ProblemKey } from '../../lib/pcpb';
 import { speak } from '../../lib/speech';
 import { C, FONT } from '../../lib/theme';
 import { getWeather, type Weather } from '../../lib/weather';
@@ -146,9 +147,8 @@ export default function AdvisoryScreen() {
     if (!storyStage) return [];
 
     const watch = getStageWatchOut(cropId, storyStage.id);
-    const pcpbProducts = getRegisteredProducts(
-      `${crop.name} ${storyStage.name} ${watch.disease} ${storyStage.products.map((p) => p.name).join(' ')}`
-    );
+    // Examples only for the stage's named threat on this crop (crop + problem from the PCPB register).
+    const pcpbProducts = getRegisteredProducts(crop.name, watch.disease);
 
     const cards: Array<{
       type: 'watchout' | 'action' | 'products';
@@ -157,6 +157,7 @@ export default function AdvisoryScreen() {
       body: string;
       index?: number;
       pcpb?: PcpbProduct[];
+      problem?: ProblemKey | null;
     }> = [
       {
         type: 'watchout',
@@ -182,6 +183,7 @@ export default function AdvisoryScreen() {
         title: t('Inputs & PCPB Registered Options'),
         body: t('Kenya registered products for this stage:'),
         pcpb: pcpbProducts,
+        problem: problemKey(watch.disease),
       });
     }
 
@@ -442,31 +444,11 @@ export default function AdvisoryScreen() {
                 {/* 3. Inputs & PCPB Commercial Products Card */}
                 {activeCard.type === 'products' ? (
                   <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
-                    <Text style={st.inputsHeader}>Registered Kenya PCPB Products</Text>
-                    <Text style={st.inputsSub}>Official commercial products for this stage (Not sponsored. Follow label):</Text>
+                    <Text style={st.inputsHeader}>Registered products in Kenya</Text>
+                    <Text style={st.inputsSub}>Not sponsored. Follow the label.</Text>
 
                     {activeCard.pcpb?.slice(0, 3).map((prod) => (
-                      <View key={prod.id} style={st.pcpbCard}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                          <Text raw style={st.pcpbName}>
-                            {prod.name}
-                          </Text>
-                          <Text raw style={st.pcpbReg}>
-                            {prod.regNo}
-                          </Text>
-                        </View>
-                        <Text raw style={st.pcpbActive}>
-                          {prod.active}
-                        </Text>
-                        <Text raw style={st.pcpbTargets}>
-                          {t('Targets')}: {prod.targets}
-                        </Text>
-                        {prod.warning ? (
-                          <Text raw style={st.pcpbWarn}>
-                            ⚠ {prod.warning}
-                          </Text>
-                        ) : null}
-                      </View>
+                      <PcpbProductCard key={prod.r} product={prod} crop={cropKey(crop.name)} problem={activeCard.problem ?? null} onPanel />
                     ))}
 
                     <View style={{ gap: 8, marginTop: 14 }}>
@@ -478,7 +460,7 @@ export default function AdvisoryScreen() {
                           closeStory();
                           router.push({
                             pathname: '/pesticide-calc',
-                            params: { crop: cropId },
+                            params: { crop: cropId, problem: activeCard.problem ?? '' },
                           });
                         }}
                       />
@@ -689,18 +671,6 @@ const st = StyleSheet.create({
   actionCaption: { fontSize: 22, fontFamily: FONT.display, color: C.text, lineHeight: 28 },
   inputsHeader: { fontSize: 18, fontFamily: FONT.bodyBold, color: C.text },
   inputsSub: { fontSize: 13, color: C.textSub, marginTop: 4, marginBottom: 12 },
-  pcpbCard: {
-    backgroundColor: C.bg,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    gap: 4,
-  },
-  pcpbName: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text },
-  pcpbReg: { fontSize: 12, color: C.primary, fontFamily: FONT.bodyBold },
-  pcpbActive: { fontSize: 13, color: C.textMid },
-  pcpbTargets: { fontSize: 12, color: C.textSub },
-  pcpbWarn: { fontSize: 12, color: C.error, marginTop: 2 },
   storyNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
