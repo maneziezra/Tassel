@@ -494,7 +494,8 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('Spray hours & forecast')}
           >
-            <View style={st.actionCardIconWrap}>
+            {/* a sky disc: the white Noto cloud vanished on the paper-grey one */}
+            <View style={[st.actionCardIconWrap, { backgroundColor: '#CFE0EA' }]}>
               <NotoEmoji name={todaySpray?.window ? 'droplet' : 'rain'} size={34} />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
