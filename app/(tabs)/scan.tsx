@@ -38,8 +38,15 @@ export default function ScanScreen() {
   const [focused, setFocused] = useState(true);
   // Set synchronously so a double tap cannot start two scans before React re-renders.
   const running = useRef(false);
+  // Found on the TECNO (26 Oct): a tap on "Scan a leaf" elsewhere could land on this
+  // screen as it appeared and press the shutter (a photo of nothing) or open the
+  // gallery. A farmer's double tap does the same. The camera's own buttons wait a
+  // moment after the screen opens.
+  const openedAt = useRef(0);
+  const settled = () => Date.now() - openedAt.current > 600;
   useFocusEffect(
     useCallback(() => {
+      openedAt.current = Date.now();
       setFocused(true);
       return () => setFocused(false);
     }, [])
@@ -109,7 +116,7 @@ export default function ScanScreen() {
   };
 
   const capture = async () => {
-    if (!cameraRef.current || busy || running.current) return;
+    if (!cameraRef.current || busy || running.current || !settled()) return;
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
       if (photo) await analyze(photo);
@@ -119,7 +126,7 @@ export default function ScanScreen() {
   };
 
   const pick = async () => {
-    if (busy || running.current) return;
+    if (busy || running.current || !settled()) return;
     const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
     if (!picked.canceled && picked.assets?.[0]) {
       const a = picked.assets[0];
@@ -130,7 +137,7 @@ export default function ScanScreen() {
   // AI photo check (online): for pests, deficiencies and crops the offline model does not know.
   const sw = lang === 'sw';
   const photoCheck = () => {
-    if (busy || running.current) return;
+    if (busy || running.current || !settled()) return;
     const go = (uri: string) => router.push({ pathname: '/photo-check', params: { uri } });
     const fromCamera = async () => {
       try {
@@ -190,7 +197,7 @@ export default function ScanScreen() {
 
       {/* Top bar */}
       <View style={[st.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity style={st.roundBtn} onPress={() => router.navigate('/')} accessibilityLabel={t('Close scanner')}>
+        <TouchableOpacity style={st.roundBtn} onPress={() => settled() && router.navigate('/')} accessibilityLabel={t('Close scanner')}>
           <Icon name="close" size={22} color="#fff" />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
@@ -275,7 +282,7 @@ export default function ScanScreen() {
         >
           <View style={st.shutterInner} />
         </TouchableOpacity>
-        <TouchableOpacity style={st.sideBtn} onPress={() => router.push('/encyclopedia')} accessibilityLabel={t('Disease library')}>
+        <TouchableOpacity style={st.sideBtn} onPress={() => settled() && router.push('/encyclopedia')} accessibilityLabel={t('Disease library')}>
           <Icon name="book-open-page-variant-outline" size={26} color="#fff" />
           <Text style={st.sideTxt}>Library</Text>
         </TouchableOpacity>
