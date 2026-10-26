@@ -175,7 +175,7 @@ export default function ProfileScreen() {
 
   const displayName = profile?.name || t('Farmer');
   const initials = displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-  const version = Constants.expoConfig?.version ?? '2.6.0';
+  const version = Constants.expoConfig?.version ?? '2.7.0';
   const since = session?.user.created_at ?? profile?.created_at;
 
   return (
