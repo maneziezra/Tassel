@@ -233,6 +233,14 @@ const SECTIONS: { icon: IconName; title: L; lines: L[] }[] = [
       { en: "Maize Imagery Dataset - Tanzania (NM-AIST/TARI): healthy, MLN, MSV — Mduma & Laizer (2023), Data in Brief 48:109108, doi:10.17632/fkw49mz3xs.1. Licence: CC BY 4.0.", sw: "Maize Imagery Dataset - Tanzania (NM-AIST/TARI): healthy, MLN, MSV — Mduma & Laizer (2023), Data in Brief 48:109108, doi:10.17632/fkw49mz3xs.1. Licence: CC BY 4.0." },
       { en: "CGIAR Computer Vision for Crop Disease: wheat rusts — CGIAR Computer Vision for Crop Disease, ICLR 2020 CV4A workshop challenge. Licence: Unknown on Kaggle (ICLR 2020 CV4A challenge data).", sw: "CGIAR Computer Vision for Crop Disease: wheat rusts — CGIAR Computer Vision for Crop Disease, ICLR 2020 CV4A workshop challenge. Licence: Unknown on Kaggle (ICLR 2020 CV4A challenge data)." },
       { en: "Wheat leaf dataset (Ethiopia): healthy, septoria, stripe rust — Wheat Leaf dataset (Kaggle, olyadgetch). Licence: Data files (c) original authors.", sw: "Wheat leaf dataset (Ethiopia): healthy, septoria, stripe rust — Wheat Leaf dataset (Kaggle, olyadgetch). Licence: Data files (c) original authors." },
+      {
+        en: 'Animated emoji: Noto Animated Emoji by Google, licensed CC BY 4.0 (googlefonts.github.io/noto-emoji-animation).',
+        sw: 'Emoji zinazosonga: Noto Animated Emoji za Google, leseni CC BY 4.0 (googlefonts.github.io/noto-emoji-animation).',
+      },
+      {
+        en: 'Pesticide products: the Pest Control Products Board register of crop products (pcpb.go.ke, list of 24 Aug 2026) and the PCPB-approved labels it links to. A dose is shown only when we read it on the label.',
+        sw: 'Bidhaa za viuatilifu: orodha ya PCPB ya bidhaa za mazao (pcpb.go.ke, orodha ya 24 Agosti 2026) na vibandiko vilivyoidhinishwa na PCPB vilivyounganishwa nayo. Kipimo kinaonyeshwa tu tukikisoma kwenye kibandiko.',
+      },
     ],
   },
 ];

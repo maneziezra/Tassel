@@ -38,6 +38,7 @@ import {
 } from '../components/ui';
 import { DateField } from '../components/DateField';
 import { FieldHero } from '../components/FieldHero';
+import { NotoEmoji } from '../components/NotoEmoji';
 import { addFarm, listFarms, type LatLng } from '../lib/data';
 import { CROP_CHOICES } from '../lib/counties';
 import { centroid } from '../lib/geo';
@@ -508,7 +509,7 @@ export default function AddFarmScreen() {
               </View>
             ) : (
               <Animated.View entering={ZoomIn.springify().damping(12)} style={st.celebrationIconWrap}>
-                <CropIcon crop={crop} size={64} disc={false} />
+                <NotoEmoji name="plant" size={80} />
               </Animated.View>
             )}
 

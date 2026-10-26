@@ -13,6 +13,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { FieldHero } from '../../components/FieldHero';
+import { NotoEmoji } from '../../components/NotoEmoji';
 import {
   Btn,
   CropIcon,
@@ -460,11 +461,7 @@ export default function HomeScreen() {
             accessibilityLabel={t('Spray hours & forecast')}
           >
             <View style={st.actionCardIconWrap}>
-              <Icon
-                name={todaySpray?.window ? 'weather-partly-cloudy' : 'weather-rainy'}
-                size={26}
-                color={todaySpray?.window ? C.primary : C.warn}
-              />
+              <NotoEmoji name={todaySpray?.window ? 'droplet' : 'rain'} size={34} />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -513,7 +510,8 @@ export default function HomeScreen() {
                 onPress={() => router.push('/calendar')}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text raw style={[st.actionCardTitle, primaryTask.ticked && st.taskDone]}>
+                  <NotoEmoji name="plant" size={26} />
+                  <Text raw style={[st.actionCardTitle, { flex: 1 }, primaryTask.ticked && st.taskDone]}>
                     {primaryTask.title}
                   </Text>
                   <Text style={[st.taskBadge, { color: primaryTask.status === 'now' ? C.error : C.primaryDark }]}>
@@ -535,8 +533,8 @@ export default function HomeScreen() {
               onPress={() => router.push('/outbreaks')}
               accessibilityRole="button"
             >
-              <View style={[st.actionCardIconWrap, { backgroundColor: C.errorTint }]}>
-                <Icon name="shield-alert-outline" size={26} color={C.error} />
+              <View style={st.actionCardIconWrap}>
+                <NotoEmoji name="bug" size={34} />
               </View>
               <View style={{ flex: 1, gap: 3 }}>
                 <Text style={[st.actionCardTitle, { color: C.error }]}>
