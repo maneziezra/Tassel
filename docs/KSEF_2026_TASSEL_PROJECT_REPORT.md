@@ -119,9 +119,9 @@ Learners who are guilty of plagiarism will be disqualified. In addition, the mat
 
 Smallholder agriculture sustains over seventy-five percent of Kenya's population, yet farmers suffer annual crop yield losses of thirty to forty percent from foliar pathogens, exacerbated by a severe extension deficit (1:1,500) and dangerous agrochemical misapplication. Existing agricultural mobile applications require high-speed cloud connectivity, lack statutory compliance with Kenya's Pest Control Products Board (PCPB) regulations, and fail to provide sprayer-calibrated chemical dosages. This research developed and evaluated Tassel (formerly CropGuard AI), an integrated, offline-first mobile diagnostic and satellite intelligence platform tailored for Kenyan smallholders.
 
-The engineering methodology deployed a quantized MobileNetV2 convolutional neural network across 154 disease, pest, and healthy classes spanning 35 East African crops. For field-scale surveillance, an automated satellite pipeline ingests European Space Agency Sentinel-2 Level-2A imagery at native resolution—computing 10-meter Normalized Difference Vegetation Index (NDVI) for canopy vigor and 20-meter Normalized Difference Water Index (NDWI_CROP) for liquid water stress—coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria. Chemical safety was operationalized through direct algorithmic enforcement of PCPB June 2025 gazette restrictions and automated dual knapsack tank-mix dilution calculations (16L and 20L sprayers).
+The engineering methodology deployed a quantized MobileNetV2 convolutional neural network across 154 disease, pest, and healthy classes spanning 34 crops. For field-scale surveillance, an automated satellite pipeline ingests European Space Agency Sentinel-2 Level-2A imagery at native resolution—computing 10-meter Normalized Difference Vegetation Index (NDVI) for canopy vigor and 20-meter Normalized Difference Water Index (NDWI_CROP) for liquid water stress—coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria. Chemical safety was operationalized through direct algorithmic enforcement of PCPB June 2025 gazette restrictions and automated dual knapsack tank-mix dilution calculations (16L and 20L sprayers).
 
-Rigorous evaluation on an 87,420-image benchmark demonstrated 95.31% top-1 validation accuracy, an on-device inference latency of 84.6 milliseconds, and a compact 4.9-megabyte Float16 footprint executing entirely offline on entry-level Android devices. The knapsack engine achieved mathematical precision across statutory products while eliminating banned carcinogens and termiticides. Tassel proves that edge artificial intelligence, strict regulatory compliance, and native multispectral remote sensing can be democratized to bolster smallholder food security, public health, and ecological resilience across Kenya.
+On 16,254 held-out dataset images the model reached 94.04% top-1 accuracy (macro F1 0.9266, calibration error 0.0096), and 97.33% when it reports at least 75% confidence; it runs offline from a 4.86 MB file. Field accuracy on Kenyan farm photos has not been measured yet. The pesticide catalogue was rebuilt from the official PCPB register (1,118 open-field products), with doses taken only from product labels. Tassel proves that edge artificial intelligence, strict regulatory compliance, and native multispectral remote sensing can be democratized to bolster smallholder food security, public health, and ecological resilience across Kenya.
 
 
 > **KSEF Metric Verification:** Abstract Word Count: Exactly 252 words. Structures Purpose, Methodology, Observations/Results, and Conclusion in strict adherence to official KSEF Guidelines.
@@ -221,6 +221,8 @@ We extend our deepest gratitude to the following individuals, institutions, and 
 
 # CHAPTER 1: BACKGROUND INFORMATION & INTRODUCTION
 
+> **Source check needed before submission (26 Oct 2026):** the statistics in 1.1 (GDP shares, smallholder output share, 30–45% losses, 80% late-blight losses, extension ratio) and in the abstract's first paragraph must be checked against the cited KNBS, KALRO and FAO documents, with page numbers. Remove any that cannot be found.
+
 
 ## 1.1 Introduction and Problem Background
 
@@ -237,7 +239,7 @@ This diagnostic void triggers pervasive chemical misapplication. Farmers repeate
 
 **Formal Problem Definition:** Statement of the Problem:
 
-Kenyan smallholder farmers operate in an information and technological vacuum characterized by: (1) lack of accessible, real-time diagnostic tools for early crop pathogen detection; (2) complete absence of high-speed internet connectivity across 65% of rural agricultural fields, rendering cloud-dependent diagnostic tools non-functional; (3) dangerous disconnect from statutory agrochemical safety regulations governed by the Pest Control Products Act (Cap 346), resulting in illegal application of withdrawn carcinogens; (4) lack of sprayer-calibrated volumetric dosage calculators for standard 16-liter and 20-liter knapsacks; and (5) inability to track macro-scale crop canopy health and water stress at farm level without expensive physical IoT hardware.
+Kenyan smallholder farmers operate in an information and technological vacuum characterized by: (1) lack of accessible, real-time diagnostic tools for early crop pathogen detection; (2) weak or no mobile data in many fields, which makes cloud-dependent diagnostic tools unreliable; (3) dangerous disconnect from statutory agrochemical safety regulations governed by the Pest Control Products Act (Cap 346), resulting in illegal application of withdrawn carcinogens; (4) lack of sprayer-calibrated volumetric dosage calculators for standard 16-liter and 20-liter knapsacks; and (5) inability to track macro-scale crop canopy health and water stress at farm level without expensive physical IoT hardware.
 
 **Inspiration and Originality Statement:** Statement of Originality:
 
@@ -263,7 +265,7 @@ To design, develop, mathematically calibrate, and evaluate an offline-first Edge
 
 The socio-economic and scientific justification for this project aligns directly with Kenya Vision 2030, the Bottom-Up Economic Transformation Agenda (BETA), and the United Nations Sustainable Development Goals (SDGs), notably SDG 1 (No Poverty), SDG 2 (Zero Hunger), SDG 3 (Good Health and Well-being), SDG 12 (Responsible Consumption and Production), and SDG 13 (Climate Action).
 
-From a food security and economic standpoint, empowering smallholder farmers to detect fungal and bacterial pathogens at the initial lesion stage prevents catastrophic harvest collapse. By arresting late blight or armyworm outbreaks within the first 48 hours of spore germination, smallholders preserve up to 40% of their prospective yield, directly protecting household income and stabilizing local grain and vegetable markets. Moreover, eliminating unnecessary or incorrect chemical purchases saves the average farming family thousands of Kenya Shillings per cropping season.
+From a food security and economic standpoint, empowering smallholder farmers to detect fungal and bacterial pathogens at the initial lesion stage prevents catastrophic harvest collapse. Acting on late blight or armyworm early, before they spread through the field, gives the farmer the best chance of protecting the harvest and household income. Avoiding unnecessary or wrong chemical purchases also saves money. Tassel has not yet measured these effects; the planned field pilot (Chapter 5) will.
 
 From a public health and ecological safety perspective, direct algorithmic enforcement of Kenya PCPB regulations represents a revolutionary safeguard. Chemical stockists and uneducated applicators frequently misuse restricted organophosphates and carcinogenic fungicides. By filtering recommendations through the June 2025 PCPB register, Tassel eliminates exposure to banned carcinogens (such as chlorothalonil) and prevents environmental contamination of rural water tables. Furthermore, precision knapsack dilution calculations prevent soil toxicity and chemical runoff.
 
@@ -280,7 +282,7 @@ Table 1.1 delineates the objective merits and inherent technical demerits of the
 | Network Dependency | 100% offline edge neural inference; zero mobile data bundle required for daily diagnosis. | Satellite imagery updates and community alerts require intermittent internet access. |
 | Agrochemical Safety | Strict algorithmic enforcement of Kenya PCPB Cap 346 and June 2025 banned product list. | Cannot physically prevent a farmer from purchasing unregistered chemicals from black-market vendors. |
 | Remote Sensing | Native 10m/20m Sentinel-2 resolution without resampling artifacts; zero hardware cost. | Optical satellite sensors cannot penetrate dense cloud cover during heavy equatorial monsoon rains. |
-| Diagnostic Scope | 154 classes across 35 crops; broad coverage of Kenyan cereals, tubers, and vegetables. | Visual leaf imaging cannot detect soil-borne root-knot nematodes before foliar chlorosis manifests. |
+| Diagnostic Scope | 154 classes across 34 crops; broad coverage of Kenyan cereals, tubers, and vegetables. | Visual leaf imaging cannot detect soil-borne root-knot nematodes before foliar chlorosis manifests. |
 | User Experience | Fully localized into fluent Kiswahili and English; intuitive camera-first field interface. | Camera performance is dependent on minimum smartphone hardware optics (>= 5MP camera lens). |
 
 
@@ -311,7 +313,7 @@ Table 1.1 delineates the objective merits and inherent technical demerits of the
 
 Crop disease scouting in developing nations has historically relied on physical visual inspection conducted by experienced farmers or itinerant agricultural extension officers. In Kenya, this paradigm has broken down under the weight of demographic pressure and institutional constraints, leaving an extension officer-to-farmer ratio of over 1:1,500 (MoALD, 2023). In response, global research has turned toward automated computer vision and mobile computing to bridge the agronomic advisory gap.
 
-The seminal work of Mohanty, Hughes, and Salathé (2016) demonstrated the feasibility of training deep Convolutional Neural Networks (CNNs) on large-scale leaf image repositories. Utilizing the open-access PlantVillage dataset comprising 54,305 laboratory-captured leaf images across 14 crops and 38 classes, their AlexNet and GoogLeNet architectures achieved validation accuracies exceeding 99.3%. However, subsequent critical evaluations by Ramcharan et al. (2017) and Ferentinos (2018) revealed that models trained purely on laboratory images with uniform, artificial backgrounds suffered severe accuracy degradation (dropping by 25% to 40%) when exposed to real-world, in-field conditions characterized by complex soil backgrounds, varied canopy shadows, insect frass, and dynamic solar illumination.
+The seminal work of Mohanty, Hughes, and Salathé (2016) demonstrated the feasibility of training deep Convolutional Neural Networks (CNNs) on large-scale leaf image repositories. Utilizing the open-access PlantVillage dataset comprising 54,305 laboratory-captured leaf images across 14 crops and 38 classes, their AlexNet and GoogLeNet architectures achieved validation accuracies exceeding 99.3%. However, subsequent critical evaluations by Ramcharan et al. (2017) and Ferentinos (2018) revealed that models trained purely on laboratory images with uniform, artificial backgrounds suffered a large drop in accuracy when tested on real-world, in-field photographs characterized by complex soil backgrounds, varied canopy shadows, insect frass, and dynamic solar illumination.
 
 In the commercial and mobile software sphere, several digital platforms have emerged. Plantix (developed by PEAT GmbH, Germany) represents the most widely recognized smartphone diagnostic tool in developing nations, utilizing cloud-hosted deep learning models to classify foliar disorders. Bayer's FarmRise and Climate FieldView provide weather-based agricultural advisories and agronomic calendars. Regionally in Kenya, mobile services like KALRO's Kenya Agricultural Observatory Platform (KAOP) and private SMS portals offer localized weather forecasts and pest outbreak bulletins.
 
@@ -322,7 +324,7 @@ Despite these notable advancements, extensive analysis of existing platforms rev
 
 **Gap 1: Total Dependency on Cloud Infrastructure.** 1. The Rural Connectivity Chasm:
 
-Commercial diagnostic applications such as Plantix and Agrio require the farmer to upload full-resolution RGB photographs to remote cloud servers for inference. In rural Kenya, over 65% of smallholder agricultural acreage lacks reliable 3G/4G broadband infrastructure, and rural farmers face severe economic constraints regarding cellular data bundles. When a farmer stands in a remote field in Trans-Nzoia or Bomet with an unmetered, intermittent 2G cellular link, cloud-dependent applications fail completely, leaving the farmer stranded.
+Commercial diagnostic applications such as Plantix and Agrio require the farmer to upload full-resolution RGB photographs to remote cloud servers for inference. In many rural Kenyan fields mobile data is weak or absent, and data bundles cost money farmers would rather not spend. When a farmer stands in a remote field in Trans-Nzoia or Bomet with an unmetered, intermittent 2G cellular link, cloud-dependent applications fail completely, leaving the farmer stranded.
 
 **Gap 2: Recommending Banned and Lethal Active Ingredients.** 2. Statutory and Regulatory Agrochemical Disconnect:
 
@@ -367,7 +369,7 @@ Standard neural networks represent floating-point weights and activation tensors
 
 *Equation 2.4 (Quantization Mapping):* q = round( r / S ) + Z
 
-where S represents the real-valued scaling factor and Z represents the integer zero-point offset. By quantizing weights to 16-bit floating-point flatbuffers, the model footprint is compressed from 19.6 MB down to 4.9 MB (-75.0%), fitting entirely within the L3 processor cache of entry-level mobile chipsets and enabling SIMD (Single Instruction, Multiple Data) vectorized parallel execution via the Android Neural Networks API (NNAPI).
+where S represents the real-valued scaling factor and Z represents the integer zero-point offset. By quantizing weights to 16-bit floating-point flatbuffers, the shipped model file is 4.86 MB, small enough to bundle in the app and run on entry-level phones via the Android Neural Networks API (NNAPI).
 
 
 ### 2.3.3 Multispectral Satellite Remote Sensing Physics
@@ -400,7 +402,7 @@ To bridge the gap between commercial product labels and smallholder reality, Tas
 
 *Equation 2.7 (Knapsack Dilution Law):* D_tank = [ ( R_label · V_tank ) / V_water ] · 1,000
 
-where V_tank is the calibrated capacity of the sprayer (16.0 liters or 20.0 liters). This mathematical formula is embedded directly into Tassel's local database, ensuring smallholders achieve 100% dosing precision with zero manual calculation.
+where V_tank is the calibrated capacity of the sprayer (16.0 liters or 20.0 liters). This mathematical formula is embedded directly into Tassel's local database, so the farmer does not have to convert hectare rates by hand; the dose always comes from the product label.
 
 
 
@@ -418,7 +420,7 @@ To ensure scientific reproducibility, all physical apparatus, hardware component
 
 ### 3.1.1 Hardware Specifications
 
-- **1. Test Smartphone (Edge Target Hardware):** Processor: MediaTek Helio G85 Octa-Core (2 x 2.0 GHz ARM Cortex-A75 & 6 x 1.8 GHz ARM Cortex-A55); Memory: 4.0 GB LPDDR4X RAM; Internal Storage: 64 GB eMMC 5.1; Primary Camera: 13.0 Megapixel (f/2.2 aperture, autofocus, LED flash); Display: 6.5-inch IPS LCD (720 x 1600 pixels); Operating System: Android 12.0 (representative of mass-market entry-level smartphones across rural Kenya).
+- **1. Test Smartphone (Edge Target Hardware):** TECNO CAMON 15 (arm64-v8a), Android 10, 720 x 1600 display — the phone Tassel is developed and tested on.
 - **2. Neural Training Workstation:** CPU: AMD Ryzen 7 5800X (8 cores, 16 threads, 3.8 GHz base, 4.7 GHz boost); Memory: 32.0 GB DDR4 3200MHz RAM; GPU: NVIDIA GeForce RTX 4070 (12.0 GB GDDR6X VRAM, 5,888 CUDA cores, 184 Tensor Cores); Storage: 1.0 TB NVMe PCIe 4.0 SSD; Operating System: Linux Ubuntu 22.04 LTS / Windows 11 Pro 64-bit.
 - **3. Earth Observation Satellite Constellation:** European Space Agency (ESA) Copernicus Sentinel-2A, Sentinel-2B, and Sentinel-2C MultiSpectral Instrument (MSI) satellites operating in sun-synchronous polar orbit at 786 km altitude with a 5-day revisit cycle at the equator, capturing 13 spectral bands from visible to short-wave infrared.
 
@@ -430,7 +432,7 @@ To ensure scientific reproducibility, all physical apparatus, hardware component
 
 ### 3.1.3 Datasets, Chemical Registers, and APIs
 
-- **1. Foliar Diagnostic Image Dataset:** Curated multi-source repository comprising 87,420 high-resolution annotated leaf photographs categorized into 154 classes covering 35 major crops (merging PlantVillage, the International Institute of Tropical Agriculture [IITA] Cassava Leaf Disease Dataset, Makerere University AI Lab archives, and East African open field repositories).
+- **1. Foliar Diagnostic Image Dataset:** 162,201 leaf photographs from 31 public datasets (111,460 field photos and 50,741 PlantVillage lab photos), 154 classes on 34 crops. The datasets and their licences are listed in the app's Methodology screen.
 - **2. Statutory PCPB Agrochemical Register:** Official commercial pesticide register issued by the Pest Control Products Board of Kenya (June 2025 edition), containing 28 registered commercial products, active ingredients, registration numbers, Pre-Harvest Intervals (PHI in days), Re-Entry Intervals (REI in hours), and statutory PPE protocols.
 - **3. Satellite Telemetry Source:** Copernicus Sentinel-2 Level-2A bottom-of-atmosphere (BOA) surface reflectance Cloud-Optimized GeoTIFFs (COGs) queried via the Element84 Earth Search STAC API hosted on AWS Open Data.
 
@@ -440,7 +442,7 @@ The development, calibration, and validation of Tassel proceeded through eight r
 
 **Phase 1: Dataset Engineering.** Phase 1: Multi-Crop Dataset Curation and Preprocessing
 
-A comprehensive dataset of 87,420 crop leaf images was compiled across 154 diagnostic classes. The data was partitioned using a stratified 80/10/10 split: 69,936 images for training, 8,742 images for validation, and 8,742 held-out images for final testing. All images were preprocessed through a standardized pipeline: bicubic resizing to 224 x 224 x 3 pixels and pixel intensity normalization to the range [0.0, 1.0]. To simulate harsh in-field optical conditions, extensive data augmentation was applied during training: random horizontal and vertical flips, random affine rotations (+/- 25 degrees), brightness jitter (+/- 20%), contrast adjustments (+/- 15%), and random Gaussian blurring.
+The 162,201 images from 31 public datasets were split into training, validation and a held-out test set; the shipped model (v5) was evaluated on 16,254 held-out images. All images are resized to 224 x 224 x 3 pixels and scaled with x/127.5 − 1 (range −1 to 1), the same preprocessing the phone uses (a v1.0 bug that scaled by /255 was found and fixed). Training used augmentation: flips, rotations, brightness and contrast changes and blur.
 
 **Phase 2: Model Training.** Phase 2: Neural Network Transfer Learning and Optimization
 
@@ -491,9 +493,9 @@ In accordance with scientific rigor, the experimental variables manipulated, mea
 **Controlled Variables:** 3. Controlled Variables:
 
 - **a. Input Dimensions:** Standardized image tensor input dimensions (fixed at 224 x 224 x 3 pixels across all model architectures).
-- **b. Test Hardware:** Hardware evaluation platform (all latency and memory tests executed on the identical MediaTek Helio G85 physical test smartphone).
+- **b. Test Hardware:** Hardware evaluation platform (the TECNO CAMON 15 used for all on-phone tests).
 - **c. Confidence Cutoff:** Diagnostic confidence cutoff gating (held constant at 75.0% across all diagnostic modules).
-- **d. Cloud Cover Threshold:** Satellite cloud cover exclusion threshold (fixed at < 20% cloud cover for Sentinel-2 scene acquisition).
+- **d. Cloud Cover Threshold:** Satellite cloud cover exclusion threshold (scene-level cloud limit of 80% for Sentinel-2 search; clouds, shadow and haze are then masked per field).
 - **e. Minimum Field Area:** Minimum field polygon area for satellite processing (held constant at 800 square meters, ensuring at least two 20m cells).
 
 
@@ -506,118 +508,90 @@ In accordance with scientific rigor, the experimental variables manipulated, mea
 
 ## 4.1 Quantitative Presentation of Experimental Results
 
-Experimental data collected across neural network training, quantization benchmarking, multi-crop validation, regulatory compliance verification, satellite remote sensing, and knapsack dilution calibration are systematically presented in Tables 4.1 through 4.6.
+Only measured results are reported here. Where something has not been measured yet, the table says so. (Revised 26 Oct 2026: earlier drafts of this chapter contained figures that were not measured — an architecture comparison, a quantization table, per-crop accuracies on an "87,420-image benchmark", farmer dosing error rates and PCPB registration numbers. They have been removed.)
 
 
-### Table 4.1: Edge Neural Network Architecture Performance Benchmark
+### Table 4.1: Shipped Leaf Model (v5) — Measured Results
+
+| Measure | Result | Notes |
+| --- | --- | --- |
+| Architecture | MobileNetV2 backbone, 154 classes (123 disease/pest, 31 healthy) on 34 crops | Counts from `class_labels.json` |
+| Test accuracy (top-1) | 94.04% | 16,254 held-out dataset images (lab and dataset photos, not field photos) |
+| Macro F1 | 0.9266 | Same held-out set |
+| Calibration error (ECE) | 0.0096 | Confidence scores match observed accuracy closely |
+| Accuracy when confident (≥ 75%) | 97.33% | Below 75% the app says "Not sure" |
+| TFLite vs Keras agreement | 100% | The phone model gives the same answers as the training model |
+| Model file on the phone | 4.86 MB | `assets/model/cropguard.tflite` |
+| Field accuracy (Kenyan farm photos) | **Not measured yet** | Planned field pilot: 100+ agronomist-labelled leaves |
+
+**Data Interpretation (Table 4.1):** The model is accurate on dataset photos and well calibrated, which is why the 75% confidence gate is meaningful: when the model says it is confident, it is right 97.33% of the time on the held-out set. These are dataset results. Real field photos (soil, shadows, several leaves) are harder, and Tassel does not claim a field accuracy until the pilot measures one.
 
 
-| Model Architecture | Parameters (M) | Top-1 Accuracy (%) | Top-5 Accuracy (%) | Model Size (FP16) | Inference Latency (ms) |
-| --- | --- | --- | --- | --- | --- |
-| MobileNetV2 (Tassel) | 3.4 M | 95.31% | 99.12% | 4.9 MB | 84.6 ms |
-| EfficientNet-B0 | 5.3 M | 95.62% | 99.24% | 8.2 MB | 146.5 ms |
-| ResNet50 | 25.6 M | 96.14% | 99.41% | 48.2 MB | 342.1 ms |
-| VGG16 | 138.4 M | 93.80% | 98.45% | 264.0 MB | 895.0 ms |
+### Table 4.2: Model Iterations (method, not marketing)
+
+| Version | Classes | Result | Decision |
+| --- | --- | --- | --- |
+| v5 | 154 | 94.04% test accuracy | Shipped |
+| v7 | 188 | −1.13 points on v5's sources; losses on cassava, maize, beans and citrus | Not shipped |
+| v6 → v7 wheat fix | — | +20.7 points on wheat leaf rust after adding a "sink" class | Kept as method for v8 |
 
 
-**Data Interpretation (Table 4.1):** Table 4.1 demonstrates the trade-off between architectural complexity, representational capacity, and mobile hardware execution speed. While ResNet50 achieved the marginally highest Top-1 accuracy (96.14%), its massive parameter count (25.6 million) and large compiled size (48.2 MB) caused an unacceptable inference latency of 342.1 milliseconds on the test smartphone, triggering thermal throttling during extended use. Conversely, MobileNetV2 achieved a highly competitive Top-1 accuracy of 95.31% (a deficit of only 0.83% compared to ResNet50) while demanding only 3.4 million parameters. Crucially, MobileNetV2 attained an inference latency of 84.6 milliseconds—over 4 times faster than ResNet50 and over 10 times faster than VGG16—while occupying only 4.9 MB of storage. This confirms MobileNetV2 as the optimal edge architecture for resource-constrained Kenyan smartphones.
+### Table 4.3: PCPB Register Verification (carried out 26 Oct 2026)
+
+| Check | Result |
+| --- | --- |
+| Source | PCPB register of conventional crop products (pcpb.go.ke/crops/, table of 24 Aug 2026), 1,779 products |
+| Hand-typed product list in the v2.6 app | 18 products; 18 of 18 registration numbers wrong; 3 products not registered; 1 registered "not for use in open field"; 1 registered for non-crop areas, tea and coffee only but offered for maize |
+| Products with a June 2025 withdrawn/restricted active (removed) | 142 |
+| Products registered "not for open field" (removed) | 36 |
+| Open-field products for the app's crops (kept) | 1,118 |
+| Products whose label rates were read from the PCPB-approved label | 13 (each rate stored with a quote from the label) |
+| Products whose label could not be read unambiguously | 4 — the app shows "See the label" |
+
+**Data Interpretation (Table 4.3):** Checking against the official register showed that typed-in product data was unreliable, which is exactly the risk the PCPB rules guard against. The catalogue is now generated from the register itself, and a dose is shown only when it is quoted from the product's own label.
 
 
-### Table 4.2: Quantization Precision Analysis (FP32 vs FP16 vs INT8 on Android Hardware)
+### Table 4.4: Sentinel-2 Products and Resolution (as implemented)
+
+| Product | Bands | Grid in Tassel | Note |
+| --- | --- | --- | --- |
+| NDVI (green cover) | B4, B8 | Native 10 m | |
+| Open-water NDWI | B3, B8 | Native 10 m | Separate from leaf water, so flooding is not confused with crop water |
+| Crop-water NDWI | B8, B11 | 20 m analysis cells | B11 is natively 20 m and is never resampled to 10 m |
+| Joint stress mask | B2, B4, B8, B11, SCL | 20 m analysis cells | B2/B3/B4/B8 are 2×2 block-averaged to 20 m |
+
+Scenes are searched with a scene-level cloud limit of 80%; clouds, shadows and haze are then masked per field (SCL classes and a blue-band haze screen), and a date with too few clear 20 m cells is marked unusable.
 
 
-| Quantization Level | Binary Size (MB) | Size Reduction (%) | Top-1 Accuracy (%) | Accuracy Delta (%) | Inference Latency (ms) |
-| --- | --- | --- | --- | --- | --- |
-| Baseline (Float32) | 19.6 MB | 0.0% | 95.38% | 0.00% | 128.4 ms |
-| Quantized (Float16) | 4.9 MB | -75.0% | 95.31% | -0.07% | 84.6 ms |
-| Quantized (INT8) | 2.8 MB | -85.7% | 93.74% | -1.64% | 71.2 ms |
+### Table 4.5: Knapsack Tank Mix — Worked Examples from PCPB Labels
 
+| Product (PCPB reg. no.) | Crop and target | Label rate (quoted) | Per 16 L tank (scaled) |
+| --- | --- | --- | --- |
+| Ridomil Gold MZ 68 WG (PCPB(CR)0326) | Potato late blight | 50 g per 20 L knapsack; 500 L/ha | 40 g |
+| Belt 480 SC (PCPB(CR)0756) | Maize fall armyworm | 7.5–10 ml per 20 L; 150–200 ml/ha in 400 L | 6–8 ml |
+| Ampligo 150 ZC (PCPB(CR)1702) | Maize fall armyworm | 10–12 ml per 20 L; 250–300 ml/ha in 500 L | 8–9.6 ml |
+| Coragen 20 SC (PCPB(CR)1138) | Tomato African bollworm | 6 ml per 20 L; 150 ml/ha in 500 L | 4.8 ml |
+| Score 250 EC (PCPB(CR)0947) | French bean angular leaf spot | 20 ml per 20 L; 0.5 L/ha | 16 ml |
 
-**Data Interpretation (Table 4.2):** Table 4.2 illustrates the impact of post-training quantization on binary compactness, classification accuracy, and execution latency. Converting baseline 32-bit floating-point weights to Float16 compressed the model binary from 19.6 MB to 4.9 MB (a 75.0% reduction) and reduced mobile inference latency from 128.4 ms down to 84.6 ms (a 34.1% speedup). Remarkable accuracy preservation was achieved: Top-1 accuracy dropped by only 0.07 percentage points (from 95.38% to 95.31%). While INT8 quantization further compressed the binary to 2.8 MB and achieved 71.2 ms latency, it incurred an accuracy drop of 1.64 percentage points. Float16 quantization was therefore selected as the ideal operational format, offering near-lossless diagnostic accuracy with exceptional edge efficiency.
-
-
-### Table 4.3: Per-Crop Validation Performance Across Major Kenyan Staple & Cash Crops (154 Classes)
-
-
-| Crop Category | Common Crop Name | Class Count | Test Sample Size | Top-1 Accuracy (%) | Top-5 Accuracy (%) |
-| --- | --- | --- | --- | --- | --- |
-| Cereal Staple | Corn / Maize (Zea mays) | 8 Classes | 4,820 Images | 96.24% | 99.42% |
-| Tuber Staple | Irish Potato (Solanum tuberosum) | 3 Classes | 2,150 Images | 95.81% | 99.63% |
-| Horticultural | Tomato (Solanum lycopersicum) | 10 Classes | 6,240 Images | 94.62% | 98.91% |
-| Legume Staple | Common Bean (Phaseolus vulgaris) | 5 Classes | 2,980 Images | 95.10% | 99.20% |
-| Root Staple | Cassava (Manihot esculenta) | 5 Classes | 3,450 Images | 93.91% | 98.70% |
-| Fruit Staple | Banana / Plantain (Musa spp.) | 7 Classes | 3,120 Images | 94.81% | 99.04% |
-| Commercial Cash | Coffee (Coffea arabica) | 4 Classes | 2,400 Images | 96.04% | 99.50% |
-| Commercial Cash | Tea (Camellia sinensis) | 5 Classes | 2,100 Images | 95.43% | 99.33% |
-| Aggregate Matrix | All 35 Crops (Macro Average) | 154 Classes | 87,420 Images | 95.31% | 99.12% |
-
-
-**Data Interpretation (Table 4.3):** Table 4.3 validates the multi-crop diagnostic breadth of the model across the agricultural spectrum of Kenya. Staple cereals like Maize achieved 96.24% Top-1 accuracy, successfully differentiating between complex chlorotic streak patterns such as Northern Leaf Blight (Exserohilum turcicum), Common Rust (Puccinia sorghi), and Gray Leaf Spot (Cercospora zeae-maydis). Potato foliar pathologies achieved 95.81% accuracy, demonstrating crisp discrimination between Early Blight (Alternaria solani) concentric rings and Late Blight (Phytophthora infestans) water-soaked lesions. Across the entire 154-class, 35-crop corpus, the macro-averaged Top-1 accuracy stood at 95.31% and Top-5 accuracy reached 99.12%, confirming high reliability across diverse agro-ecological conditions.
-
-
-### Table 4.4: Regulatory Compliance Matrix: Tassel vs Standard Digital Agricultural Tools
-
-
-| Crop Disease Target | Common Agrochemical Recommended by Global Apps | Statutory PCPB Status (June 2025 Kenya Gazette) | Tassel Enforced Recommendation | Regulatory Compliance Result |
-| --- | --- | --- | --- | --- |
-| Tomato Late Blight | Chlorothalonil 720g/L | WITHDRAWN / BANNED (Carcinogenic & Mutagenic Risk) | Metalaxyl-M + Mancozeb (PCPB Reg 0831) | 100% Lawful; Banned Product Filtered |
-| Maize Fall Armyworm | Chlorpyrifos 480g/L EC | RESTRICTED (Termiticide / Building Only; Not Food Crops) | Emamectin benzoate 50g/kg (PCPB Reg 1240) | 100% Lawful; Food Crop Protected |
-| Kale Aphids / Thrips | Dimethoate 400g/L EC | RESTRICTED (Building / Wood Termiticide Only) | Flonicamid 500g/kg (PCPB Reg 1560) | 100% Lawful; Public Health Safeguarded |
-| Potato Late Blight | Carbofuran 3% Granules | WITHDRAWN / BANNED (Extreme Neurotoxicity & Wildlife Lethality) | Azoxystrobin + Difenoconazole (PCPB Reg 0945) | 100% Lawful; Highly Toxic Actives Purged |
-| Bean Anthracnose | Mancozeb 800g/kg WP | FLAGGED: UNDER REVIEW (Endocrine Disruption Warning) | Mancozeb + Explicit Regulatory Caution Notice | 100% Compliant with Mandatory Advisory |
-
-
-**Data Interpretation (Table 4.4):** Table 4.4 exposes the grave legal and toxicological hazards present in standard agricultural applications. In 80% of reviewed severe disease cases, generic commercial apps recommend active ingredients that have been legally withdrawn or restricted in Kenya under the Pest Control Products Act (Cap 346). Global engines frequently advise spraying chlorothalonil (a banned carcinogen) or dimethoate (a neurotoxic organophosphate restricted strictly to non-food termiticide uses). Tassel achieved 100% regulatory compliance by programmatically enforcing the June 2025 PCPB Gazette register: completely eliminating banned compounds, recommending only verified PCPB-registered commercial products, and appending mandatory caution notices to actives under active review.
-
-
-### Table 4.5: Sentinel-2 Multispectral Remote Sensing Native Resolution vs Resampling Distortion Matrix
-
-
-| Spectral Product | Governing Sensor Bands | Native Satellite Resolution | Standard Commercial Tool Practice | Tassel Architecture | Scientific Fidelity Impact |
-| --- | --- | --- | --- | --- | --- |
-| NDVI (Canopy Vigor) | Band 4 (Red) & Band 8 (NIR) | 10 Meters Native | Rendered at 10m pixels | Computed on native 10m grid | 100% Accurate spatial canopy representation |
-| Crop-Water NDWI | Band 8A (NIR) & Band 11 (SWIR-1) | 20 Meters Native (SWIR-1) | Bilinearly resampled to 10m | Computed on native 20m analysis cells | Zero synthetic interpolation artifacts |
-| Open-Water NDWI | Band 3 (Green) & Band 8 (NIR) | 10 Meters Native | Often confused with crop NDWI | Separately computed at native 10m | Eliminates confusion between flooding and leaf water |
-| Joint Stress Mask | Bands 2, 4, 8, 11 + SCL Mask | 20 Meters Analysis Grid | Pixel-level unweighted overlay | Exact 2x2 block average on 20m cells | Mathematically robust biophysical stress matrix |
-
-
-**Data Interpretation (Table 4.5):** Table 4.5 highlights the scientific rigor of Tassel's remote sensing pipeline. Conventional satellite platforms bilinearly interpolate Sentinel-2 Band 11 (natively 20m) into 10m pixels, fabricating pseudo-resolution that deceives farmers regarding localized water stress boundaries. Tassel strictly computes crop water stress on the native 20-meter analysis grid, averaging the four 10-meter visual pixels inside each 20-meter cell via an exact 2 x 2 block average. This ensures absolute mathematical consistency and eliminates false alarms caused by spatial resampling.
-
-
-### Table 4.6: Knapsack Sprayer Volumetric Dilution Calibration Accuracy (16L and 20L Tanks)
-
-
-| Commercial Trade Product | Active Ingredient | Statutory Label Rate (per Hectare) | Carrier Water (L/ha) | Calculated Dose per 16L Knapsack | Calculated Dose per 20L Knapsack | Farmer Guesswork Error Rate |
-| --- | --- | --- | --- | --- | --- | --- |
-| Ridomil Gold MZ 68WG | Metalaxyl-M + Mancozeb | 2.50 kg / ha | 400 L/ha | 100.0 g / tank | 125.0 g / tank | +180% to +350% overdosing |
-| Amistar Top 325 SC | Azoxystrobin + Difenoconazole | 0.50 L / ha | 250 L/ha | 32.0 ml / tank | 40.0 ml / tank | +200% overdosing (leaf scorch) |
-| Ampligo 150 ZC | Chlorantraniliprole + Lambda | 0.20 L / ha | 200 L/ha | 16.0 ml / tank | 20.0 ml / tank | -60% underdosing (pest resistance) |
-| Belt 480 SC | Flubendiamide 480g/L | 0.15 L / ha | 300 L/ha | 8.0 ml / tank | 10.0 ml / tank | +300% severe overdosing |
-| Score 250 EC | Difenoconazole 250g/L | 0.50 L / ha | 300 L/ha | 26.7 ml / tank | 33.3 ml / tank | High variance (+/- 250%) |
-| Oshothane 80 WP | Mancozeb 800g/kg | 2.00 kg / ha | 400 L/ha | 80.0 g / tank | 100.0 g / tank | +150% overdosing |
-
-
-**Data Interpretation (Table 4.6):** Table 4.6 reveals the massive dosing discrepancies that occur when smallholder farmers attempt to estimate spray mixtures without calibration. In traditional field practice, farmers use bottle tops (typically 5 to 10 ml) or matchboxes (typically 20 to 30 g) to estimate chemicals, resulting in errors ranging from -60% underdosing (causing insect resistance) to +350% overdosing (causing phytotoxic crop burn and dangerous chemical residues). Tassel's embedded knapsack calibration engine executes Equation 2.7 to provide exact, mathematically validated volumetric measurements for standard 16L and 20L sprayers, achieving 100% dosage accuracy.
+**Data Interpretation (Table 4.5):** The calculator only scales the label's own rate to the farmer's tank and field size; label ranges are kept as ranges, never averaged. Farmer dosing errors in the field have not been measured.
 
 
 ## 4.2 Data Analysis in Reference to SMART Objectives
 
-The experimental findings demonstrate decisive, quantitative attainment of all four SMART objectives:
+**Objective 1 (edge model):** Met on dataset photos: 94.04% top-1 on 16,254 held-out images, above the 94.0% target, running fully offline on the phone. The scan screen measures and shows the on-device time for every scan; a benchmark across phones has not been recorded. Field accuracy is the next measurement.
 
-**Evaluation of Objective 1 (Edge Model Training & Optimization):** Specific Objective 1 required training and quantizing an edge model across 154 classes achieving > 94.0% Top-1 accuracy and < 100 ms on-device latency without internet connectivity. As demonstrated in Tables 4.1, 4.2, and 4.3, the quantized MobileNetV2 architecture achieved 95.31% Top-1 accuracy and 99.12% Top-5 accuracy on the held-out test corpus of 87,420 images. When benchmarked on the physical test smartphone, the Float16 flatbuffer model demonstrated an average inference latency of 84.6 milliseconds with a memory footprint of only 4.9 MB. The objective was fully attained.
+**Objective 2 (PCPB compliance and tank mix):** Met after the 26 Oct revision: the product catalogue is generated from the PCPB register, June 2025 withdrawn/restricted actives and "not for open field" products are removed automatically, and tank-mix doses come only from label quotes (Table 4.3, Table 4.5).
 
-**Evaluation of Objective 2 (PCPB Compliance & Knapsack Calibration):** Specific Objective 2 required developing an offline agronomic decision engine compliant with PCPB June 2025 regulations and providing knapsack tank-mix dilution calculations for 16L and 20L sprayers. As evidenced in Tables 4.4 and 4.6, Tassel successfully encoded 28 PCPB-registered commercial formulations while completely blocking withdrawn chemicals (chlorothalonil, open-field dimethoate, carbofuran). The knapsack engine executed precise volumetric dilution calculations, converting complex hectare rates into exact milliliters/grams per 16L and 20L tank, eliminating farmer guesswork. The objective was fully attained.
+**Objective 3 (satellite and weather):** Met as engineered: native-resolution products with the 20 m rule enforced (Table 4.4), per-field cloud and haze masking, and the Hutton criteria (two days with minimum temperature ≥ 10 °C and ≥ 6 hours of relative humidity ≥ 90%) as a late-blight warning for potato and tomato. The satellite readings say where to look; they are not a diagnosis and have not yet been validated against field checks.
 
-**Evaluation of Objective 3 (Multispectral Satellite Telemetry & Microclimate):** Specific Objective 3 mandated engineering a Sentinel-2 satellite pipeline processing native 10m NDVI and 20m NDWI_CROP indices coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria. As detailed in Table 4.5 and Section 3.2, the satellite engine processes native resolution grids without resampling artifacts, masks Rayleigh atmospheric haze, and categorizes 20m cells into a 9-class joint health-water stress matrix. Furthermore, the weather module evaluates the Hutton Criteria (2 days with T_min >= 10 °C and RH >= 90% for >= 6 hours), providing predictive blight warnings 48 hours prior to symptom eruption. The objective was fully attained.
-
-**Evaluation of Objective 4 (Privacy-Preserving Edge Architecture & Community Alerts):** Specific Objective 4 required constructing an offline-first mobile architecture utilizing local SQLite storage and Supabase Edge Functions with Row Level Security (RLS) to aggregate anonymized county-level disease outbreaks (threshold >= 2 farmers). The architecture was fully realized: leaf photos remain 100% on the local smartphone, while anonymized disease detections synchronize to Supabase via a PostgreSQL SECURITY DEFINER function, triggering county alerts only when the statutory >= 2 farmer threshold is reached within a 14-day rolling window. The objective was fully attained.
+**Objective 4 (privacy and community alerts):** Met: leaf photos are analysed on the phone and are not uploaded unless the farmer attaches one to a post or chooses the online AI check; outbreak alerts leave the database only as county totals through a SECURITY DEFINER function and only when at least 2 different farmers report within 14 days.
 
 
 ## 4.3 Scientific Discussion, Anomalies, and Technical Limitations
 
 A critical analysis of edge classification boundaries reveals specific biological and optical anomalies. In cases of severe co-infection—such as an older tomato leaf simultaneously displaying Late Blight water-soaked lesions and Early Blight concentric rings—the model's softmax probability distribution exhibited dispersion, reducing top-1 confidence to between 60% and 72%. Under conventional systems, an unconstrained model would output an arbitrary diagnosis. In Tassel, the enforced 75% confidence gating threshold operated as a vital safety filter: the ambiguous leaf was gated as 'Not Sure' (Haina uhakika), preventing the application of an inappropriate chemical. Subsequent online visual verification confirmed the co-infection, validating the necessity of the 75% gating mechanism.
 
-Regarding optical satellite telemetry, analysis of Sentinel-2 acquisitions over Western Kenya during the long rains (April-May) revealed that persistent cloud cover obscured optical reflectance in approximately 40% of satellite passes. While Tassel's SCL cloud masking and Blue-band haze filtering successfully prevented corrupted data from entering the baseline calculations, cloud persistence remains an intrinsic physical limitation of optical spaceborne sensors, underscoring the necessity of future Synthetic Aperture Radar (SAR) integration.
+Regarding optical satellite telemetry, persistent cloud cover during the long rains (April–May) blocks many optical Sentinel-2 passes over Western Kenya; Tassel marks those dates as unusable rather than guessing. While Tassel's SCL cloud masking and Blue-band haze filtering successfully prevented corrupted data from entering the baseline calculations, cloud persistence remains an intrinsic physical limitation of optical spaceborne sensors, underscoring the necessity of future Synthetic Aperture Radar (SAR) integration.
 
 
 ## 4.4 Planned Pilot Methodology for Kenyan Ground-Truth Field Validation
@@ -647,7 +621,7 @@ This research successfully designed, developed, mathematically calibrated, and e
 
 The project decisively achieved all four of its SMART objectives:
 
-- **1. Objective 1 Attainment:** A quantized MobileNetV2 convolutional neural network was successfully trained across 154 classes spanning 35 East African crops, achieving 95.31% Top-1 validation accuracy, 99.12% Top-5 accuracy, a compact 4.9 MB storage footprint, and an on-device inference latency of 84.6 milliseconds on entry-level Android hardware without requiring an internet connection.
+- **1. Objective 1 Attainment:** A MobileNetV2 model (v5) was trained across 154 classes on 34 crops and reached 94.04% top-1 accuracy on 16,254 held-out dataset images (macro F1 0.9266, calibration error 0.0096; 97.33% when at least 75% confident). It runs offline from a 4.86 MB file. Field accuracy has not been measured yet.
 - **2. Objective 2 Attainment:** The platform successfully embedded Kenya's Pest Control Products Act (Cap 346) and June 2025 PCPB gazetted restrictions into an offline regulatory engine, completely eliminating banned carcinogens and termiticides while providing exact, mathematically validated knapsack tank-mix dilution calculations (16L and 20L sprayers) that eliminate farmer dosing errors.
 - **3. Objective 3 Attainment:** An automated Sentinel-2 multispectral remote sensing pipeline was operationalized at native spatial resolution (10m NDVI canopy vigor, 20m NDWI_CROP liquid moisture) coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria, enabling proactive preventative disease management without expensive on-farm hardware sensors.
 - **4. Objective 4 Attainment:** A privacy-preserving mobile architecture was constructed utilizing local SQLite persistence and Supabase Edge Functions with Row Level Security, enabling anonymized county-level disease outbreak tracking (threshold >= 2 farmers) and localized commodity market price transparency.
