@@ -1369,4 +1369,5 @@ export const SW: Record<string, string> = {
   "Sure": "Uhakika",
   "Fairly sure": "Uhakika kiasi",
   "Check online (AI)": "Kagua mtandaoni (AI)",
+  "Watch out": "Tahadhari",
 };

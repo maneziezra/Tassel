@@ -37,6 +37,7 @@ import { localizeGuide } from '../../lib/advisory.sw';
 import { FERTS, type FertId } from '../../lib/fertiliser';
 import { useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
+import { NotoEmoji } from '../../components/NotoEmoji';
 import { PcpbProductCard } from '../../components/PcpbProductCard';
 import { cropKey, getRegisteredProducts, problemKey, type PcpbProduct, type ProblemKey } from '../../lib/pcpb';
 import { speak } from '../../lib/speech';
@@ -382,9 +383,11 @@ export default function AdvisoryScreen() {
                 {activeCard.type === 'watchout' ? (
                   <View style={st.watchCard}>
                     <WatchOutDiseaseArt width={SCREEN_WIDTH - 64} height={150} />
-                    <View style={st.alertBadge}>
-                      <Icon name="shield-alert-outline" size={18} color="#FFFFFF" />
-                      <Text style={st.alertBadgeTxt}>STAGE HEALTH ALERT</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <NotoEmoji name="bug" size={40} />
+                      <View style={st.alertBadge}>
+                        <Text style={st.alertBadgeTxt}>Watch out</Text>
+                      </View>
                     </View>
                     <Text raw style={st.watchDiseaseName}>
                       {activeCard.caption}
@@ -394,7 +397,8 @@ export default function AdvisoryScreen() {
                     </Text>
 
                     {/* Hutton late-blight risk status if relevant */}
-                    {weather?.blight ? (
+                    {/* Hutton criteria are for potato and tomato late blight only */}
+                    {weather?.blight && /potato|tomato/i.test(cropId) ? (
                       <View style={st.huttonBox}>
                         <Icon name="weather-partly-cloudy" size={16} color={C.primaryDark} />
                         <Text raw style={st.huttonTxt}>
