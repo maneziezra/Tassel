@@ -776,7 +776,7 @@ export default function HomeScreen() {
         </View>
       </Sheet>
 
-      <StatusShade />
+      <StatusShade color={C.brandDark} />
     </View>
   );
 }

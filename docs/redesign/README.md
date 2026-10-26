@@ -52,9 +52,23 @@ sees their field "arrive". Reduce-motion shows the final picture.
 - Imidacloprid was listed as a TYLCV option; now "restricted" like the other June 2025 actives.
 - Profile name: merge logic made pure and tested; photo-check "scan again" used a raw route.
 
+## Checked on the TECNO (26 Oct, debug build over Metro, installed with `adb install -r`)
+
+- Before/after Home: `docs/redesign/shots/before-home.jpg`, `after-home.jpg`.
+- The field hero draws the real boundary of "Kera Coffee" under the satellite sweep; the field
+  switcher shows both fields; the gold Scan action and verdict render as designed.
+- P0.1 root cause: the phone's account is anonymous (created 21 Oct) and never went through
+  sign-up, so no name existed in the profile row, the auth metadata or the cache. Home now asks
+  "What should we call you?" under the greeting (one field, saved through `saveProfile`).
+- Found and fixed on the phone: Noto emoji ended on a blank frame (now loop), invisible avatar
+  initials, a paper-coloured status-bar strip over the dark hero, a 3-line "checking" verdict,
+  deprecated Skia path calls.
+
 ## Not done / needs Ezra
 
-- **Phone checks** of the P0 fixes (TECNO): the phone was in use; nothing was taken over.
+- **Phone checks still to do** (the phone disconnected): enter the name once and confirm it shows on
+  Home and Profile after closing the app; open Scan from Home, result, library, calendar task, farm,
+  satellite and outbreaks; run the planting flow; before/after shots of the other screens.
 - **Auto-capture** on the scan camera needs frame processing (react-native-vision-camera).
 - **Mobbin** references: the Mobbin MCP needs a paid plan.
 - **Supabase** `pesticide_products` table: written (`cropguard-proxy`, branch
