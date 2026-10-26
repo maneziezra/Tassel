@@ -169,7 +169,7 @@ export default function FertiliserScreen() {
 
   const shareList = () => {
     tick('success');
-    const header = `🌾 *${t('Tassel Fertiliser Shopping List')}*\n${t('Total land')}: ${fmtArea(totalAcreage, units)} (${
+    const header = `*${t('Tassel Fertiliser Shopping List')}*\n${t('Total land')}: ${fmtArea(totalAcreage, units)} (${
       selectedFarms.length > 0 && !manualMode ? `${selectedFarms.length} ${t('fields')}` : '1 field'
     })\n`;
 

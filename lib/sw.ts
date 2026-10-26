@@ -1322,4 +1322,23 @@ export const SW: Record<string, string> = {
   "Work out the spray mix": "Kokotoa mchanganyiko wa dawa",
   "Call": "Piga simu",
   "The scanner cannot detect insects — check for:": "Kichanganuzi hakiwezi kutambua wadudu — angalia:",
+
+  // ── v2.7 Home: the field from space (Direction A) ── flagged for native-speaker review
+  "Open the field from space": "Fungua shamba kutoka angani",
+  "Clear picture from space · {date} · tap to open": "Picha safi kutoka angani · {date} · gusa kufungua",
+  "Tap to open the field from space": "Gusa kufungua shamba kutoka angani",
+  "Draw this field to see it from space": "Chora shamba hili ulione kutoka angani",
+  "Tap to open the field": "Gusa kufungua shamba",
+  "Tassel needs a few clear pictures to learn this field": "Tassel inahitaji picha chache safi ili kulijua shamba hili",
+  "Your {crop} looks healthy": "{crop} yako inaonekana na afya",
+  "Possible stress — check {zone} today": "Huenda kuna tatizo — kagua {zone} leo",
+  "Part of your field is drying — check {zone}": "Sehemu ya shamba lako inakauka — kagua {zone}",
+  "crop": "zao",
+  "Tap the corners. We measure it for you.": "Gusa kona za shamba. Tutalipima kwa ajili yako.",
+  "Works without data": "Inafanya kazi bila data",
+  "Draw my field": "Chora shamba langu",
+  "About 1 minute": "Kama dakika 1",
+  "Scan a sick leaf": "Skani jani gonjwa",
+  "No field needed · works offline": "Huhitaji shamba · inafanya kazi bila mtandao",
+  "Checking your fields…": "Tunaangalia mashamba yako…",
 };

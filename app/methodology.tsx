@@ -93,12 +93,12 @@ const SECTIONS: { icon: IconName; title: L; lines: L[] }[] = [
         sw: 'Seva inaongeza kanuni za usalama: mbinu za gharama nafuu kwanza, bidhaa zilizosajiliwa tu, hakuna kipimo juu ya lebo, kusema inapokosa uhakika, na kujibu kwa Kiswahili ikiombwa.',
       },
       {
-        en: 'Each phone can ask 20 questions per hour, and the whole app 500 per day, to control cost and abuse.',
-        sw: 'Kila simu inaweza kuuliza maswali 20 kwa saa, na programu nzima 500 kwa siku, ili kudhibiti gharama na matumizi mabaya.',
+        en: 'Each phone has an hourly limit on questions, and the whole app a daily limit, to control cost and abuse. The limits are set on the server.',
+        sw: 'Kila simu ina kikomo cha maswali kwa saa, na programu nzima kikomo kwa siku, ili kudhibiti gharama na matumizi mabaya. Vikomo vimewekwa kwenye seva.',
       },
       {
-        en: 'AI photo check (online, only when the farmer chooses it): for insect pests, nutrient deficiencies, weather damage and problems outside the scanner\'s 154 classes. One photo is shrunk on the phone (longest side 1,024 px, location data removed) and sent to Claude with the same safety rules. It returns the crop, the most likely cause and its type, a low/medium/high confidence, the visible signs, what to check in the field and what to do. The photo is not stored. It counts towards the same 20-per-hour limit and is labelled as an AI suggestion, not a lab test.',
-        sw: 'Ukaguzi wa picha wa AI (kwa intaneti, mkulima akichagua tu): kwa wadudu, upungufu wa virutubisho, madhara ya hali ya hewa na matatizo nje ya madaraja 154 ya skana. Picha moja hupunguzwa kwenye simu (upande mrefu pikseli 1,024, data ya eneo huondolewa) na kutumwa kwa Claude ikiwa na kanuni zile zile za usalama. Inarudisha zao, chanzo kinachowezekana zaidi na aina yake, uhakika wa chini/wastani/juu, dalili zinazoonekana, cha kukagua shambani na cha kufanya. Picha haihifadhiwi. Inahesabiwa katika kikomo kile kile cha 20 kwa saa na inaonyeshwa kama pendekezo la AI, si kipimo cha maabara.',
+        en: 'AI photo check (online, only when the farmer chooses it): for insect pests, nutrient deficiencies, weather damage and problems outside the scanner\'s 154 classes. One photo is shrunk on the phone (longest side 1,024 px, location data removed) and sent to Claude with the same safety rules. It returns the crop, the most likely cause and its type, a low/medium/high confidence, the visible signs, what to check in the field and what to do. The photo is not stored. It counts towards the same hourly limit and is labelled as an AI suggestion, not a lab test.',
+        sw: 'Ukaguzi wa picha wa AI (kwa intaneti, mkulima akichagua tu): kwa wadudu, upungufu wa virutubisho, madhara ya hali ya hewa na matatizo nje ya madaraja 154 ya skana. Picha moja hupunguzwa kwenye simu (upande mrefu pikseli 1,024, data ya eneo huondolewa) na kutumwa kwa Claude ikiwa na kanuni zile zile za usalama. Inarudisha zao, chanzo kinachowezekana zaidi na aina yake, uhakika wa chini/wastani/juu, dalili zinazoonekana, cha kukagua shambani na cha kufanya. Picha haihifadhiwi. Inahesabiwa katika kikomo kile kile cha kila saa na inaonyeshwa kama pendekezo la AI, si kipimo cha maabara.',
       },
     ],
   },

@@ -13,6 +13,7 @@ import { Btn, Card, Chip, Dot, ErrorNote, Header, Icon, Loading, ProgressBar, Se
 import { getFarm, type Farm } from '../../lib/data';
 import { locale, useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
+import { mix, ndviColor } from '../../lib/fieldArt';
 import { C, FONT, RADIUS } from '../../lib/theme';
 import {
   CLASSES, QUALITY_META, RESOLUTION, STRESS, classMeta, getGrid, interpret, listObservations, listValidations, listZones, refreshSatellite,
@@ -54,13 +55,7 @@ const CONDITIONS: { value: Condition; label: string }[] = [
   { value: 'other', label: 'Something else' },
 ];
 
-// colour ramps for the index layers
-function mix(a: string, b: string, t: number): string {
-  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
-  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
-  return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * Math.min(1, Math.max(0, t))).toString(16).padStart(2, '0')).join('');
-}
-const ndviColor = (v: number) => (v < 0.45 ? mix('#E9DFC9', '#9DB77C', (v - 0.05) / 0.4) : mix('#9DB77C', '#1F4D39', (v - 0.45) / 0.4));
+// colour ramps for the index layers (NDVI ramp shared with the Home hero: lib/fieldArt.ts)
 const waterColor = (v: number) => (v < 0 ? mix('#EFE6D2', '#C9D9E2', (v + 0.6) / 0.6) : mix('#7FB0CF', '#1E4F73', v / 0.4));
 const ndwiColor = (v: number) => (v < 0.1 ? mix('#EFE6D2', '#A9C3CF', (v + 0.25) / 0.35) : mix('#A9C3CF', '#24587C', (v - 0.1) / 0.3));
 

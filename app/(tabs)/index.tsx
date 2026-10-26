@@ -9,9 +9,10 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { FieldHero } from '../../components/FieldHero';
 import {
   Btn,
   CropIcon,
@@ -40,19 +41,19 @@ import {
   type Profile,
 } from '../../lib/data';
 import {
-  classMeta,
+  getGrid,
   interpret,
   latestByFarm as latestSatellite,
   listObservations,
   listZones,
   zoneName,
-  type Observation,
   type Reading,
   type ZoneStat,
 } from '../../lib/satellite';
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { getPosition } from '../../lib/geo';
 import { describeCode, getWeather, type Weather } from '../../lib/weather';
+import type { Grid } from '../../lib/satelliteCore';
 import { loadCached, saveCached } from '../../lib/store';
 import { currentStage, daysSince, fieldTasks, loadTicks, saveTicks, type FieldTask } from '../../lib/calendar';
 import { alertOnce } from '../../lib/notify';
@@ -61,6 +62,7 @@ import { fmtArea, usePrefs } from '../../lib/prefs';
 import { openScanner } from '../../lib/navigation';
 import { C, FONT, RADIUS } from '../../lib/theme';
 
+const HERO_ART_H = 230;
 const NAIROBI = { lat: -1.2864, lng: 36.8172 };
 const FALLBACK_PLACE = 'Nairobi (location off)';
 
@@ -78,83 +80,6 @@ const TOOLS: { label: string; icon: IconName; href: string }[] = [
   { label: 'AI advisor', icon: 'chat-processing-outline', href: '/chat' },
 ];
 
-/** SVG Field Boundary Mini-map renderer */
-function MiniFieldBoundary({
-  polygon,
-  tone,
-  width = 150,
-  height = 94,
-}: {
-  polygon: [number, number][] | null;
-  tone: 'normal' | 'watch' | 'act' | 'none';
-  width?: number;
-  height?: number;
-}) {
-  const strokeColor =
-    tone === 'normal' ? '#8FC2A5' : tone === 'watch' ? '#E8C25A' : tone === 'act' ? '#E2876A' : '#5E6B64';
-  const fillColor =
-    tone === 'normal'
-      ? 'rgba(46, 106, 79, 0.45)'
-      : tone === 'watch'
-      ? 'rgba(217, 169, 58, 0.40)'
-      : tone === 'act'
-      ? 'rgba(168, 71, 42, 0.45)'
-      : 'rgba(30, 58, 42, 0.45)';
-
-  const points = useMemo(() => {
-    if (!polygon || polygon.length < 3) {
-      // Stylized default field contour
-      return '18,34 56,16 126,24 138,72 96,86 28,78';
-    }
-    const lats = polygon.map((p) => p[0]);
-    const lngs = polygon.map((p) => p[1]);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-
-    const spanLat = maxLat - minLat || 0.0001;
-    const spanLng = maxLng - minLng || 0.0001;
-    const pad = 12;
-    const w = width - pad * 2;
-    const h = height - pad * 2;
-
-    return polygon
-      .map(([lat, lng]) => {
-        const x = pad + ((lng - minLng) / spanLng) * w;
-        const y = pad + ((maxLat - lat) / spanLat) * h;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(' ');
-  }, [polygon, width, height]);
-
-  return (
-    <View style={{ width, height, borderRadius: 12, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.22)' }}>
-      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        {/* Subtle coordinate grid lines */}
-        <Line x1={width * 0.33} y1="0" x2={width * 0.33} y2={height} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <Line x1={width * 0.66} y1="0" x2={width * 0.66} y2={height} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        <Line x1="0" y1={height * 0.5} x2={width} y2={height * 0.5} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-
-        {/* Drawn Polygon */}
-        <Polygon points={points} fill={fillColor} stroke={strokeColor} strokeWidth="2" strokeLinejoin="round" />
-
-        {/* Radar beam center pulse */}
-        <Circle cx={width * 0.52} cy={height * 0.48} r="3" fill="#E2B33C" />
-        <Circle cx={width * 0.52} cy={height * 0.48} r="7" stroke="#E2B33C" strokeWidth="1" strokeOpacity="0.4" />
-
-        {/* North Indicator */}
-        <G x={width - 16} y={16}>
-          <Path d="M0,-5 L3,4 L0,2 L-3,4 Z" fill="#F4F1E6" />
-          <SvgText x="0" y="12" fontSize="8" fill="#F4F1E6" textAnchor="middle" fontFamily={FONT.bodyBold}>
-            N
-          </SvgText>
-        </G>
-      </Svg>
-    </View>
-  );
-}
-
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -167,6 +92,7 @@ export default function HomeScreen() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [satSummaries, setSatSummaries] = useState<Awaited<ReturnType<typeof latestSatellite>>>({});
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
+  const [activeGrid, setActiveGrid] = useState<Grid | null>(null);
   const [outbreaks, setOutbreaks] = useState<Outbreak[]>([]);
   const [ticks, setTicks] = useState<Record<string, string[]>>({});
   const [weather, setWeather] = useState<(Weather & { place: string }) | null>(null);
@@ -228,6 +154,7 @@ export default function HomeScreen() {
   const loadActiveFarmSatellite = useCallback(async (farm: Farm | null) => {
     if (!farm) {
       setActiveReading(null);
+      setActiveGrid(null);
       return;
     }
     try {
@@ -236,8 +163,13 @@ export default function HomeScreen() {
       const zones: ZoneStat[] = latestUsable ? await listZones(latestUsable.id) : [];
       const reading = interpret(obs, zones, farm.crop, farm.planting_date);
       setActiveReading(reading);
+      // The hero draws the field's latest clear grid; cached so it still shows offline.
+      const grid = latestUsable ? await getGrid(latestUsable.id) : null;
+      setActiveGrid(grid);
+      if (grid) saveCached(`grid:${farm.id}`, grid);
     } catch {
       setActiveReading(null);
+      setActiveGrid(await loadCached<Grid>(`grid:${farm.id}`));
     }
   }, []);
 
@@ -326,251 +258,197 @@ export default function HomeScreen() {
     month: 'long',
   });
 
-  // Plain-language satellite verdict for active field
+  // Plain-language satellite verdict for the active field, from interpret() (lib/satellite.ts).
   const fieldVerdict = useMemo(() => {
     if (!activeFarm) return null;
-    const crop = (activeFarm.crop ? cropName(activeFarm.crop) : '') || 'crop';
-    if (!activeReading || activeReading.tone === 'none') {
-      return {
-        text: t('Checking your field from space… about a minute'),
-        badge: t('Learning this field'),
-        tone: 'none' as const,
-      };
+    const crop = (activeFarm.crop ? cropName(activeFarm.crop) : '') || t('crop');
+    const seen = activeReading?.latest
+      ? new Date(activeReading.latest.observed_at).toLocaleDateString(locale(lang), { day: 'numeric', month: 'short' })
+      : null;
+    const meta = seen ? t('Clear picture from space · {date} · tap to open', { date: seen }) : t('Tap to open the field from space');
+    if (!activeFarm.polygon) {
+      return { text: t('Draw this field to see it from space'), meta: t('Tap to open the field'), tone: 'none' as const };
     }
-    if (activeReading.headline === 'Looks normal' || activeReading.tone === 'normal') {
-      return {
-        text: t('Your {crop} field looks healthy', { crop: crop.toLowerCase() }),
-        badge: activeReading.latest
-          ? t('Sentinel-2 · {when} · Clear image', { when: timeAgo(activeReading.latest.observed_at) })
-          : t('Sentinel-2 · Clear image'),
-        tone: 'normal' as const,
-      };
+    if (!activeReading || activeReading.tone === 'none') {
+      return { text: t('Checking your field from space… about a minute'), meta: t('Tassel needs a few clear pictures to learn this field'), tone: 'none' as const };
+    }
+    if (activeReading.tone === 'normal') {
+      return { text: t('Your {crop} looks healthy', { crop: crop.toLowerCase() }), meta, tone: 'normal' as const };
     }
     if (activeReading.tone === 'act') {
       return {
-        text: activeReading.action ?? t('Possible stress detected — inspect {zone} today', { zone: zoneName(activeReading.zone) }),
-        badge: t('Action needed'),
+        text: activeReading.action ?? t('Possible stress — check {zone} today', { zone: zoneName(activeReading.zone) }),
+        meta,
         tone: 'act' as const,
       };
     }
-    return {
-      text: t('Part of your field is drying — go and check {zone}', { zone: zoneName(activeReading.zone) }),
-      badge: t('Watch zone'),
-      tone: 'watch' as const,
-    };
-  }, [activeFarm, activeReading, t]);
+    return { text: t('Part of your field is drying — check {zone}', { zone: zoneName(activeReading.zone) }), meta, tone: 'watch' as const };
+  }, [activeFarm, activeReading, t, lang]);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <StatusBar style="light" />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 64 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[C.primary]} />}
       >
-        {/* ── TOP EDITORIAL HEADER ────────────────────────────────────────── */}
-        <View style={[st.header, { paddingTop: insets.top + 14 }]}>
-          <View style={{ flex: 1 }}>
-            <Text raw style={st.dateText}>
-              {todayFormatted}
-            </Text>
-            <Text raw style={st.greetingText}>
-              {first ? `${t(greeting())}, ${first}` : t(greeting())}
-            </Text>
-            {profile?.county ? (
-              <Text raw style={st.subLocation}>
-                {[
-                  t('{county} County', { county: profile.county }),
-                  farms.length ? t('{n} fields', { n: farms.length }) : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+        {/* ── HERO: THE FIELD FROM SPACE (Direction A) ───────────────────── */}
+        <View style={[st.hero, { paddingTop: insets.top + 12 }]}>
+          <View style={st.heroTop}>
+            <View style={{ flex: 1 }}>
+              <Text raw style={st.heroGreeting} numberOfLines={1}>
+                {first ? `${t(greeting())}, ${first}` : t(greeting())}
               </Text>
-            ) : (
-              <TouchableOpacity onPress={() => router.navigate('/profile')} hitSlop={8}>
-                <Text style={[st.subLocation, { color: C.brandGold, fontFamily: FONT.bodyBold }]}>
-                  Add your county for local alerts
+              {activeFarm ? (
+                <Text raw style={st.heroSub} numberOfLines={1}>
+                  {[
+                    activeFarm.name,
+                    activeFarm.crop ? cropName(activeFarm.crop) : null,
+                    activeFarm.size_acres ? fmtArea(Number(activeFarm.size_acres), prefs.units) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <Press
-            onPress={() => router.navigate('/profile')}
-            accessibilityLabel={t('Profile')}
-            style={[st.avatarBtn, { backgroundColor: prefs.avatarTone || C.primaryDark }]}
-          >
-            {prefs.avatarCrop ? (
-              <CropIcon crop={prefs.avatarCrop} size={44} disc={false} />
-            ) : (
-              <Text raw style={st.avatarInitials}>
-                {initials}
-              </Text>
-            )}
-          </Press>
-        </View>
-
-        {offline ? (
-          <View style={st.offlineNotice}>
-            <Dot color={C.warn} />
-            <Text style={st.offlineNoticeText}>
-              Offline. Scanning still works; your fields load when you reconnect.
-            </Text>
-          </View>
-        ) : null}
-
-        {/* ── FIELD SWITCHER PILLS (when multiple fields) ────────────────── */}
-        {farms.length > 1 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={st.fieldPillsContainer}
-          >
-            {farms.map((f) => {
-              const isSelected = f.id === activeFarm?.id;
-              return (
-                <Press
-                  key={f.id}
-                  onPress={() => {
-                    tick('select');
-                    setActiveFarmId(f.id);
-                  }}
-                  style={[st.fieldPill, isSelected && st.fieldPillActive]}
-                >
-                  <CropIcon crop={f.crop} size={22} disc={false} />
-                  <Text raw style={[st.fieldPillText, isSelected && st.fieldPillTextActive]}>
-                    {f.name}
-                  </Text>
-                </Press>
-              );
-            })}
+              ) : profile?.county ? (
+                <Text raw style={st.heroSub}>
+                  {t('{county} County', { county: profile.county })}
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={() => router.navigate('/profile')} hitSlop={8}>
+                  <Text style={[st.heroSub, { color: C.brandGold, fontFamily: FONT.bodyBold }]}>Add your county for local alerts</Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <Press
-              onPress={() => router.push('/add-farm')}
-              style={st.fieldPillAdd}
-              accessibilityLabel={t('Add a field')}
+              onPress={() => router.navigate('/profile')}
+              accessibilityLabel={t('Profile')}
+              style={[st.avatarBtn, { backgroundColor: prefs.avatarTone || C.primaryDark }]}
             >
-              <Icon name="plus" size={16} color={C.brandGold} />
-              <Text style={st.fieldPillAddText}>Add</Text>
+              {prefs.avatarCrop ? (
+                <CropIcon crop={prefs.avatarCrop} size={44} disc={false} />
+              ) : (
+                <Text raw style={st.avatarInitials}>
+                  {initials}
+                </Text>
+              )}
             </Press>
-          </ScrollView>
-        ) : null}
+          </View>
 
-        {/* ── HERO: FIELD-FIRST SATELLITE CARD ──────────────────────────── */}
-        <View style={st.heroWrapper}>
-          {farms.length > 0 && activeFarm ? (
+          {farms.length > 1 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.fieldPillsContainer}>
+              {farms.map((f) => {
+                const isSelected = f.id === activeFarm?.id;
+                return (
+                  <Press
+                    key={f.id}
+                    onPress={() => {
+                      tick('select');
+                      setActiveFarmId(f.id);
+                    }}
+                    accessibilityState={{ selected: isSelected }}
+                    style={[st.fieldPill, isSelected && st.fieldPillActive]}
+                  >
+                    <CropIcon crop={f.crop} size={22} disc={false} />
+                    <Text raw style={[st.fieldPillText, isSelected && st.fieldPillTextActive]}>
+                      {f.name}
+                    </Text>
+                  </Press>
+                );
+              })}
+            </ScrollView>
+          ) : null}
+
+          {activeFarm ? (
             <Press
-              style={st.fieldHeroCard}
               onPress={() => {
                 tick('select');
                 router.push({ pathname: '/satellite/[id]', params: { id: activeFarm.id } });
               }}
               accessibilityRole="button"
-              accessibilityLabel={t('Tap to inspect field from space')}
+              accessibilityLabel={`${fieldVerdict?.text ?? ''}. ${t('Open the field from space')}`}
             >
-              {/* Field info & satellite tag */}
-              <View style={st.fieldHeroHeader}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <CropIcon crop={activeFarm.crop} size={28} discColor="rgba(255,255,255,0.14)" />
-                    <Text raw style={st.heroFieldName} numberOfLines={1}>
-                      {activeFarm.name}
-                    </Text>
-                  </View>
-                  <Text raw style={st.heroFieldSub} numberOfLines={1}>
-                    {[
-                      activeFarm.crop ? cropName(activeFarm.crop) : null,
-                      activeFarm.size_acres ? fmtArea(Number(activeFarm.size_acres), prefs.units) : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ') || t('Field')}
-                  </Text>
-                </View>
-
-                {fieldVerdict?.badge ? (
-                  <View
-                    style={[
-                      st.satelliteBadge,
-                      fieldVerdict.tone === 'act' && { backgroundColor: 'rgba(168, 71, 42, 0.35)', borderColor: C.error },
-                    ]}
-                  >
-                    <Icon name="satellite-variant" size={13} color={C.brandGold} />
-                    <Text raw style={st.satelliteBadgeText}>
-                      {fieldVerdict.badge}
-                    </Text>
-                  </View>
-                ) : null}
+              <View style={st.heroArt}>
+                {activeFarm.polygon || activeGrid ? (
+                  <FieldHero
+                    polygon={activeFarm.polygon}
+                    grid={activeGrid}
+                    width={width - 32}
+                    height={HERO_ART_H}
+                    checking={!activeGrid}
+                    playKey={activeFarm.id}
+                  />
+                ) : (
+                  <SatellitePassArt size={150} />
+                )}
               </View>
-
-              {/* Graphic center: Mini Field Boundary SVG */}
-              <View style={st.heroVisualRow}>
-                <MiniFieldBoundary
-                  polygon={activeFarm.polygon}
-                  tone={fieldVerdict?.tone ?? 'none'}
-                  width={Math.min(160, Math.round(width * 0.4))}
-                  height={94}
-                />
-                <View style={{ flex: 1, paddingLeft: 14, justifyContent: 'center', gap: 6 }}>
-                  <Text raw style={st.heroVerdictText}>
-                    {fieldVerdict?.text}
-                  </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Text style={st.heroInspectLink}>Tap to inspect field from space</Text>
-                    <Icon name="arrow-right" size={14} color={C.brandGold} />
-                  </View>
-                </View>
-              </View>
+              <Text raw style={st.heroVerdict}>
+                {fieldVerdict?.text}
+              </Text>
+              <Text raw style={st.heroMeta}>
+                {fieldVerdict?.meta}
+              </Text>
             </Press>
           ) : !loaded ? (
-            <View style={[st.fieldHeroCard, { height: 160, justifyContent: 'center', alignItems: 'center' }]}>
-              <Text style={{ color: C.brandCream }}>Checking your fields…</Text>
+            <View style={[st.heroArt, { justifyContent: 'center' }]}>
+              <Text style={st.heroSub}>Checking your fields…</Text>
             </View>
           ) : (
-            /* First run empty state: "Draw your field from space" */
-            <Press
-              style={[st.fieldHeroCard, st.emptyHeroCard]}
-              onPress={() => router.push('/add-farm')}
-              accessibilityRole="button"
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                <SatellitePassArt size={90} />
-                <View style={{ flex: 1, gap: 4 }}>
-                  <Text style={st.emptyHeroTitle}>See your crop from space</Text>
-                  <Text style={st.emptyHeroSub}>
-                    Draw your boundary in 60 seconds to get Sentinel-2 satellite health and soil moisture.
-                  </Text>
-                  <View style={st.drawFieldBtn}>
-                    <Icon name="vector-polygon" size={16} color={C.brandDark} />
-                    <Text style={st.drawFieldBtnText}>Draw field</Text>
-                  </View>
-                </View>
+            <Press onPress={() => router.push('/add-farm')} accessibilityRole="button">
+              <View style={st.heroArt}>
+                <SatellitePassArt size={150} />
+              </View>
+              <Text style={st.heroVerdict}>Draw your field from space</Text>
+              <Text style={st.heroMeta}>Tap the corners. We measure it for you.</Text>
+            </Press>
+          )}
+        </View>
+
+        {/* ── THE ONE BIG ACTION ─────────────────────────────────────────── */}
+        <View style={st.actionWrap}>
+          {activeFarm || !loaded ? (
+            <Press style={st.bigAction} onPress={openScanner} haptic accessibilityRole="button" accessibilityLabel={t('Scan a leaf')}>
+              <Icon name="line-scan" size={36} color={C.brandGround} />
+              <View style={{ flex: 1 }}>
+                <Text style={st.bigActionTitle}>Scan a leaf</Text>
+                <Text style={st.bigActionSub}>Works without data</Text>
+              </View>
+            </Press>
+          ) : (
+            <Press style={st.bigAction} onPress={() => router.push('/add-farm')} haptic accessibilityRole="button">
+              <Icon name="vector-polygon" size={36} color={C.brandGround} />
+              <View style={{ flex: 1 }}>
+                <Text style={st.bigActionTitle}>Draw my field</Text>
+                <Text style={st.bigActionSub}>About 1 minute</Text>
               </View>
             </Press>
           )}
         </View>
 
-        {/* ── GIANT THUMB-REACHABLE SCAN BAR ─────────────────────────────── */}
-        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
-          <Press
-            style={st.scanBar}
-            onPress={openScanner}
-            haptic
-            accessibilityRole="button"
-            accessibilityLabel={t('Scan a leaf')}
-          >
-            <View style={st.scanIconCircle}>
-              <Icon name="line-scan" size={30} color={C.brandGold} />
-            </View>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={st.scanBarTitle}>Scan a leaf</Text>
-              <Text style={st.scanBarSub}>154 plant conditions · Works offline</Text>
-            </View>
-            <View style={st.scanCameraGlyph}>
-              <Icon name="camera" size={20} color="#FFFFFF" />
-            </View>
-          </Press>
-        </View>
+        {offline ? (
+          <View style={st.offlineNotice}>
+            <Dot color={C.warn} />
+            <Text style={st.offlineNoticeText}>Offline. Scanning still works; your fields load when you reconnect.</Text>
+          </View>
+        ) : null}
+
+        {!activeFarm && loaded ? (
+          <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+            <Press style={st.actionCard} onPress={openScanner} accessibilityRole="button">
+              <View style={st.actionCardIconWrap}>
+                <Icon name="line-scan" size={26} color={C.primary} />
+              </View>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text style={st.actionCardTitle}>Scan a sick leaf</Text>
+                <Text style={st.actionCardDesc}>No field needed · works offline</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color={C.textLight} />
+            </Press>
+          </View>
+        ) : null}
 
         {/* ── "TODAY" ACTION CARDS (MAX 3) ────────────────────────────────── */}
         <View style={st.sectionHeader}>
-          <SectionLabel>Today on your farm</SectionLabel>
+          <SectionLabel>Today</SectionLabel>
         </View>
 
         <View style={st.todayCardsContainer}>
@@ -857,29 +735,37 @@ export default function HomeScreen() {
 }
 
 const st = StyleSheet.create({
-  header: {
+  // Direction A hero: the field from space on the dark brand ground.
+  hero: { backgroundColor: C.brandDark, paddingHorizontal: 16, paddingBottom: 56, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  heroGreeting: { fontSize: 28, fontFamily: FONT.display, color: C.brandCream },
+  heroSub: { fontSize: 15, color: C.secondary, marginTop: 2 },
+  heroArt: { height: HERO_ART_H, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
+  heroVerdict: { fontSize: 32, lineHeight: 36, fontFamily: FONT.display, color: C.brandCream, marginTop: 14 },
+  heroMeta: { fontSize: 15, color: C.secondary, marginTop: 6 },
+  fieldPillsContainer: { gap: 8, paddingTop: 14 },
+  fieldPill: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 14, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,255,255,0.08)' },
+  fieldPillActive: { backgroundColor: C.brandCream },
+  fieldPillText: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.brandCream },
+  fieldPillTextActive: { color: C.brandGround },
+  // The one big action, overlapping the hero's edge.
+  actionWrap: { paddingHorizontal: 16, marginTop: -40 },
+  bigAction: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 8,
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 78,
+    paddingHorizontal: 22,
+    borderRadius: RADIUS.xl,
+    backgroundColor: C.brandGold,
+    shadowColor: C.brandGround,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  dateText: {
-    fontSize: 14,
-    color: C.textSub,
-  },
-  greetingText: {
-    fontSize: 30,
-    lineHeight: 36,
-    fontFamily: FONT.display,
-    color: C.text,
-    marginTop: 2,
-  },
-  subLocation: {
-    fontSize: 14,
-    color: C.textSub,
-    marginTop: 2,
-  },
+  bigActionTitle: { fontSize: 26, fontFamily: FONT.display, color: C.brandGround },
+  bigActionSub: { fontSize: 14, fontFamily: FONT.bodyBold, color: C.brandDark },
   avatarBtn: {
     width: 48,
     height: 48,
@@ -910,190 +796,12 @@ const st = StyleSheet.create({
   },
 
   // Field selector pills
-  fieldPillsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  fieldPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: C.surface,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  fieldPillActive: {
-    backgroundColor: C.brandDark,
-    borderColor: C.brandDark,
-  },
-  fieldPillText: {
-    fontSize: 14,
-    color: C.textMid,
-  },
-  fieldPillTextActive: {
-    color: C.brandCream,
-    fontFamily: FONT.bodyBold,
-  },
-  fieldPillAdd: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: C.brandGold,
-  },
-  fieldPillAddText: {
-    fontSize: 14,
-    color: C.brandGold,
-    fontFamily: FONT.bodyBold,
-  },
 
   // Hero Card: Field-First
-  heroWrapper: {
-    paddingHorizontal: 16,
-    marginTop: 4,
-  },
-  fieldHeroCard: {
-    backgroundColor: C.brandDark,
-    borderRadius: 20,
-    padding: 18,
-    gap: 14,
-    shadowColor: '#101D16',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  fieldHeroHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  heroFieldName: {
-    fontSize: 20,
-    fontFamily: FONT.display,
-    color: C.brandCream,
-  },
-  heroFieldSub: {
-    fontSize: 13,
-    color: '#8FC2A5',
-  },
-  satelliteBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    paddingVertical: 4,
-    paddingHorizontal: 9,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(226, 179, 60, 0.4)',
-  },
-  satelliteBadgeText: {
-    fontSize: 12,
-    color: C.brandCream,
-    fontFamily: FONT.bodyBold,
-  },
-  heroVisualRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  heroVerdictText: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontFamily: FONT.body,
-    color: C.brandCream,
-  },
-  heroInspectLink: {
-    fontSize: 13,
-    color: C.brandGold,
-    fontFamily: FONT.bodyBold,
-  },
 
   // First run empty hero card
-  emptyHeroCard: {
-    backgroundColor: C.brandDark,
-    padding: 20,
-  },
-  emptyHeroTitle: {
-    fontSize: 19,
-    fontFamily: FONT.display,
-    color: C.brandCream,
-  },
-  emptyHeroSub: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#8FC2A5',
-  },
-  drawFieldBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: C.brandGold,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 18,
-    marginTop: 6,
-  },
-  drawFieldBtnText: {
-    fontSize: 14,
-    fontFamily: FONT.bodyBold,
-    color: C.brandDark,
-  },
 
   // Giant Scan Bar
-  scanBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: C.primaryDark,
-    borderRadius: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    minHeight: 64,
-    borderWidth: 1,
-    borderColor: 'rgba(226,179,60,0.3)',
-    shadowColor: '#101D16',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  scanIconCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scanBarTitle: {
-    fontSize: 20,
-    fontFamily: FONT.display,
-    color: '#FFFFFF',
-  },
-  scanBarSub: {
-    fontSize: 13,
-    color: '#A2CBB4',
-  },
-  scanCameraGlyph: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: C.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
   // Today Action Cards
   sectionHeader: {
