@@ -64,11 +64,22 @@ sees their field "arrive". Reduce-motion shows the final picture.
   initials, a paper-coloured status-bar strip over the dark hero, a 3-line "checking" verdict,
   deprecated Skia path calls.
 
+## Second phone pass (26 Oct, evening)
+
+- Name: "Good evening, Ezra" shows on Home after restart (P0.1 confirmed on the phone).
+- Location: Android's "Location Accuracy" dialog came up on every Home refresh; automatic loads no longer ask.
+- Home hero: the field sits on a paper plate with a Bare–Dense–Cloud key; cloud squares are empty;
+  stress squares pulse only when the verdict says watch/act.
+- Scan: a tap on "Scan a leaf" could carry onto the camera and press the shutter or gallery; the
+  camera buttons now wait 600 ms after opening. All Scan buttons use `openScanner()`.
+- Result: "Not sure" shows the guess small, then Retake / Check online / Ask the community; no
+  treatment, plan or urgency for a guess.
+- Advisory: animated diagrams for spacing, depth, rotation and certified seed, drawn only from the
+  numbers in each step (`lib/diagramFacts.ts`, `scripts/test-diagrams.mjs`).
+
 ## Not done / needs Ezra
 
-- **Phone checks still to do** (the phone disconnected): enter the name once and confirm it shows on
-  Home and Profile after closing the app; open Scan from Home, result, library, calendar task, farm,
-  satellite and outbreaks; run the planting flow; before/after shots of the other screens.
+- **Phone checks still to do**: the planting-calendar flow; before/after shots of the other screens.
 - **Auto-capture** on the scan camera needs frame processing (react-native-vision-camera).
 - **Mobbin** references: the Mobbin MCP needs a paid plan.
 - **Supabase** `pesticide_products` table: written (`cropguard-proxy`, branch
