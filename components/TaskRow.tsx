@@ -2,7 +2,8 @@
 // The how-to opens only when tapped, so a list of tasks stays light to read.
 import React, { useState } from 'react';
 import { LayoutAnimation, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Dot, Icon, ListenButton, Text, tick } from './ui';
+import { Btn, Dot, Icon, ListenButton, Text, tick } from './ui';
+import { openScanner } from '../lib/navigation';
 import { locale, useLang } from '../lib/i18n';
 import type { FieldTask, TaskStatus } from '../lib/calendar';
 import { C, FONT } from '../lib/theme';
@@ -67,6 +68,9 @@ export function TaskRow({ item, onToggle, showField }: { item: FieldTask; onTogg
               {item.detail}
             </Text>
             <ListenButton text={`${item.title}. ${item.detail}`} />
+            {/scout|inspect|check (the )?leaves/i.test(`${item.task.title.en} ${item.task.detail.en}`) ? (
+              <Btn label="Scan a leaf" icon="line-scan" kind="signature" onPress={openScanner} />
+            ) : null}
           </View>
         ) : null}
       </TouchableOpacity>

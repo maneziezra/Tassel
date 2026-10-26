@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { Btn, Chip, CropIcon, Dot, Header, Icon, ListenButton, Text } from '../components/ui';
 import { getLibrary, LIBRARY_CROPS, LIBRARY_FILTERS } from '../lib/encyclopedia';
 import { cropName } from '../lib/diseases';
+import { openScanner } from '../lib/navigation';
 import { useLang } from '../lib/i18n';
 import { C, FONT } from '../lib/theme';
 
@@ -129,6 +130,7 @@ export default function EncyclopediaScreen() {
                       <Btn label="Ask the AI advisor" icon="chat-processing-outline" kind="secondary" style={{ flex: 1, minHeight: 44 }} onPress={() => router.push({ pathname: '/chat' })} />
                     )}
                   </View>
+                  {d.scanLabel ? <Btn label="Scan a leaf" icon="line-scan" kind="signature" style={{ marginTop: 10 }} onPress={openScanner} /> : null}
                 </View>
               ) : null}
             </TouchableOpacity>

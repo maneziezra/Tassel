@@ -11,6 +11,7 @@ import { Badge, Btn, Card, Chip, Header, Icon, ListenButton, Text, type IconName
 import { CROP_CHOICES } from '../lib/counties';
 import { chemicalRules } from '../lib/diseases';
 import { useLang } from '../lib/i18n';
+import { openScanner } from '../lib/navigation';
 import { givePhotoConsent, hasPhotoConsent, runPhotoCheck, type PhotoCheck, type ProblemType } from '../lib/photoCheck';
 import { C, FONT, RADIUS } from '../lib/theme';
 
@@ -126,7 +127,7 @@ export default function PhotoCheckScreen() {
           <Text raw style={st.body}>
             {L(TXT.why)}
           </Text>
-          <Btn label={L(TXT.again)} icon="camera-outline" kind="signature" style={{ marginTop: 14 }} onPress={() => router.replace('/scan')} />
+          <Btn label={L(TXT.again)} icon="camera-outline" kind="signature" style={{ marginTop: 14 }} onPress={openScanner} />
         </Card>
       </View>
     );
@@ -324,7 +325,7 @@ export default function PhotoCheckScreen() {
             <View style={{ paddingHorizontal: 16, marginTop: 16, gap: 12 }}>
               {r.status !== 'unclear' ? <Btn label={L(TXT.ask)} icon="robot-outline" onPress={askAdvisor} /> : null}
               <Btn label={L(TXT.community)} icon="account-group-outline" kind="secondary" onPress={askCommunity} />
-              <Btn label={L(TXT.again)} icon="camera-retake-outline" kind="ghost" onPress={() => router.replace('/scan')} />
+              <Btn label={L(TXT.again)} icon="camera-retake-outline" kind="ghost" onPress={openScanner} />
             </View>
           </>
         ) : null}

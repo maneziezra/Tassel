@@ -9,6 +9,7 @@ import { toByteArray } from 'base64-js';
 import { supabase } from './supabase';
 import { currentUserId, ensureSession } from './session';
 import { tr } from './i18n';
+import { needsNameBackfill, resolveProfile } from './profileCore';
 
 export type Profile = { id: string; name: string | null; phone: string | null; county: string | null; crops: string | null; created_at?: string };
 export type LatLng = [number, number];
@@ -123,29 +124,17 @@ export async function getProfile(): Promise<Profile> {
       fail(error, 'load your profile');
     }
 
-    const resolvedName = data?.name?.trim() || authName || cached?.name?.trim() || null;
-    const resolvedPhone = data?.phone?.trim() || cached?.phone?.trim() || null;
-    const resolvedCounty = data?.county?.trim() || cached?.county?.trim() || null;
-    const resolvedCrops = data?.crops?.trim() || cached?.crops?.trim() || null;
-
-    const merged: Profile = {
-      id,
-      name: resolvedName,
-      phone: resolvedPhone,
-      county: resolvedCounty,
-      crops: resolvedCrops,
-      created_at: data?.created_at ?? cached?.created_at,
-    };
+    const merged: Profile = resolveProfile(id, data, authName, cached);
 
     // If Supabase was missing the name, backfill it
-    if ((!data || !data.name) && resolvedName) {
+    if (needsNameBackfill(data, merged)) {
       Promise.resolve(
         supabase.from('profiles').upsert({
           id,
-          name: resolvedName,
-          phone: resolvedPhone,
-          county: resolvedCounty,
-          crops: resolvedCrops,
+          name: merged.name,
+          phone: merged.phone,
+          county: merged.county,
+          crops: merged.crops,
           updated_at: new Date().toISOString(),
         })
       ).catch(() => {});
