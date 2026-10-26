@@ -1,4 +1,7 @@
-// Tassel — treatment knowledge base for the 38 classes the scanner can detect.
+// Tassel — treatment knowledge base for every class the scanner can detect.
+// The 38 PlantVillage classes are written out below; the 116 classes added with
+// model v5 (Kenyan staples, cash crops, cereals and vegetables) are generated
+// into diseases.v5.ts by scripts/kb/gen.py.
 //
 // v2.0 methodology (replaces the v1.0 free-text advice + keyword "3-pillar" parser):
 // - Every class has explicit cultural, biological and chemical options written
@@ -14,9 +17,11 @@
 //   verified were removed.
 
 import { CHEMICAL_RULES_SW, CROP_SW, PEST_HINTS_SW, SW_DISEASES } from './diseases.sw';
+import { V5_LIST } from './diseases.v5';
 import { getLang, tr, type Lang } from './i18n';
+import modelLabels from '../assets/model/class_labels.json';
 
-export type Kind = 'Fungal' | 'Oomycete' | 'Bacterial' | 'Viral' | 'Pest' | 'Healthy';
+export type Kind = 'Fungal' | 'Oomycete' | 'Bacterial' | 'Viral' | 'Pest' | 'Algal' | 'Healthy';
 export type Urgency = 'low' | 'medium' | 'high' | 'critical';
 
 export type Chemical = { active: string; note?: string };
@@ -509,7 +514,7 @@ const LIST: DiseaseInfo[] = [
     biological: ['Neem-based sprays reduce whitefly numbers.'],
     chemical: [
       { active: 'Whitefly control with a PCPB-registered product (e.g. spiromesifen)', note: 'Sprays control the insect, not the virus.' },
-      { active: 'Imidacloprid', note: 'Restricted to greenhouse (non-open-field) use since 2025.' },
+      { active: 'Imidacloprid is restricted', note: 'Not for open-field use since the 2025 PCPB review.' },
     ],
   },
   {
@@ -532,14 +537,22 @@ const LIST: DiseaseInfo[] = [
     chemical: [{ active: 'No spray controls this virus', note: 'Hygiene is the only control.' }],
   },
   healthy('Tomato___healthy', 'Tomato', ['Stake and prune for airflow.', 'Water at the base in the morning; mulch to stop soil splash.']),
+
+  // ───────────── Added with model v5 (generated, see diseases.v5.ts) ─────────────
+  ...V5_LIST,
 ];
 
 export const DISEASES: Record<string, DiseaseInfo> = Object.fromEntries(LIST.map((d) => [d.label, d]));
 export const ALL_DISEASES = LIST;
-export const DETECTABLE_CROPS = Array.from(new Set(LIST.map((d) => d.crop)));
-// Diseases/pests the on-device scanner can name. The model has 38 output
-// classes in total; the other 12 are "healthy" classes, not diseases.
-export const SCANNABLE_DISEASES = LIST.length;
+// What the on-device scanner can name comes from the model's own label list, so these
+// counts stay right when the model changes (v5: 154 classes, 34 crops). Every class has
+// a guide (LIST + V5_LIST); scripts/kb/gen.py fails if one is missing.
+const MODEL_LABELS = Object.values(modelLabels as Record<string, string>);
+export const DETECTABLE_CROPS = Array.from(
+  new Set(MODEL_LABELS.map((l) => l.split('___')[0].replace(/^Orange$/, 'Citrus')))
+);
+// Diseases, pests and disorders the scanner can name (healthy classes excluded).
+export const SCANNABLE_DISEASES = MODEL_LABELS.filter((l) => !/___healthy$/i.test(l)).length;
 
 export function getDisease(label: string): DiseaseInfo | undefined {
   return DISEASES[label];
@@ -578,16 +591,18 @@ export function chemicalRules(lang: Lang = getLang()): string {
   return lang === 'sw' ? CHEMICAL_RULES_SW : CHEMICAL_RULES;
 }
 
-/** What the farmer should check for when the scan is uncertain. The model was
- * never trained on insect damage, so instead of inventing a pest diagnosis
+/** What the farmer should check for when the scan is uncertain. Model v5 knows
+ * 14 pests but not most insects, so instead of inventing a pest diagnosis
  * (v1.0 did this) the app points the farmer to the signs to look for. */
 export function pestHints(crops: string[], lang: Lang = getLang()): string[] {
   const en: Record<string, string> = {
     Maize: 'Maize: ragged holes in young leaves and sawdust-like droppings in the whorl point to fall armyworm. Check at dawn or dusk.',
     Tomato: 'Tomato: check leaf undersides for aphids and whiteflies, and look for winding silvery mines (Tuta absoluta).',
     Potato: 'Potato: look for aphids on shoot tips and leaf miner tunnels.',
+    Beans: 'Beans: wilting seedlings with a swollen, cracked stem base point to bean fly; also check shoot tips for aphids.',
+    Cabbage: 'Cabbage and kale: small holes and see-through "windows" in the leaves point to diamondback moth caterpillars.',
   };
-  return ['Maize', 'Tomato', 'Potato'].filter((c) => crops.includes(c)).map((c) => (lang === 'sw' ? PEST_HINTS_SW[c] : en[c]));
+  return ['Maize', 'Tomato', 'Potato', 'Beans', 'Cabbage'].filter((c) => crops.includes(c)).map((c) => (lang === 'sw' ? PEST_HINTS_SW[c] : en[c]));
 }
 
 // ───────────────────────── Treatment plan ─────────────────────────
@@ -595,7 +610,7 @@ export function pestHints(crops: string[], lang: Lang = getLang()): string[] {
 export type PlanTask = { id: string; text: string };
 export type PlanStep = { id: string; when: string; title: string; urgency: Urgency; tasks: PlanTask[] };
 
-/** Builds a day-by-day plan for any of the 38 classes from its knowledge-base
+/** Builds a day-by-day plan for any class from its knowledge-base
  * entry. v1.0 only had 3 hand-written plans and showed the fall armyworm plan
  * for every other disease. */
 export function buildPlan(base: DiseaseInfo, lang: Lang = getLang()): PlanStep[] {

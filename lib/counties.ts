@@ -7,4 +7,8 @@ export const COUNTIES = [
   'Tharaka-Nithi', 'Trans Nzoia', 'Turkana', 'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot',
 ];
 
-export const CROP_CHOICES = ['Maize', 'Tomato', 'Potato', 'Beans', 'Wheat', 'Cabbage', 'Kale', 'Onion', 'Capsicum', 'Cassava', 'Banana', 'Avocado'];
+export const CROP_CHOICES = [
+  'Maize', 'Tomato', 'Potato', 'Beans', 'Wheat', 'Cabbage', 'Kale', 'Onion', 'Capsicum', 'Cassava', 'Banana', 'Avocado',
+  // Added with model v5
+  'Coffee', 'Tea', 'Sorghum', 'Millet', 'Rice', 'Sugarcane', 'Mango', 'Citrus', 'Cashew', 'Cotton', 'Cucumber', 'Pumpkin', 'Eggplant', 'Black gram',
+];

@@ -12,6 +12,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Btn, Card, Chip, Dot, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Segmented, Sheet, StatusShade, Text, tick } from '../../components/ui';
 import { getFarm, type Farm } from '../../lib/data';
 import { locale, useLang } from '../../lib/i18n';
+import { openScanner } from '../../lib/navigation';
 import { C, FONT, RADIUS } from '../../lib/theme';
 import {
   CLASSES, QUALITY_META, RESOLUTION, STRESS, classMeta, getGrid, interpret, listObservations, listValidations, listZones, refreshSatellite,
@@ -197,7 +198,7 @@ export default function SatelliteScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Header title="Crop health from space" subtitle={farm?.name ?? ''} />
+      <Header dark title="Crop health from space" subtitle={farm?.name ?? ''} />
       {!loaded || farm === undefined ? (
         <Loading />
       ) : !satelliteReady() ? (
@@ -216,41 +217,59 @@ export default function SatelliteScreen() {
           {error ? <ErrorNote message={error} onRetry={() => check()} /> : null}
           {warning ? <Text raw style={[st.note, { marginHorizontal: 20, marginTop: 8 }]}>{warning}</Text> : null}
 
-          {/* 1. The reading */}
-          <Card>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Icon name={tone.icon} size={26} color={tone.color} />
-              <Text raw style={[st.headline, { color: reading.tone === 'none' ? C.text : tone.color }]}>{reading.headline}</Text>
+          {/* 1. The reading (Editorial Dark Hero) */}
+          <View style={{ backgroundColor: C.brandDark, borderRadius: 20, marginHorizontal: 16, marginTop: 14, padding: 18, gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <Icon name={tone.icon} size={28} color={reading.tone === 'normal' ? C.secondary : tone.color} />
+                <Text raw style={[st.headline, { color: C.brandCream, flex: 1 }]}>{reading.headline}</Text>
+              </View>
+              {reading.latest ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                  <Dot color={QUALITY_META[reading.latest.quality].color} size={8} />
+                  <Text raw style={{ fontSize: 12, color: C.brandCream, fontFamily: FONT.bodyBold }}>
+                    {t(QUALITY_META[reading.latest.quality].label)}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-            <Text raw style={st.body}>{busy && !reading.lastImage ? t('Reading up to 90 days of Sentinel-2 images of this field. The first check takes about a minute.') : reading.body}</Text>
+
+            <Text raw style={[st.body, { color: '#C9D8CF' }]}>
+              {busy && !reading.lastImage ? t('Reading up to 90 days of Sentinel-2 images of this field. The first check takes about a minute.') : reading.body}
+            </Text>
+
             {reading.action ? (
-              <View style={st.action}>
-                <Text style={st.actionLabel}>What to do</Text>
-                <Text raw style={st.actionTxt}>{reading.action}</Text>
+              <View style={[st.action, { backgroundColor: 'rgba(0,0,0,0.22)', borderColor: 'rgba(226,179,60,0.3)', borderWidth: 1 }]}>
+                <Text style={[st.actionLabel, { color: C.brandGold }]}>What to do</Text>
+                <Text raw style={[st.actionTxt, { color: C.brandCream }]}>{reading.action}</Text>
               </View>
             ) : null}
+
             {reading.latest ? (
-              <View style={st.qualityRow}>
-                <Dot color={QUALITY_META[reading.latest.quality].color} />
-                <Text raw style={st.qualityTxt}>
-                  {t('{q} image', { q: t(QUALITY_META[reading.latest.quality].label) })} · {dateLabel(reading.latest.observed_at)} · {ago(reading.latest.observed_at) === 0 ? t('today') : t('{n} days ago', { n: ago(reading.latest.observed_at) })}
+              <View style={[st.qualityRow, { marginTop: 2 }]}>
+                <Icon name="satellite-variant" size={14} color={C.brandGold} />
+                <Text raw style={[st.qualityTxt, { color: '#8FC2A5' }]}>
+                  Sentinel-2 · {dateLabel(reading.latest.observed_at)} · {ago(reading.latest.observed_at) === 0 ? t('today') : t('{n} days ago', { n: ago(reading.latest.observed_at) })}
                 </Text>
               </View>
             ) : null}
+
             {busy ? (
-              <View style={{ marginTop: 14, gap: 6 }}>
-                <Text raw style={st.note}>{busy.total ? t('Reading satellite images: {a} of {b}', { a: busy.done, b: busy.total }) : t('Looking for new satellite images…')}</Text>
+              <View style={{ marginTop: 10, gap: 6 }}>
+                <Text raw style={[st.note, { color: C.brandCream }]}>
+                  {busy.total ? t('Reading satellite images: {a} of {b}', { a: busy.done, b: busy.total }) : t('Looking for new satellite images…')}
+                </Text>
                 <ProgressBar value={busy.total ? busy.done / busy.total : 0.05} />
               </View>
             ) : (
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
                 <Btn label="Check now" icon="satellite-variant" kind="secondary" style={{ flex: 1, minHeight: 46 }} onPress={() => check()} />
                 {reading.zone || reading.tone === 'act' || reading.tone === 'watch' ? (
-                  <Btn label="I inspected it" icon="shoe-print" style={{ flex: 1, minHeight: 46 }} onPress={() => setInspect({ zone: reading.zone, cls: reading.latest?.dominant_class ?? null })} />
+                  <Btn label="Scan a leaf in this zone" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={openScanner} />
                 ) : null}
               </View>
             )}
-          </Card>
+          </View>
 
           {/* follow-ups that are due */}
           {due.map((c) => (
@@ -373,7 +392,7 @@ export default function SatelliteScreen() {
           if (v.observed_condition === 'disease' || v.observed_condition === 'yellowing' || v.observed_condition === 'pests') {
             Alert.alert(t('Saved'), t('Scan a leaf now to find out what it is?'), [
               { text: t('Later'), style: 'cancel' },
-              { text: t('Scan'), onPress: () => router.navigate('/scan') },
+              { text: t('Scan'), onPress: openScanner },
             ]);
           }
         }}

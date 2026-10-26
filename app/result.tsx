@@ -8,8 +8,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, type IconName } from '../components/ui';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
+import { getRegisteredProducts, PCPB_DISCLAIMER } from '../lib/pcpb';
 import { addFarm, listFarms, saveIncident, type Farm } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
+import { openScanner } from '../lib/navigation';
 import { useLang } from '../lib/i18n';
 import { C, FONT, KIND_META, URGENCY_META, confidenceBand } from '../lib/theme';
 
@@ -31,6 +33,7 @@ export default function ResultScreen() {
     }
   }, [p.alts]);
   const hints = uncertain ? pestHints([base.crop, ...alts.map(([l]) => describeLabel(l).crop)], lang) : [];
+  const pcpbProducts = useMemo(() => getRegisteredProducts(label || raw?.disease || base.disease), [label, raw, base]);
 
   const [farms, setFarms] = useState<Farm[] | null>(null);
   const [picker, setPicker] = useState(false);
@@ -218,7 +221,7 @@ export default function ResultScreen() {
             </Text>
             {hints.length ? (
               <>
-                <Text style={[st.h2, { marginTop: 14 }]}>The scanner cannot detect insects — check for:</Text>
+                <Text style={[st.h2, { marginTop: 14 }]}>Also check for pests the scanner can miss:</Text>
                 {hints.map((h) => (
                   <View key={h} style={st.li}>
                     <View style={{ paddingTop: 8 }}>
@@ -304,6 +307,29 @@ export default function ResultScreen() {
                 <Text raw style={[st.small, { marginTop: 12 }]}>
                   {chemicalRules(lang)}
                 </Text>
+
+                {pcpbProducts.length > 0 ? (
+                  <View style={{ marginTop: 16, gap: 8 }}>
+                    <Text style={[st.h2, { fontSize: 15 }]}>Registered product examples (Kenya PCPB)</Text>
+                    {pcpbProducts.map((prod) => (
+                      <View key={prod.regNo} style={st.pcpbCard}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text raw style={st.pcpbName}>{prod.name}</Text>
+                          <View style={st.pcpbBadge}>
+                            <Text raw style={st.pcpbBadgeText}>{prod.regNo}</Text>
+                          </View>
+                        </View>
+                        <Text raw style={st.pcpbActive}>Active: {prod.active}</Text>
+                        {prod.warning ? (
+                          <Text raw style={st.pcpbWarning}>{prod.warning}</Text>
+                        ) : null}
+                      </View>
+                    ))}
+                    <Text style={st.pcpbDisclaimer}>
+                      Not sponsored. Commercial examples registered with Kenya's Pest Control Products Board. Always follow label.
+                    </Text>
+                  </View>
+                ) : null}
               </>
             ) : null}
             {!healthy ? (
@@ -369,7 +395,7 @@ export default function ResultScreen() {
           {!uncertain ? <Btn label="Ask the community" icon="account-group-outline" kind="secondary" onPress={askCommunity} /> : null}
           {!uncertain && p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="secondary" onPress={openPhotoCheck} /> : null}
           <Btn label="Share on WhatsApp" icon="whatsapp" kind="secondary" onPress={shareWhatsApp} />
-          <Btn label="Scan another leaf" icon="camera-retake-outline" kind="ghost" onPress={() => router.navigate('/scan')} />
+          <Btn label="Scan another leaf" icon="camera-retake-outline" kind="ghost" onPress={openScanner} />
         </View>
       </ScrollView>
 
@@ -439,4 +465,11 @@ const st = StyleSheet.create({
   agroName: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
   agroIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
   farmRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
+  pcpbCard: { backgroundColor: C.sunken, padding: 12, borderRadius: 12, gap: 4, marginTop: 4 },
+  pcpbName: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text },
+  pcpbBadge: { backgroundColor: C.primaryTint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  pcpbBadgeText: { fontSize: 11, fontFamily: FONT.bodyBold, color: C.primaryDark },
+  pcpbActive: { fontSize: 13, color: C.textMid },
+  pcpbWarning: { fontSize: 12, color: C.warn, fontFamily: FONT.bodyBold, marginTop: 2 },
+  pcpbDisclaimer: { fontSize: 12, color: C.textSub, marginTop: 4, lineHeight: 17 },
 });

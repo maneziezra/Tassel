@@ -1,7 +1,9 @@
 // Tassel — on-device leaf disease classifier
 //
-// Model: assets/model/cropguard.tflite — trained on the PlantVillage dataset
-// (Kaggle), 38 classes, input 1×224×224×3 float32 RGB, softmax output.
+// Model: assets/model/cropguard.tflite — Tassel v5 (MobileNetV2, 154 classes, 34 crops;
+// PlantVillage + 30 field datasets, see results/model_v5/ATTRIBUTION.md). Input
+// 1×224×224×3 float32 RGB, softmax output with temperature calibration built in.
+// Float16 weights (4.9 MB). The 38-class v2.4 model is in model_backup/.
 // Runs fully offline on the phone via react-native-fast-tflite.
 //
 // Pipeline (must match training): centre-crop to a square → resize to
@@ -52,7 +54,8 @@ export function describeLabel(label: string): Omit<Prediction, 'confidence'> {
     .replace('Pepper,_bell', 'Pepper (capsicum)')
     .replace('Cherry_(including_sour)', 'Cherry')
     .replace(/_/g, ' ')
-    .trim();
+    .trim()
+    .replace(/^Bean$/, 'Beans');
   const healthy = rawDisease.toLowerCase() === 'healthy';
   let disease = rawDisease
     .replace(/_/g, ' ')

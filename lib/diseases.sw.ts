@@ -4,6 +4,7 @@
 // scientific form so farmers can match them to product labels.
 
 import type { Chemical } from './diseases';
+import { SW_DISEASES_V5 } from './diseases.v5.sw';
 
 export type DiseaseSw = {
   disease: string;
@@ -43,6 +44,18 @@ export const CROP_SW: Record<string, string> = {
   Sorghum: 'Mtama',
   Avocado: 'Parachichi',
   Mango: 'Embe',
+  Cashew: 'Korosho',
+  Citrus: 'Machungwa',
+  Rice: 'Mpunga',
+  Millet: 'Mawele',
+  Sugarcane: 'Miwa',
+  Cotton: 'Pamba',
+  Cucumber: 'Tango',
+  Pumpkin: 'Malenge',
+  Eggplant: 'Biringanya',
+  Olive: 'Mzeituni',
+  'Black gram': 'Dengu nyeusi',
+  Capsicum: 'Pilipili hoho',
 };
 
 export const MANCOZEB_NOTE_SW = 'Mancozeb ilikuwa ikikaguliwa na PCPB mwaka 2025 — hakikisha bidhaa bado imesajiliwa.';
@@ -391,7 +404,7 @@ export const SW_DISEASES: Record<string, DiseaseSw> = {
     biological: ['Dawa za mwarubaini hupunguza idadi ya inzi weupe.'],
     chemical: [
       { active: 'Kudhibiti inzi weupe kwa bidhaa iliyosajiliwa na PCPB (k.m. spiromesifen)', note: 'Dawa hudhibiti mdudu, si virusi.' },
-      { active: 'Imidacloprid', note: 'Imezuiliwa kwa matumizi ya greenhouse pekee (si shambani wazi) tangu 2025.' },
+      { active: 'Imidacloprid imezuiliwa', note: 'Hairuhusiwi kutumika shambani wazi tangu ukaguzi wa PCPB wa 2025.' },
     ],
   },
   Tomato___Tomato_mosaic_virus: {
@@ -409,10 +422,15 @@ export const SW_DISEASES: Record<string, DiseaseSw> = {
     chemical: [{ active: 'Hakuna dawa inayodhibiti virusi hivi', note: 'Usafi ndio udhibiti pekee.' }],
   },
   Tomato___healthy: healthy(['Weka vigingi na pogoa ili hewa ipite.', 'Mwagilia kwenye shina asubuhi; weka matandazo kuzuia udongo kurushwa.']),
+
+  // Added with model v5 (generated, see diseases.v5.sw.ts)
+  ...SW_DISEASES_V5,
 };
 
 export const PEST_HINTS_SW: Record<string, string> = {
   Maize: 'Mahindi: matundu yaliyochanika kwenye majani machanga na kinyesi kama unga wa mbao ndani ya kikonyo huashiria viwavijeshi vamizi (fall armyworm). Kagua alfajiri au jioni.',
   Tomato: 'Nyanya: kagua upande wa chini wa majani kutafuta vidukari na inzi weupe, na angalia njia za fedha zinazopinda (Tuta absoluta).',
   Potato: 'Viazi: tafuta vidukari kwenye ncha za machipukizi na njia za wachimbaji majani.',
+  Beans: 'Maharagwe: miche inayonyauka yenye kitako cha shina kilichovimba na kupasuka huashiria inzi wa maharagwe; pia kagua vidukari kwenye ncha za machipukizi.',
+  Cabbage: 'Kabichi na sukuma wiki: matundu madogo na \"madirisha\" angavu kwenye majani huashiria viwavi wa nondo mgongo-almasi.',
 };

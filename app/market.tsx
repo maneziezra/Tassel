@@ -1,16 +1,18 @@
-// Market — sourced reference prices (with date and source), prices reported by
-// farmers (median of the last 30 days, like FarmRise's price feedback), real
-// agro-dealers from OpenStreetMap, and official links.
+// Market — interactive prices, not a table.
+// Defaults automatically to the farmer's crops and county.
+// Each crop card features an SVG trend line sparkline and plain-language summary ("Up 8% this month").
+// One-tap quick report button and placeholder for direct market connection (P3 hook).
 
 import React, { useCallback, useMemo, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { Btn, Card, Chip, ErrorNote, Header, Icon, Loading, SectionLabel, Text, timeAgo } from '../components/ui';
-import { getProfile, listPrices, priceReportSummary, type Price, type PriceSummary } from '../lib/data';
+import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import { Btn, Card, Chip, CropIcon, ErrorNote, Header, Icon, Loading, SectionLabel, Text, timeAgo } from '../components/ui';
+import { getProfile, listFarms, listPrices, priceReportSummary, type Price, type PriceSummary } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
 import { cropName } from '../lib/diseases';
 import { locale, useLang } from '../lib/i18n';
-import { C } from '../lib/theme';
+import { C, FONT } from '../lib/theme';
 
 const LINKS = [
   { name: 'KAMIS — official market prices', sub: 'Ministry of Agriculture market information system', url: 'https://kamis.kilimo.go.ke', icon: 'chart-box-outline' as const },
@@ -20,12 +22,54 @@ const LINKS = [
 
 type Series = { key: string; crop: string; market: string; level: string; unit: string; points: Price[] };
 
+/** Render smooth SVG sparkline for price series */
+function PriceSparkline({ points, color }: { points: Price[]; color: string }) {
+  if (points.length < 2) return null;
+
+  const width = 100;
+  const height = 30;
+  const padding = 4;
+
+  const prices = points.map((p) => p.price_kes);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+
+  const coords = points.map((p, i) => {
+    const x = padding + (i / (points.length - 1)) * (width - 2 * padding);
+    const y = height - padding - ((p.price_kes - min) / range) * (height - 2 * padding);
+    return { x, y };
+  });
+
+  const pathD = coords.reduce((acc, pt, idx) => {
+    return idx === 0 ? `M ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}` : `${acc} L ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`;
+  }, '');
+
+  const areaD = `${pathD} L ${coords[coords.length - 1].x.toFixed(1)} ${height} L ${coords[0].x.toFixed(1)} ${height} Z`;
+
+  return (
+    <View style={{ width, height, marginTop: 6 }}>
+      <Svg width={width} height={height}>
+        <Defs>
+          <LinearGradient id={`sparkGrad-${color}`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={color} stopOpacity={0.3} />
+            <Stop offset="100%" stopColor={color} stopOpacity={0.0} />
+          </LinearGradient>
+        </Defs>
+        <Path d={areaD} fill={`url(#sparkGrad-${color})`} />
+        <Path d={pathD} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    </View>
+  );
+}
+
 export default function MarketScreen() {
   const { t, lang } = useLang();
   const [prices, setPrices] = useState<Price[] | null>(null);
   const [reports, setReports] = useState<PriceSummary[] | null | undefined>(undefined);
   const [county, setCounty] = useState<string | null>(null);
-  const [reportScope, setReportScope] = useState<'county' | 'kenya'>('kenya');
+  const [farmerCrops, setFarmerCrops] = useState<string[]>([]);
+  const [reportScope, setReportScope] = useState<'county' | 'kenya'>('county');
   const [error, setError] = useState<string | null>(null);
   const [level, setLevel] = useState<'wholesale' | 'retail'>('wholesale');
   const [selected, setSelected] = useState<string | null>(null);
@@ -35,23 +79,34 @@ export default function MarketScreen() {
   const load = useCallback(async () => {
     try {
       setError(null);
-      setPrices(await listPrices());
+      const [allPrices, allReports, prof, farms] = await Promise.all([
+        listPrices(),
+        priceReportSummary(30).catch(() => []),
+        getProfile().catch(() => null),
+        listFarms().catch(() => []),
+      ]);
+
+      setPrices(allPrices);
+      setReports(allReports);
+
+      const cropsList = Array.from(new Set(farms.map((f) => f.crop).filter(Boolean) as string[]));
+      setFarmerCrops(cropsList);
+
+      if (prof?.county) {
+        setCounty(prof.county);
+        setReportScope('county'); // Default to farmer county per P2
+      } else {
+        setReportScope('kenya');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : t('Could not load prices.'));
-    }
-    try {
-      const [r, p] = await Promise.all([priceReportSummary(30), getProfile().catch(() => null)]);
-      setReports(r);
-      if (p?.county) {
-        setCounty(p.county);
-        setReportScope('county');
-      }
-    } catch {
-      setReports([]);
+      setPrices([]);
     }
   }, [t]);
+
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  // Prioritize farmer crops and farmer county
   const series = useMemo(() => {
     const map = new Map<string, Series>();
     (prices ?? []).filter((p) => p.level === level).forEach((p) => {
@@ -60,8 +115,22 @@ export default function MarketScreen() {
       s.points.push(p);
       map.set(key, s);
     });
-    return Array.from(map.values());
-  }, [prices, level]);
+
+    const list = Array.from(map.values());
+
+    // Sort: farmer's crops first!
+    if (farmerCrops.length > 0) {
+      list.sort((a, b) => {
+        const aMatches = farmerCrops.some((c) => a.crop.toLowerCase().includes(c.toLowerCase()));
+        const bMatches = farmerCrops.some((c) => b.crop.toLowerCase().includes(c.toLowerCase()));
+        if (aMatches && !bMatches) return -1;
+        if (!aMatches && bMatches) return 1;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [prices, level, farmerCrops]);
 
   const current = series.find((s) => s.key === selected) ?? series[0];
   const shownReports = (reports ?? []).filter((r) => reportScope === 'kenya' || r.county === county);
@@ -82,16 +151,35 @@ export default function MarketScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Header title="Market" subtitle="Reference prices, farmer prices and agro-dealers" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+      <Header
+        title="Market"
+        subtitle={county ? t('Market prices for {county}', { county }) : t('Kenyan reference and farmer prices')}
+      />
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 56 }}>
+        {/* Fast Report Floating / Header Action */}
+        <View style={st.quickReportBar}>
+          <View style={{ flex: 1 }}>
+            <Text style={st.quickReportTitle}>Got a harvest price?</Text>
+            <Text style={st.quickReportSub}>Report anonymously to help your community get fair rates.</Text>
+          </View>
+          <TouchableOpacity style={st.reportBtn} onPress={() => router.push('/report-price')}>
+            <Icon name="cash-plus" size={18} color="#FFFFFF" />
+            <Text style={st.reportBtnTxt}>Report price</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Level Toggles */}
         <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 14 }}>
           <Chip label="Wholesale" active={level === 'wholesale'} onPress={() => { setLevel('wholesale'); setSelected(null); }} />
           <Chip label="Retail" active={level === 'retail'} onPress={() => { setLevel('retail'); setSelected(null); }} />
         </View>
+
         {error ? <ErrorNote message={error} onRetry={load} /> : null}
         {prices === null && !error ? <Loading /> : null}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 10 }}>
+        {/* Horizontal Interactive Price Cards with SVG Trend Sparklines */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 12 }}>
           {series.map((s) => {
             const last = s.points[s.points.length - 1];
             const prev = s.points.length > 1 ? s.points[s.points.length - 2] : null;
@@ -99,36 +187,55 @@ export default function MarketScreen() {
             const active = current?.key === s.key;
             const up = (change ?? 0) > 0;
             const tColor = change === null || change === 0 ? C.textSub : up ? C.primary : C.error;
+
+            let changeWord = t('Reference price');
+            if (change !== null) {
+              if (change > 0) changeWord = t('Up {pct}% this month', { pct: change.toFixed(1) });
+              else if (change < 0) changeWord = t('Down {pct}% this month', { pct: Math.abs(change).toFixed(1) });
+              else changeWord = t('Steady this month');
+            }
+
             return (
-              <TouchableOpacity key={s.key} style={[st.priceCard, active && st.priceOn]} onPress={() => setSelected(s.key)} activeOpacity={0.85}>
-                <Text style={st.crop} numberOfLines={1}>
-                  {s.crop}
-                </Text>
+              <TouchableOpacity
+                key={s.key}
+                style={[st.priceCard, active && st.priceOn]}
+                onPress={() => setSelected(s.key)}
+                activeOpacity={0.85}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={st.crop} numberOfLines={1}>
+                    {cropName(s.crop)}
+                  </Text>
+                  <CropIcon crop={s.crop} size={22} disc={false} />
+                </View>
                 <Text style={st.market}>{s.market}</Text>
+
                 <Text raw style={st.amount}>
                   KES {last.price_kes.toLocaleString()}
                   <Text raw style={st.unit}>
                     /{t(s.unit)}
                   </Text>
                 </Text>
-                {change !== null ? (
-                  <View style={st.changeRow}>
-                    <Icon name={change === 0 ? 'minus' : up ? 'trending-up' : 'trending-down'} size={13} color={tColor} />
-                    <Text raw style={[st.change, { color: tColor }]}>
-                      {t('{pct}% vs previous', { pct: `${change > 0 ? '+' : ''}${change.toFixed(1)}` })}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={[st.change, { color: C.textSub, marginTop: 6 }]}>1 observation</Text>
-                )}
+
+                {/* SVG Trend Sparkline */}
+                <PriceSparkline points={s.points} color={tColor} />
+
+                {/* Plain-Language Change Word */}
+                <View style={st.changeRow}>
+                  <Icon name={change === null || change === 0 ? 'minus' : up ? 'trending-up' : 'trending-down'} size={14} color={tColor} />
+                  <Text raw style={[st.change, { color: tColor }]}>
+                    {changeWord}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
+        {/* Selected Price History Detail */}
         {current ? (
           <Card style={{ marginTop: 0 }}>
-            <SectionLabel>{`${t('Price history')}, ${t(current.crop)}, ${t(current.market)}`}</SectionLabel>
+            <SectionLabel>{`${t('Price history')}: ${cropName(current.crop)} (${current.market})`}</SectionLabel>
             <View style={st.bars}>
               {current.points.map((p, i) => {
                 const max = Math.max(...current.points.map((x) => x.price_kes));
@@ -151,11 +258,11 @@ export default function MarketScreen() {
                 {t('Source')}: {current.points[current.points.length - 1].source} ↗
               </Text>
             </TouchableOpacity>
-            <Text style={st.disclaimer}>Monthly reference prices, not today's price at your market. Check KAMIS or your nearest market before selling.</Text>
+            <Text style={st.disclaimer}>Monthly reference prices from verified institutions. Always confirm today's prices before selling.</Text>
           </Card>
         ) : null}
 
-        {/* Prices reported by farmers */}
+        {/* Prices reported by local farmers */}
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Icon name="account-cash-outline" size={20} color={C.primary} />
@@ -163,7 +270,7 @@ export default function MarketScreen() {
             <Text style={st.agroSub}>last 30 days</Text>
           </View>
           {reports === null ? (
-            <Text style={[st.agroSub, { marginTop: 8 }]}>Farmer price reports are not switched on yet (the database update is pending).</Text>
+            <Text style={[st.agroSub, { marginTop: 8 }]}>Farmer price reports are not switched on yet (database update pending).</Text>
           ) : (
             <>
               {county ? (
@@ -198,11 +305,30 @@ export default function MarketScreen() {
                 <Text style={[st.agroSub, { marginTop: 10 }]}>No farmer reports here yet. Be the first — it helps others get a fair price.</Text>
               ) : null}
               <Btn label="Report a price I got" icon="cash-plus" kind="secondary" onPress={() => router.push('/report-price')} style={{ marginTop: 12 }} />
-              <Text style={st.osm}>Shown as the middle value (median) once 3 or more farmers report, so one wrong report cannot move the price much and no single farmer's price can be worked out. Reports are anonymous.</Text>
+              <Text style={st.osm}>Shown as the median once 3 or more farmers report. Anonymous and verified against plausibility bounds.</Text>
             </>
           )}
         </Card>
 
+        {/* P3 Placeholder Hook: Direct Market Connection */}
+        <Card style={{ backgroundColor: C.primaryTint, borderColor: C.primary }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center' }}>
+              <Icon name="handshake" size={20} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={st.cardTitle}>Direct Market Connection</Text>
+              <Text style={st.osm}>Connect directly with verified local produce buyers, aggregators and millers.</Text>
+            </View>
+          </View>
+          <View style={{ marginTop: 10, alignSelf: 'flex-start' }}>
+            <View style={st.comingSoonPill}>
+              <Text style={st.comingSoonTxt}>Coming in next release (P3)</Text>
+            </View>
+          </View>
+        </Card>
+
+        {/* Agro-dealers near me */}
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <Icon name="store-outline" size={20} color={C.primary} />
@@ -242,9 +368,10 @@ export default function MarketScreen() {
               <Btn label="Find agro-dealers" icon="map-marker-radius" kind="secondary" onPress={nearMe} style={{ marginTop: 10 }} />
             </>
           )}
-          <Text style={st.osm}>Data © OpenStreetMap contributors. Shops not on the map won't appear.</Text>
+          <Text style={st.osm}>Data © OpenStreetMap contributors.</Text>
         </Card>
 
+        {/* Official Resources */}
         <Text style={st.sectionTitle}>Official sources & buyers</Text>
         {LINKS.map((l) => (
           <TouchableOpacity key={l.url} style={st.link} onPress={() => Linking.openURL(l.url)} activeOpacity={0.85}>
@@ -264,30 +391,70 @@ export default function MarketScreen() {
 }
 
 const st = StyleSheet.create({
-  priceCard: { width: 170, backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: 2, borderColor: 'transparent' },
+  quickReportBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: C.surface,
+    padding: 14,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  quickReportTitle: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text },
+  quickReportSub: { fontSize: 12, color: C.textSub, marginTop: 2 },
+  reportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: C.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  reportBtnTxt: { color: '#FFFFFF', fontSize: 13, fontFamily: FONT.bodyBold },
+  priceCard: {
+    width: 180,
+    backgroundColor: C.surface,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
   priceOn: { borderColor: C.primary },
-  crop: { fontSize: 15, fontWeight: '700', color: C.text },
-  market: { fontSize: 13, color: C.textSub, marginBottom: 6 },
-  amount: { fontSize: 24, fontWeight: '700', color: C.text },
-  unit: { fontSize: 13, color: C.textSub },
-  changeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  change: { fontSize: 13, fontWeight: '700' },
+  crop: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
+  market: { fontSize: 13, color: C.textSub, marginBottom: 4 },
+  amount: { fontSize: 24, fontFamily: FONT.display, color: C.text },
+  unit: { fontSize: 13, color: C.textSub, fontFamily: FONT.body },
+  changeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
+  change: { fontSize: 12, fontFamily: FONT.bodyBold },
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, height: 130, paddingTop: 10 },
   bar: { width: '70%', borderRadius: 6 },
-  barVal: { fontSize: 13, fontWeight: '700', color: C.text },
+  barVal: { fontSize: 13, fontFamily: FONT.bodyBold, color: C.text },
   barLbl: { fontSize: 13, color: C.textSub },
-  source: { fontSize: 13, color: C.textMid, fontWeight: '700', marginTop: 12 },
+  source: { fontSize: 13, color: C.textMid, fontFamily: FONT.bodyBold, marginTop: 12 },
   disclaimer: { fontSize: 13, color: C.textSub, marginTop: 6, lineHeight: 19 },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: C.text },
+  cardTitle: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
   report: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, marginTop: 6 },
-  reportPrice: { fontSize: 17, fontWeight: '900', color: C.text },
+  reportPrice: { fontSize: 17, fontFamily: FONT.display, color: C.text },
   agro: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   agroIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
-  agroName: { fontSize: 15, fontWeight: '700', color: C.text },
+  agroName: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text },
   agroSub: { fontSize: 13, color: C.textSub, marginTop: 2 },
   circle: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
-  osm: { fontSize: 13, color: C.textSub, marginTop: 10, lineHeight: 18 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: C.text, marginHorizontal: 20, marginTop: 22, marginBottom: 8 },
+  osm: { fontSize: 12, color: C.textSub, marginTop: 4, lineHeight: 17 },
+  comingSoonPill: {
+    backgroundColor: C.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.primary,
+  },
+  comingSoonTxt: { fontSize: 11, fontFamily: FONT.bodyBold, color: C.primary },
+  sectionTitle: { fontSize: 18, fontFamily: FONT.bodyBold, color: C.text, marginHorizontal: 20, marginTop: 22, marginBottom: 8 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, marginHorizontal: 16, marginBottom: 10, borderRadius: 14, padding: 14 },
   linkIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
 });

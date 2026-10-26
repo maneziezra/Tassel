@@ -34,6 +34,10 @@ export const C = {
   border: '#E3DFD5', // only for input outlines and focus, never for dividers
   dark: '#14231C', // night ground for the camera
   darkRaised: '#1F4D39',
+  brandDark: '#1E3A2A', // Tassel forest dark: hero satellite & scan cards
+  brandGround: '#101D16', // Deep ground
+  brandCream: '#F4F1E6', // Tassel cream
+  brandGold: '#E2B33C', // Maize gold
   whatsapp: '#25D366',
 };
 
@@ -88,6 +92,7 @@ export const KIND_META: Record<string, { color: string; tint: string; icon: stri
   Bacterial: { ...NEUTRAL, icon: 'bacteria-outline' },
   Viral: { ...NEUTRAL, icon: 'virus-outline' },
   Pest: { ...NEUTRAL, icon: 'bug-outline' },
+  Algal: { ...NEUTRAL, icon: 'leaf-circle-outline' },
   Disorder: { ...NEUTRAL, icon: 'flask-outline' },
   Healthy: { color: C.primary, tint: C.primaryTint, icon: 'check-circle-outline' },
 };

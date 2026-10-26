@@ -3,12 +3,13 @@
 // happens then. Tasks are short lines you tick off; the how-to opens on tap.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Btn, Chip, CropIcon, Dot, Empty, ErrorNote, Header, Loading, ProgressBar, SectionLabel, Text, tick } from '../components/ui';
+import { Btn, Chip, CropIcon, Dot, Empty, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Sheet, Text, tick } from '../components/ui';
 import { TaskRow } from '../components/TaskRow';
-import { listFarms, type Farm } from '../lib/data';
-import { calendarFor, daysSince, fieldTasks, loadTicks, parseDate, saveTicks, type FieldTask } from '../lib/calendar';
+import { DateField } from '../components/DateField';
+import { listFarms, updateFarm, type Farm } from '../lib/data';
+import { calendarFor, daysSince, fieldTasks, loadTicks, parseDate, saveTicks, toIsoDate, type FieldTask } from '../lib/calendar';
 import { cropName } from '../lib/diseases';
 import { locale, useLang } from '../lib/i18n';
 import { C, FONT } from '../lib/theme';
@@ -78,6 +79,46 @@ export default function CalendarScreen() {
     await saveTicks(farmId, next);
   };
 
+  // Guided Planting Wizard state
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4>(1);
+  const [selectedField, setSelectedField] = useState<Farm | null>(null);
+  const [selectedCrop, setSelectedCrop] = useState<string>('maize');
+  const [selectedDate, setSelectedDate] = useState<string>(toIsoDate(new Date()));
+  const [savingPlanting, setSavingPlanting] = useState(false);
+
+  const openPlantingWizard = (f?: Farm) => {
+    if (f) {
+      setSelectedField(f);
+      setSelectedCrop(f.crop && calendarFor(f.crop) ? f.crop : 'maize');
+      setSelectedDate(f.planting_date || toIsoDate(new Date()));
+      setWizardStep(2);
+    } else {
+      const defaultField = unplanned[0] ?? farms?.[0] ?? null;
+      setSelectedField(defaultField);
+      setSelectedCrop(defaultField?.crop && calendarFor(defaultField.crop) ? defaultField.crop : 'maize');
+      setSelectedDate(toIsoDate(new Date()));
+      setWizardStep(1);
+    }
+    setWizardOpen(true);
+  };
+
+  const savePlanting = async () => {
+    if (!selectedField) return;
+    setSavingPlanting(true);
+    try {
+      await updateFarm(selectedField.id, { crop: selectedCrop, planting_date: selectedDate });
+      tick('success');
+      await load();
+      setFieldId(selectedField.id);
+      setWizardStep(4);
+    } catch (e) {
+      Alert.alert(t('Could not save planting'), e instanceof Error ? e.message : '');
+    } finally {
+      setSavingPlanting(false);
+    }
+  };
+
   const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) => d.toLocaleDateString(locale(lang), opts);
   const weekLabel = selWeek === nowWeek ? t('This week') : t('Week {n}', { n: selWeek + 1 });
 
@@ -95,9 +136,9 @@ export default function CalendarScreen() {
           text="Add a field with its crop (maize, beans, potato, tomato or wheat) and planting date. Tassel then plans the whole season."
           action={
             <Btn
-              label={farms.length ? 'Add a planting date' : 'Add a field'}
+              label={farms.length ? t('Add a planting') : t('Add a field')}
               icon="calendar-plus"
-              onPress={() => (unplanned[0] ? router.push({ pathname: '/farm/[id]', params: { id: unplanned[0].id } }) : router.push('/add-farm'))}
+              onPress={() => (farms.length ? openPlantingWizard() : router.push('/add-farm'))}
               style={{ marginTop: 12, alignSelf: 'stretch' }}
             />
           }
@@ -117,13 +158,12 @@ export default function CalendarScreen() {
             />
           }
         >
-          {planned.length > 1 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 6 }}>
-              {planned.map((f) => (
-                <Chip key={f.id} raw crop={f.crop ?? undefined} label={f.name} active={farm.id === f.id} onPress={() => setFieldId(f.id)} />
-              ))}
-            </ScrollView>
-          ) : null}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 6 }}>
+            {planned.map((f) => (
+              <Chip key={f.id} raw crop={f.crop ?? undefined} label={f.name} active={farm.id === f.id} onPress={() => setFieldId(f.id)} />
+            ))}
+            <Chip icon="plus" label={t('Add planting')} onPress={() => openPlantingWizard()} />
+          </ScrollView>
 
           {/* Season */}
           <View style={st.panel}>
@@ -237,14 +277,165 @@ export default function CalendarScreen() {
           ) : null}
 
           {unplanned.length ? (
-            <TouchableOpacity style={st.hint} onPress={() => router.push({ pathname: '/farm/[id]', params: { id: unplanned[0].id } })}>
+            <TouchableOpacity style={st.hint} onPress={() => openPlantingWizard(unplanned[0])}>
               <Text style={[st.small, { flex: 1 }]}>{t('{n} fields have no calendar yet — add the crop and planting date.', { n: unplanned.length })}</Text>
-              <Text style={st.link}>Add</Text>
+              <Text style={st.link}>{t('Add')}</Text>
             </TouchableOpacity>
           ) : null}
           <Text style={st.footer}>Timings are typical for Kenyan conditions and change with variety, altitude and rain. Adjust to what you see in your field.</Text>
         </ScrollView>
       )}
+
+      {/* Guided Planting Wizard Sheet */}
+      <Sheet visible={wizardOpen} onClose={() => setWizardOpen(false)} title={t('Plan a crop season')}>
+        {wizardStep === 1 ? (
+          <View style={{ gap: 14 }}>
+            <Text style={st.stepLabel}>{t('Step 1 of 3: Choose field')}</Text>
+            <Text style={st.small}>{t('Which field are you planting?')}</Text>
+            <View style={{ gap: 8 }}>
+              {(farms ?? []).map((f) => (
+                <TouchableOpacity
+                  key={f.id}
+                  style={[st.wizardRow, selectedField?.id === f.id && st.wizardRowSelected]}
+                  onPress={() => {
+                    tick('select');
+                    setSelectedField(f);
+                    if (f.crop && calendarFor(f.crop)) setSelectedCrop(f.crop);
+                    setWizardStep(2);
+                  }}
+                >
+                  <CropIcon crop={f.crop} size={38} />
+                  <View style={{ flex: 1 }}>
+                    <Text raw style={st.wizardRowTitle}>{f.name}</Text>
+                    <Text raw style={st.small}>
+                      {[
+                        f.crop ? cropName(f.crop, lang) : null,
+                        f.size_acres ? `${Number(f.size_acres).toFixed(2)} acres` : null,
+                        f.planting_date ? t('Planted') : t('Not planted yet'),
+                      ].filter(Boolean).join(' · ')}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-right" size={20} color={C.textLight} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[st.wizardRow, { borderStyle: 'dashed', borderWidth: 1.5, borderColor: C.primary, justifyContent: 'center' }]}
+              onPress={() => {
+                setWizardOpen(false);
+                router.push('/add-farm');
+              }}
+            >
+              <Icon name="plus" size={20} color={C.primary} />
+              <Text style={{ color: C.primary, fontFamily: FONT.bodyBold, fontSize: 15 }}>{t('Add a field')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : wizardStep === 2 ? (
+          <View style={{ gap: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={st.stepLabel}>{t('Step 2 of 3: Choose crop')}</Text>
+              <TouchableOpacity onPress={() => setWizardStep(1)}>
+                <Text style={st.link}>{t('Back')}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={st.small}>{t('Which crop are you planting in {name}?', { name: selectedField?.name ?? '' })}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {['maize', 'beans', 'potato', 'tomato', 'wheat'].map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={[st.cropChoice, selectedCrop === c && st.cropChoiceSelected]}
+                  onPress={() => {
+                    tick('select');
+                    setSelectedCrop(c);
+                    setWizardStep(3);
+                  }}
+                >
+                  <CropIcon crop={c} size={50} />
+                  <Text raw style={[st.cropChoiceText, selectedCrop === c && { color: C.primaryDark, fontFamily: FONT.bodyBold }]}>
+                    {cropName(c, lang)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ) : wizardStep === 3 ? (
+          <View style={{ gap: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={st.stepLabel}>{t('Step 3 of 3: Planting date')}</Text>
+              <TouchableOpacity onPress={() => setWizardStep(2)}>
+                <Text style={st.link}>{t('Back')}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={st.small}>
+              {selectedCrop === 'tomato' ? t('When were the seedlings transplanted?') : t('When was this crop planted?')}
+            </Text>
+
+            {/* Quick date chips */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                { l: t('Today'), d: toIsoDate(new Date()) },
+                { l: t('1 week ago'), d: toIsoDate(new Date(Date.now() - 7 * DAY)) },
+                { l: t('2 weeks ago'), d: toIsoDate(new Date(Date.now() - 14 * DAY)) },
+                { l: t('3 weeks ago'), d: toIsoDate(new Date(Date.now() - 21 * DAY)) },
+                { l: t('1 month ago'), d: toIsoDate(new Date(Date.now() - 30 * DAY)) },
+              ].map((chip) => (
+                <Chip
+                  key={chip.d}
+                  label={chip.l}
+                  raw
+                  active={selectedDate === chip.d}
+                  onPress={() => {
+                    tick('select');
+                    setSelectedDate(chip.d);
+                  }}
+                />
+              ))}
+            </View>
+
+            <View style={{ marginTop: 8 }}>
+              <Text style={[st.small, { marginBottom: 6 }]}>{t('Or pick a specific date')}</Text>
+              <DateField value={selectedDate} onChange={(iso) => iso && setSelectedDate(iso)} />
+            </View>
+
+            <Btn
+              label={t('Confirm planting')}
+              icon="check"
+              loading={savingPlanting}
+              onPress={savePlanting}
+              style={{ marginTop: 12 }}
+            />
+          </View>
+        ) : (
+          <View style={{ alignItems: 'center', gap: 14, paddingVertical: 12 }}>
+            <CropIcon crop={selectedCrop} size={64} />
+            <Text style={{ fontSize: 22, fontFamily: FONT.display, color: C.text, textAlign: 'center' }}>
+              {t('Planting calendar ready!')}
+            </Text>
+            <Text raw style={[st.small, { textAlign: 'center' }]}>
+              {`${selectedField?.name} · ${cropName(selectedCrop, lang)} · ${selectedDate}`}
+            </Text>
+            <View style={{ width: '100%', gap: 10, marginTop: 12 }}>
+              <Btn
+                label={t('View calendar')}
+                icon="calendar-check-outline"
+                onPress={() => {
+                  setWizardOpen(false);
+                  if (selectedField) setFieldId(selectedField.id);
+                }}
+              />
+              <Btn
+                label={t('Add another planting')}
+                kind="secondary"
+                icon="plus"
+                onPress={() => {
+                  setSelectedField(unplanned.find((u) => u.id !== selectedField?.id) ?? null);
+                  setWizardStep(1);
+                }}
+              />
+            </View>
+          </View>
+        )}
+      </Sheet>
     </View>
   );
 }
@@ -265,4 +456,11 @@ const st = StyleSheet.create({
   hint: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 20 },
   link: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.primary },
   footer: { fontSize: 13, color: C.textSub, textAlign: 'center', marginHorizontal: 28, marginTop: 20, lineHeight: 19 },
+  stepLabel: { fontSize: 17, fontFamily: FONT.display, color: C.text },
+  wizardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, backgroundColor: C.bg, borderWidth: 1.5, borderColor: 'transparent' },
+  wizardRowSelected: { borderColor: C.primary, backgroundColor: C.primaryTint },
+  wizardRowTitle: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
+  cropChoice: { width: '30%', minWidth: 90, flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 14, backgroundColor: C.bg, borderWidth: 1.5, borderColor: 'transparent' },
+  cropChoiceSelected: { borderColor: C.primary, backgroundColor: C.primaryTint },
+  cropChoiceText: { fontSize: 14, color: C.textMid, textAlign: 'center' },
 });

@@ -8,6 +8,7 @@ import { Btn, Header, Icon, Text } from '../components/ui';
 import { tr as t } from '../lib/i18n';
 import { AuthField } from '../components/AuthField';
 import { sendPasswordReset, signIn } from '../lib/session';
+import { getProfile } from '../lib/data';
 import { C } from '../lib/theme';
 
 export default function LoginScreen() {
@@ -23,6 +24,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signIn(email.trim(), password);
+      await getProfile().catch(() => {});
       router.replace('/');
     } catch (e) {
       Alert.alert(t('Sign-in failed'), e instanceof Error ? e.message : '');

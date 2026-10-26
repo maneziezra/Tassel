@@ -97,6 +97,22 @@ export function Press({ style, children, haptic, onPress, ...rest }: PressablePr
 // ---------------------------------------------------------------- crop artwork
 
 const CROP_MATCH: [RegExp, string][] = [
+  // Added with model v5 (checked first so e.g. 'malenge' is a pumpkin, not a squash)
+  [/coffee|kahawa/, 'Coffee'],
+  [/\btea\b|chai/, 'Tea'],
+  [/rice|mpunga|mchele/, 'Rice'],
+  [/sorghum|mtama/, 'Sorghum'],
+  [/millet|mawele|uwele|wimbi/, 'Millet'],
+  [/sugar|miwa/, 'Sugarcane'],
+  [/mango|embe/, 'Mango'],
+  [/cashew|korosho/, 'Cashew'],
+  [/cotton|pamba/, 'Cotton'],
+  [/cucumber|tango/, 'Cucumber'],
+  [/pumpkin|malenge/, 'Pumpkin'],
+  [/eggplant|brinjal|biringanya/, 'Eggplant'],
+  [/olive|zeituni/, 'Olive'],
+  [/black gram|urad|dengu/, 'Beans'],
+  [/citrus|lemon|lime|ndimu/, 'Orange'],
   [/maize|corn|mahindi/, 'Maize'],
   [/tomato|nyanya/, 'Tomato'],
   [/potato|viazi|kiazi/, 'Potato'],
@@ -111,7 +127,7 @@ const CROP_MATCH: [RegExp, string][] = [
   [/peach|pichi/, 'Peach'],
   [/pepper|capsicum|pilipili/, 'Pepper, bell'],
   [/raspberr/, 'Raspberry'],
-  [/squash|boga|malenge/, 'Squash'],
+  [/squash|boga/, 'Squash'],
   [/strawberr|stroberi/, 'Strawberry'],
   [/kale|sukuma/, 'Kale'],
   [/cabbage|kabichi/, 'Cabbage'],
@@ -135,6 +151,43 @@ export function CropIcon({ crop, size = 44, disc = true, discColor = '#F1EEE6' }
       <SvgXml xml={`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">${art}</svg>`} width={inner} height={inner} />
     </View>
   );
+}
+
+/** Official Tassel brand mark with maize gold satellite node and stalk. */
+export function TasselMark({ size = 32, dark = false }: { size?: number; dark?: boolean }) {
+  const fg = dark ? '#F4F1E6' : '#1E3A2A';
+  const bg = dark ? '#1E3A2A' : '#F4F2EC';
+  const xml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="138" cy="60" r="26" fill="#E2B33C" opacity="${dark ? '0.55' : '0.45'}"/>
+    <path d="M20 118C44 74 146 40 178 54" stroke="${fg}" stroke-width="5" opacity=".75"/>
+    <path d="M100 30V180M100 72C84 60 62 60 46 74C38 82 36 92 38 102M100 72C116 60 138 60 154 74C162 82 164 92 162 102M100 72C93 62 88 54 86 44M100 72C107 62 112 54 114 44" stroke="${bg}" stroke-width="16"/>
+    <path d="M100 30V180M100 72C84 60 62 60 46 74C38 82 36 92 38 102M100 72C116 60 138 60 154 74C162 82 164 92 162 102M100 72C93 62 88 54 86 44M100 72C107 62 112 54 114 44" stroke="${fg}"/>
+    <circle cx="178" cy="54" r="8" fill="#E2B33C"/>
+  </svg>`;
+  return <SvgXml xml={xml} width={size} height={size} />;
+}
+
+/** Editorial SVG art: Sentinel-2 satellite pass scanning a farm polygon from space. */
+export function SatellitePassArt({ size = 120 }: { size?: number }) {
+  const xml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none">
+    <path d="M20 85 L65 55 L135 70 L110 110 L35 105 Z" fill="#2E6A4F" fill-opacity="0.32" stroke="#8FC2A5" stroke-width="2" stroke-dasharray="4 3"/>
+    <line x1="35" y1="95" x2="120" y2="80" stroke="#8FC2A5" stroke-opacity="0.4" stroke-width="1"/>
+    <line x1="50" y1="70" x2="90" y2="108" stroke="#8FC2A5" stroke-opacity="0.4" stroke-width="1"/>
+    <polygon points="120,20 15,90 85,110" fill="#E2B33C" fill-opacity="0.14"/>
+    <g transform="translate(115, 18)">
+      <circle cx="0" cy="0" r="13" fill="#1E3A2A" stroke="#E2B33C" stroke-width="1.8"/>
+      <line x1="-16" y1="-7" x2="-7" y2="-3" stroke="#F4F1E6" stroke-width="2" stroke-linecap="round"/>
+      <line x1="7" y1="3" x2="16" y2="7" stroke="#F4F1E6" stroke-width="2" stroke-linecap="round"/>
+      <rect x="-22" y="-12" width="7" height="10" rx="1" fill="#8FC2A5"/>
+      <rect x="15" y="2" width="7" height="10" rx="1" fill="#8FC2A5"/>
+      <circle cx="0" cy="0" r="3.5" fill="#E2B33C"/>
+      <circle cx="0" cy="0" r="7" stroke="#E2B33C" stroke-opacity="0.45" stroke-width="1"/>
+    </g>
+    <circle cx="55" cy="80" r="3" fill="#E2B33C"/>
+    <circle cx="85" cy="72" r="3" fill="#E2B33C"/>
+    <circle cx="100" cy="92" r="3" fill="#E2B33C"/>
+  </svg>`;
+  return <SvgXml xml={xml} width={Math.round(size * 1.33)} height={size} />;
 }
 
 // ---------------------------------------------------------------- structure

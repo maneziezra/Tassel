@@ -1,5 +1,5 @@
 // AI photo check — a second opinion from one photo for what the offline scanner
-// cannot cover: insect pests, nutrient deficiencies, crops outside its 38 classes,
+// cannot cover: insect pests, nutrient deficiencies, crops outside its 154 classes,
 // or an uncertain scan (Plantix covers 780+ problems; this closes that gap).
 // The farmer agrees once before any photo leaves the phone.
 // Strings are kept here in English and Kiswahili (like methodology.tsx).
@@ -20,8 +20,8 @@ const TXT = {
   title: { en: 'AI photo check', sw: 'Ukaguzi wa picha wa AI' },
   subtitle: { en: 'Pests, deficiencies and other crops', sw: 'Wadudu, upungufu wa virutubisho na mazao mengine' },
   why: {
-    en: 'The offline scanner knows 38 leaf conditions. This check looks at your photo for anything else: insect pests, nutrient deficiencies, weather damage and other crops.',
-    sw: 'Skana ya bila intaneti inajua hali 38 za majani. Ukaguzi huu unaangalia picha yako kwa mengine yote: wadudu, upungufu wa virutubisho, madhara ya hali ya hewa na mazao mengine.',
+    en: 'The offline scanner knows 154 leaf conditions on 34 crops. This check looks at your photo for anything else: insect pests, nutrient deficiencies, weather damage and other crops.',
+    sw: 'Skana ya bila intaneti inajua hali 154 za majani kwenye mazao 34. Ukaguzi huu unaangalia picha yako kwa mengine yote: wadudu, upungufu wa virutubisho, madhara ya hali ya hewa na mazao mengine.',
   },
   crop: { en: 'Which crop is this?', sw: 'Hili ni zao gani?' },
   note: { en: 'What did you notice? (optional)', sw: 'Uliona nini? (si lazima)' },

@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { Btn, Chip, CropIcon, Dot, Header, Icon, ListenButton, Text } from '../components/ui';
-import { getLibrary, LIBRARY_FILTERS } from '../lib/encyclopedia';
+import { getLibrary, LIBRARY_CROPS, LIBRARY_FILTERS } from '../lib/encyclopedia';
 import { cropName } from '../lib/diseases';
 import { useLang } from '../lib/i18n';
 import { C, FONT } from '../lib/theme';
@@ -24,7 +24,7 @@ export default function EncyclopediaScreen() {
   const list = useMemo(() => {
     let l = library;
     if (filter === 'Scanner can detect') l = l.filter((d) => d.scanLabel);
-    else if (['Maize', 'Tomato', 'Potato', 'Beans', 'Wheat'].includes(filter)) l = l.filter((d) => d.crops.includes(filter));
+    else if (LIBRARY_CROPS.includes(filter)) l = l.filter((d) => d.crops.includes(filter));
     else if (filter !== 'All') l = l.filter((d) => d.kind === filter);
     const s = q.trim().toLowerCase();
     if (s) l = l.filter((d) => [d.name, d.sci, d.kind, t(d.kind), ...d.crops, ...d.crops.map(crop)].some((x) => x.toLowerCase().includes(s)));
@@ -50,7 +50,7 @@ export default function EncyclopediaScreen() {
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 8 }}>
           {LIBRARY_FILTERS.map((f) => (
-            <Chip key={f} label={f} active={filter === f} onPress={() => setFilter(f)} />
+            <Chip key={f} label={f} crop={LIBRARY_CROPS.includes(f) ? f : undefined} active={filter === f} onPress={() => setFilter(f)} />
           ))}
         </ScrollView>
       </View>

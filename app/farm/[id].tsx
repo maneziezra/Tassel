@@ -12,6 +12,7 @@ import { calendarFor, currentStage, fieldTasks, loadTicks, saveTicks, type Field
 import { cancelFieldReminders, countFieldReminders, ensurePermission, scheduleFieldReminders } from '../../lib/notify';
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { locale, useLang } from '../../lib/i18n';
+import { openScanner } from '../../lib/navigation';
 import { C, FONT, confidenceBand } from '../../lib/theme';
 
 export default function FarmScreen() {
@@ -154,7 +155,7 @@ export default function FarmScreen() {
                 style={{ flex: 1, minHeight: 46 }}
                 onPress={() => router.push({ pathname: '/farm-map', params: { farmId: farm.id } })}
               />
-              <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={() => router.navigate('/scan')} />
+              <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={openScanner} />
             </View>
           </Card>
 

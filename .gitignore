@@ -48,3 +48,8 @@ android/app/.cxx/
 
 scripts/shots/
 scripts/refs/
+
+# Local model backups and binary docs (kept out of git)
+model_backup/
+docs/*.docx
+scripts/kb/backup_pre_*/

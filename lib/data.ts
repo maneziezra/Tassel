@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { toByteArray } from 'base64-js';
 import { supabase } from './supabase';
-import { currentUserId } from './session';
+import { currentUserId, ensureSession } from './session';
 import { tr } from './i18n';
 
 export type Profile = { id: string; name: string | null; phone: string | null; county: string | null; crops: string | null; created_at?: string };
@@ -81,25 +81,123 @@ export function hasV21Schema(): boolean {
 }
 
 // ── Profile ─────────────────────────────────────────────────────────
+const profileKey = (id: string) => `profile:${id}`;
+const GLOBAL_PROFILE_KEY = 'profile:latest';
+
+export async function getLocalProfile(): Promise<Profile | null> {
+  try {
+    const raw = await AsyncStorage.getItem(GLOBAL_PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getProfile(): Promise<Profile> {
-  const id = await currentUserId();
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
-  fail(error, 'load your profile');
-  return data ?? { id, name: null, phone: null, county: null, crops: null };
+  let id = '';
+  let authName: string | null = null;
+  try {
+    const session = await ensureSession();
+    id = session.user.id;
+    const meta = session.user.user_metadata as { name?: string; full_name?: string } | undefined;
+    authName = meta?.name?.trim() || meta?.full_name?.trim() || null;
+  } catch {}
+
+  let cached: Profile | null = null;
+  try {
+    const raw = id ? await AsyncStorage.getItem(profileKey(id)) : null;
+    cached = raw ? JSON.parse(raw) : await getLocalProfile();
+  } catch {}
+
+  if (!id) {
+    return cached ?? { id: '', name: authName, phone: null, county: null, crops: null };
+  }
+
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
+    if (error) {
+      if (cached) {
+        if (!cached.name && authName) cached.name = authName;
+        return cached;
+      }
+      fail(error, 'load your profile');
+    }
+
+    const resolvedName = data?.name?.trim() || authName || cached?.name?.trim() || null;
+    const resolvedPhone = data?.phone?.trim() || cached?.phone?.trim() || null;
+    const resolvedCounty = data?.county?.trim() || cached?.county?.trim() || null;
+    const resolvedCrops = data?.crops?.trim() || cached?.crops?.trim() || null;
+
+    const merged: Profile = {
+      id,
+      name: resolvedName,
+      phone: resolvedPhone,
+      county: resolvedCounty,
+      crops: resolvedCrops,
+      created_at: data?.created_at ?? cached?.created_at,
+    };
+
+    // If Supabase was missing the name, backfill it
+    if ((!data || !data.name) && resolvedName) {
+      Promise.resolve(
+        supabase.from('profiles').upsert({
+          id,
+          name: resolvedName,
+          phone: resolvedPhone,
+          county: resolvedCounty,
+          crops: resolvedCrops,
+          updated_at: new Date().toISOString(),
+        })
+      ).catch(() => {});
+    }
+
+    // Cache locally
+    AsyncStorage.setItem(profileKey(id), JSON.stringify(merged)).catch(() => {});
+    AsyncStorage.setItem(GLOBAL_PROFILE_KEY, JSON.stringify(merged)).catch(() => {});
+
+    return merged;
+  } catch {
+    if (cached) {
+      if (!cached.name && authName) cached.name = authName;
+      return cached;
+    }
+    return { id, name: authName, phone: null, county: null, crops: null };
+  }
 }
 
 export async function saveProfile(p: Omit<Profile, 'id' | 'created_at'>): Promise<void> {
   const id = await currentUserId();
-  const clean = {
+  const clean: Profile = {
     id,
     name: p.name?.trim().slice(0, 80) || null,
     phone: p.phone?.trim().slice(0, 20) || null,
     county: p.county?.trim().slice(0, 40) || null,
     crops: p.crops?.trim().slice(0, 200) || null,
+  };
+
+  // 1. Immediately cache locally so the name is never forgotten, even offline
+  try {
+    await AsyncStorage.setItem(profileKey(id), JSON.stringify(clean));
+    await AsyncStorage.setItem(GLOBAL_PROFILE_KEY, JSON.stringify(clean));
+  } catch {}
+
+  // 2. Also keep auth user metadata in sync if name is set
+  if (clean.name) {
+    supabase.auth.updateUser({ data: { name: clean.name } }).catch(() => {});
+  }
+
+  // 3. Upsert to Supabase profiles table
+  const payload = {
+    ...clean,
     updated_at: new Date().toISOString(),
   };
-  const { error } = await supabase.from('profiles').upsert(clean);
-  fail(error, 'save your profile');
+  const { error } = await supabase.from('profiles').upsert(payload);
+  if (error) {
+    const offline = /network|fetch/i.test(error.message);
+    if (!offline) {
+      fail(error, 'save your profile');
+    }
+  }
 }
 
 export async function displayName(): Promise<string> {
