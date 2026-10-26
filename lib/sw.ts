@@ -1363,4 +1363,10 @@ export const SW: Record<string, string> = {
   "Shows standing water or flooding. Each square is 10 × 10 m.": "Inaonyesha maji yaliyotuama au mafuriko. Kila mraba ni mita 10 × 10.",
   "No clear picture since {date} — clouds": "Hakuna picha safi tangu {date} — mawingu",
   "Small field: Tassel reads it as one zone.": "Shamba dogo: Tassel inalisoma kama sehemu moja.",
+
+  // ── v2.7 Scan result ── flagged for native-speaker review
+  "Best guess: {d}": "Kisio bora: {d}",
+  "Sure": "Uhakika",
+  "Fairly sure": "Uhakika kiasi",
+  "Check online (AI)": "Kagua mtandaoni (AI)",
 };

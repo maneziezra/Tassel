@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTensorflowModel } from 'react-native-fast-tflite';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { classifyPhoto, type ScanStep } from '../../lib/classifier';
 import { DETECTABLE_CROPS, SCANNABLE_DISEASES } from '../../lib/diseases';
 import { Icon, Text } from '../../components/ui';
@@ -44,6 +45,14 @@ export default function ScanScreen() {
     }, [])
   );
   const cameraRef = useRef<CameraView>(null);
+  // The guide frame breathes gently so the eye finds it; still when reduce-motion is on.
+  const reduceMotion = useReducedMotion();
+  const breathe = useSharedValue(1);
+  useEffect(() => {
+    if (reduceMotion) return;
+    breathe.value = withRepeat(withTiming(1.035, { duration: 1300, easing: Easing.inOut(Easing.quad) }), -1, true);
+  }, [reduceMotion, breathe]);
+  const frameStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathe.value }] }));
   const [permission, requestPermission] = useCameraPermissions();
   const tflite = useTensorflowModel(MODEL, []);
   const [torch, setTorch] = useState(false);
@@ -196,11 +205,11 @@ export default function ScanScreen() {
       {/* Frame + tip */}
       {!photoUri && permission?.granted ? (
         <View pointerEvents="none" style={st.frameWrap}>
-          <View style={st.frame}>
+          <Animated.View style={[st.frame, frameStyle]}>
             {['tl', 'tr', 'bl', 'br'].map((k) => (
               <View key={k} style={[st.corner, st[k as 'tl']]} />
             ))}
-          </View>
+          </Animated.View>
           <View style={st.tipPill}>
             <Icon name="lightbulb-on-outline" size={14} color={C.gold} />
             <Text style={st.tipTxt}>{TIPS[tip]}</Text>

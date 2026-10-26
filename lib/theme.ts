@@ -70,11 +70,11 @@ export const RADIUS = { sm: 10, md: 16, lg: 16, xl: 20, full: 999 };
 /** Community categories: told apart by their word, not by colour. */
 export const CATEGORY_COLOR: Record<string, string> = { Pests: C.textMid, Diseases: C.error, Market: C.primary, General: C.textMid };
 
-/** One confidence scale used everywhere in the app (and by the advisor prompt). */
-export function confidenceBand(c: number): { label: string; color: string; tint: string } {
-  if (c >= 0.9) return { label: 'High confidence', color: C.primaryDark, tint: C.primaryTint };
-  if (c >= 0.75) return { label: 'Medium confidence', color: C.accentDark, tint: C.accentTint };
-  return { label: 'Low confidence', color: C.error, tint: C.errorTint };
+/** One confidence scale used everywhere in the app (and by the advisor prompt). `word` is what the farmer reads. */
+export function confidenceBand(c: number): { label: string; word: string; color: string; tint: string } {
+  if (c >= 0.9) return { label: 'High confidence', word: 'Sure', color: C.primaryDark, tint: C.primaryTint };
+  if (c >= 0.75) return { label: 'Medium confidence', word: 'Fairly sure', color: C.accentDark, tint: C.accentTint };
+  return { label: 'Low confidence', word: 'Not sure', color: C.error, tint: C.errorTint };
 }
 
 export const URGENCY_META: Record<string, { label: string; color: string; tint: string }> = {

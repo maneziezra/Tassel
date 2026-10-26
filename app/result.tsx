@@ -2,10 +2,11 @@
 // looks like, what to do in order, where to buy inputs, and the next actions.
 // v2.2: calm layout (no tinted panels), steps as numbered lists, field picker sheet.
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, type IconName } from '../components/ui';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, tick, type IconName } from '../components/ui';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
 import { PcpbProductCard } from '../components/PcpbProductCard';
@@ -41,6 +42,13 @@ export default function ResultScreen() {
     () => (uncertain ? [] : getRegisteredProducts(base.crop, label || raw?.disease || base.disease)),
     [uncertain, label, raw, base]
   );
+
+  const scroll = useRef<ScrollView>(null);
+  const [todoY, setTodoY] = useState(0);
+  // A confirmation you can feel: success for a healthy leaf, a light tap otherwise.
+  useEffect(() => {
+    tick(!uncertain && base.healthy ? 'success' : 'light');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [farms, setFarms] = useState<Farm[] | null>(null);
   const [picker, setPicker] = useState(false);
@@ -171,11 +179,11 @@ export default function ResultScreen() {
         subtitle={p.inferMs ? t('Analysed on this phone in {ms} ms', { ms: Number(p.prepareMs ?? 0) + Number(p.inferMs) }) : undefined}
         right={<ListenButton compact text={listenText} />}
       />
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+      <ScrollView ref={scroll} contentContainerStyle={{ paddingBottom: 48 }}>
         {p.uri ? <Image source={{ uri: p.uri }} style={st.leaf} resizeMode="cover" /> : null}
 
         {/* Verdict */}
-        <View style={st.panel}>
+        <Animated.View entering={FadeInDown.springify().damping(16)} style={st.panel}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <CropIcon crop={cropEn} size={44} />
             <View style={{ flex: 1 }}>
@@ -188,12 +196,20 @@ export default function ResultScreen() {
               </View>
             </View>
           </View>
+          {/* Rule 3: below the threshold the title never names a disease. */}
           <Text raw style={st.disease}>
-            {disease}
+            {uncertain ? t('Not sure') : disease}
           </Text>
+          {uncertain ? (
+            <Text raw style={[st.small, { marginTop: -4, marginBottom: 6 }]}>
+              {t('Best guess: {d}', { d: disease })}
+            </Text>
+          ) : null}
           <View style={{ gap: 6 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={st.small}>{band.label}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={[st.confPill, { backgroundColor: band.tint }]}>
+                <Text style={[st.confWord, { color: band.color }]}>{band.word}</Text>
+              </View>
               <Text raw style={[st.small, { color: band.color, fontFamily: FONT.bodyBold }]}>
                 {pct}
               </Text>
@@ -215,7 +231,18 @@ export default function ResultScreen() {
               <Text style={[st.small, { color: C.error, fontFamily: FONT.bodyBold }]}>Report to authorities</Text>
             </View>
           ) : null}
-        </View>
+        </Animated.View>
+
+        {/* The three next steps (confident results; "Not sure" has its own panel below) */}
+        {!uncertain ? (
+          <View style={st.actions}>
+            {info ? <Btn label={healthy ? 'Keep it healthy' : 'What to do'} icon="clipboard-check-outline" kind="signature" onPress={() => scroll.current?.scrollTo({ y: todoY, animated: true })} /> : null}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ flex: 1 }} onPress={askCommunity} />
+              {p.uri ? <Btn label="Check online (AI)" icon="image-search-outline" kind="secondary" style={{ flex: 1 }} onPress={openPhotoCheck} /> : null}
+            </View>
+          </View>
+        ) : null}
 
         {/* Uncertain: no fabricated diagnosis */}
         {uncertain ? (
@@ -294,7 +321,7 @@ export default function ResultScreen() {
 
         {/* What to do */}
         {info ? (
-          <View style={st.panel}>
+          <View style={st.panel} onLayout={(e) => setTodoY(e.nativeEvent.layout.y - 12)}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={st.h}>{healthy ? 'Keep it healthy' : 'What to do'}</Text>
               <ListenButton
@@ -450,6 +477,9 @@ function Steps({ title, items }: { title: string; items: string[] }) {
 }
 
 const st = StyleSheet.create({
+  actions: { marginHorizontal: 16, marginTop: 12, gap: 10 },
+  confPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
+  confWord: { fontSize: 15, fontFamily: FONT.bodyBold },
   leaf: { height: 240, marginHorizontal: 16, borderRadius: 16, marginTop: 4 },
   panel: { backgroundColor: C.surface, borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 12 },
   crop: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },

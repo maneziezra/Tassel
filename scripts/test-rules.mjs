@@ -63,6 +63,7 @@ test('rule 2: PCPB products only come from the generated register catalogue', ()
 test('rule 3: below 75% the result screen offers no product examples', () => {
   const result = read(path.join(root, 'app/result.tsx'));
   assert.match(result, /uncertain \? \[\] : getRegisteredProducts/);
+  assert.match(result, /uncertain \? t\('Not sure'\) : disease/, 'the title never names a disease below the threshold');
   const classifier = read(path.join(root, 'lib/classifier.ts'));
   assert.match(classifier, /CONFIDENCE_THRESHOLD\s*=\s*0\.75/);
 });
