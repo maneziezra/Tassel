@@ -12,12 +12,14 @@ import { listFarms, updateFarm, type Farm } from '../lib/data';
 import { calendarFor, daysSince, fieldTasks, loadTicks, parseDate, saveTicks, toIsoDate, type FieldTask } from '../lib/calendar';
 import { cropName } from '../lib/diseases';
 import { locale, useLang } from '../lib/i18n';
+import { fmtArea, usePrefs } from '../lib/prefs';
 import { C, FONT } from '../lib/theme';
 
 const WEEK_W = 46;
 const DAY = 86400000;
 
 export default function CalendarScreen() {
+  const { units } = usePrefs();
   const { t, lang } = useLang();
   const params = useLocalSearchParams<{ id?: string }>();
   const [farms, setFarms] = useState<Farm[] | null>(null);
@@ -310,7 +312,7 @@ export default function CalendarScreen() {
                     <Text raw style={st.small}>
                       {[
                         f.crop ? cropName(f.crop, lang) : null,
-                        f.size_acres ? `${Number(f.size_acres).toFixed(2)} acres` : null,
+                        f.size_acres ? fmtArea(Number(f.size_acres), units) : null,
                         f.planting_date ? t('Planted') : t('Not planted yet'),
                       ].filter(Boolean).join(' · ')}
                     </Text>
@@ -412,7 +414,7 @@ export default function CalendarScreen() {
               {t('Planting calendar ready!')}
             </Text>
             <Text raw style={[st.small, { textAlign: 'center' }]}>
-              {`${selectedField?.name} · ${cropName(selectedCrop, lang)} · ${selectedDate}`}
+              {`${selectedField?.name} · ${cropName(selectedCrop, lang)} · ${fmt(parseDate(selectedDate), { day: 'numeric', month: 'long' })}`}
             </Text>
             <View style={{ width: '100%', gap: 10, marginTop: 12 }}>
               <Btn
