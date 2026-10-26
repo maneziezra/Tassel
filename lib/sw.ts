@@ -1379,6 +1379,18 @@ export const SW: Record<string, string> = {
   "Sure": "Uhakika",
   "Fairly sure": "Uhakika kiasi",
   "Check online (AI)": "Kagua mtandaoni (AI)",
+  // v2.7 advisory diagrams (flagged for native-speaker review)
+  "Rows {n} cm apart": "Mistari sm {n} kati yake",
+  "Plants {n} cm apart": "Mimea sm {n} kati yake",
+  "{n} cm": "sm {n}",
+  "between rows": "kati ya mistari",
+  "{n} cm deep": "kina cha sm {n}",
+  "Soil surface": "Uso wa udongo",
+  "Other crops for {n} seasons": "Mazao mengine kwa misimu {n}",
+  "Potato or tomato": "Viazi au nyanya",
+  "Potato again": "Viazi tena",
+  "Certified seed": "Mbegu zilizothibitishwa",
+  "Certified": "Imethibitishwa",
   // v2.7 not-sure actions (flagged for native-speaker review)
   "Retake the photo": "Piga picha tena",
   "Watch out": "Tahadhari",

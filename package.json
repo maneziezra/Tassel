@@ -57,7 +57,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit -p .",
-    "test": "tsc --noEmit -p . && node scripts/check_sw.js > NUL && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-pcpb.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-profile.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-fieldart.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-satellite-export.mjs && node scripts/test-rules.mjs"
+    "test": "tsc --noEmit -p . && node scripts/check_sw.js > NUL && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-pcpb.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-profile.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-fieldart.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-satellite-export.mjs && node --experimental-strip-types --no-warnings --import ./scripts/ts-resolve.mjs scripts/test-diagrams.mjs && node scripts/test-rules.mjs"
   },
   "private": true
 }

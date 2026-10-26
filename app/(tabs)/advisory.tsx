@@ -38,6 +38,8 @@ import { FERTS, type FertId } from '../../lib/fertiliser';
 import { useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
 import { NotoEmoji } from '../../components/NotoEmoji';
+import { StoryDiagram } from '../../components/StoryDiagram';
+import { diagramFacts, type DiagramFact } from '../../lib/diagramFacts';
 import { PcpbProductCard } from '../../components/PcpbProductCard';
 import { cropKey, getRegisteredProducts, problemKey, type PcpbProduct, type ProblemKey } from '../../lib/pcpb';
 import { speak } from '../../lib/speech';
@@ -157,6 +159,7 @@ export default function AdvisoryScreen() {
       caption?: string;
       body: string;
       index?: number;
+      facts?: DiagramFact[];
       pcpb?: PcpbProduct[];
       problem?: ProblemKey | null;
     }> = [
@@ -168,6 +171,8 @@ export default function AdvisoryScreen() {
       },
     ];
 
+    // Diagram facts come from the English source step, so the numbers match lib/advisory.ts exactly.
+    const sourceStage = CROPS.find((c) => c.id === cropId)?.stages.find((s) => s.id === storyStage.id);
     storyStage.activities.forEach((act, idx) => {
       cards.push({
         type: 'action',
@@ -175,6 +180,7 @@ export default function AdvisoryScreen() {
         caption: makeCaption(act),
         body: act,
         index: idx,
+        facts: diagramFacts(sourceStage?.activities[idx] ?? act),
       });
     });
 
@@ -422,9 +428,13 @@ export default function AdvisoryScreen() {
 
                 {/* 2. Action Story Card with Custom SVG Art & 5-10 word caption */}
                 {activeCard.type === 'action' ? (
-                  <View style={st.actionCard}>
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={[st.actionCard, { flexGrow: 1, justifyContent: 'center' }]}>
                     <View style={{ alignItems: 'center' }}>
-                      {getActionIllustration(activeCard.body, storyStage?.name ?? '', activeCard.index ?? 0)}
+                      {activeCard.facts?.length ? (
+                        <StoryDiagram facts={activeCard.facts} crop={cropId} width={SCREEN_WIDTH - 72} k={`${storyStage?.id}:${storyIndex}`} />
+                      ) : (
+                        getActionIllustration(activeCard.body, storyStage?.name ?? '', activeCard.index ?? 0)
+                      )}
                     </View>
                     <Text style={st.actionBadge}>{activeCard.title}</Text>
                     <Text raw style={st.actionCaption}>
@@ -442,7 +452,7 @@ export default function AdvisoryScreen() {
                         onPress={readCard}
                       />
                     </View>
-                  </View>
+                  </ScrollView>
                 ) : null}
 
                 {/* 3. Inputs & PCPB Commercial Products Card */}
