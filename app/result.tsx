@@ -184,8 +184,10 @@ export default function ResultScreen() {
 
         {/* Verdict */}
         <Animated.View entering={FadeInDown.springify().damping(16)} style={st.panel}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <CropIcon crop={cropEn} size={44} />
+          {/* Rule 3: below the threshold nothing on this card names a crop or disease as fact. */}
+          {!uncertain ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <CropIcon crop={cropEn} size={44} />
             <View style={{ flex: 1 }}>
               <Text raw style={st.crop}>
                 {crop}
@@ -195,28 +197,32 @@ export default function ResultScreen() {
                 <Text style={[st.status, { color: status.color }]}>{status.text}</Text>
               </View>
             </View>
-          </View>
-          {/* Rule 3: below the threshold the title never names a disease. */}
+            </View>
+          ) : null}
           <Text raw style={st.disease}>
             {uncertain ? t('Not sure') : disease}
           </Text>
           {uncertain ? (
             <Text raw style={[st.small, { marginTop: -4, marginBottom: 6 }]}>
-              {t('Best guess: {d}', { d: disease })}
+              {t('Best guess: {d}', { d: `${crop} — ${disease}` })}
             </Text>
           ) : null}
           <View style={{ gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={[st.confPill, { backgroundColor: band.tint }]}>
-                <Text style={[st.confWord, { color: band.color }]}>{band.word}</Text>
-              </View>
+              {!uncertain ? (
+                <View style={[st.confPill, { backgroundColor: band.tint }]}>
+                  <Text style={[st.confWord, { color: band.color }]}>{band.word}</Text>
+                </View>
+              ) : (
+                <Text style={st.small}>Confidence</Text>
+              )}
               <Text raw style={[st.small, { color: band.color, fontFamily: FONT.bodyBold }]}>
                 {pct}
               </Text>
             </View>
             <ProgressBar value={confidence} color={band.color} height={8} />
           </View>
-          {info && !healthy ? (
+          {info && !healthy && !uncertain ? (
             <Text raw style={[st.small, { marginTop: 12 }]}>
               {[t(info.kind), info.pathogen].filter(Boolean).join(' · ')}
               {'  '}
@@ -225,7 +231,7 @@ export default function ResultScreen() {
               </Text>
             </Text>
           ) : null}
-          {info?.notifiable ? (
+          {info?.notifiable && !uncertain ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
               <Dot color={C.error} />
               <Text style={[st.small, { color: C.error, fontFamily: FONT.bodyBold }]}>Report to authorities</Text>
@@ -245,6 +251,15 @@ export default function ResultScreen() {
         ) : null}
 
         {/* Uncertain: no fabricated diagnosis */}
+        {uncertain ? (
+          <View style={st.actions}>
+            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={openScanner} />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {p.uri ? <Btn label="Check online (AI)" icon="image-search-outline" kind="secondary" style={{ flex: 1 }} onPress={openPhotoCheck} /> : null}
+              <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ flex: 1 }} onPress={askCommunity} />
+            </View>
+          </View>
+        ) : null}
         {uncertain ? (
           <View style={st.panel}>
             <Text style={st.h}>The scanner is not sure</Text>
@@ -268,13 +283,11 @@ export default function ResultScreen() {
                 ))}
               </>
             ) : null}
-            {p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="signature" style={{ marginTop: 14 }} onPress={openPhotoCheck} /> : null}
-            <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ marginTop: 10 }} onPress={askCommunity} />
           </View>
         ) : null}
 
-        {/* What it looks like */}
-        {info && !healthy ? (
+        {/* What it looks like (not for a guess: rule 3) */}
+        {info && !healthy && !uncertain ? (
           <View style={st.panel}>
             <Text style={st.h}>What it looks like</Text>
             <Text raw style={st.body}>
@@ -319,8 +332,8 @@ export default function ResultScreen() {
           </View>
         ) : null}
 
-        {/* What to do */}
-        {info ? (
+        {/* What to do (not for a guess: rule 3) */}
+        {info && !uncertain ? (
           <View style={st.panel} onLayout={(e) => setTodoY(e.nativeEvent.layout.y - 12)}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={st.h}>{healthy ? 'Keep it healthy' : 'What to do'}</Text>
@@ -372,7 +385,7 @@ export default function ResultScreen() {
         ) : null}
 
         {/* Nearby agro-dealers (OpenStreetMap) */}
-        {!healthy ? (
+        {!healthy && !uncertain ? (
           <View style={st.panel}>
             <Text style={st.h}>Nearby agro-dealers</Text>
             {agrovets?.length ? (
@@ -422,7 +435,7 @@ export default function ResultScreen() {
           {!uncertain ? <Btn label="Ask the community" icon="account-group-outline" kind="secondary" onPress={askCommunity} /> : null}
           {!uncertain && p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="secondary" onPress={openPhotoCheck} /> : null}
           <Btn label="Share on WhatsApp" icon="whatsapp" kind="secondary" onPress={shareWhatsApp} />
-          <Btn label="Scan another leaf" icon="camera-retake-outline" kind="ghost" onPress={openScanner} />
+          {!uncertain ? <Btn label="Scan another leaf" icon="camera-retake-outline" kind="ghost" onPress={openScanner} /> : null}
         </View>
       </ScrollView>
 

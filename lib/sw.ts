@@ -1379,5 +1379,7 @@ export const SW: Record<string, string> = {
   "Sure": "Uhakika",
   "Fairly sure": "Uhakika kiasi",
   "Check online (AI)": "Kagua mtandaoni (AI)",
+  // v2.7 not-sure actions (flagged for native-speaker review)
+  "Retake the photo": "Piga picha tena",
   "Watch out": "Tahadhari",
 };
