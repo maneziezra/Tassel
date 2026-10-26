@@ -43,11 +43,10 @@ export function FieldHero({
   const art = useMemo(() => layoutField(polygon, grid, width, height), [polygon, grid, width, height]);
 
   const outlinePath = useMemo(() => {
-    const p = Skia.Path.Make();
-    if (!art?.outline.length) return p;
-    art.outline.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
-    p.close();
-    return p;
+    const b = Skia.PathBuilder.Make();
+    if (!art?.outline.length) return b.build();
+    art.outline.forEach(([x, y], i) => (i ? b.lineTo(x, y) : b.moveTo(x, y)));
+    return b.close().build();
   }, [art]);
 
   const reveal = useSharedValue(reduce ? 1 : 0);

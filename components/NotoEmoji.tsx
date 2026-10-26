@@ -24,13 +24,21 @@ const FILES = {
 
 export type NotoName = keyof typeof FILES;
 
-/** Plays once by default (a confirmation, not a distraction). Still under reduce-motion. */
-export function NotoEmoji({ name, size = 40, loop = false }: { name: NotoName; size?: number; loop?: boolean }) {
+/**
+ * The Noto set is designed to loop: the first and last frames of some files are
+ * mid-transition (on the TECNO a play-once droplet ended blank). Under
+ * reduce-motion a mid-animation frame is shown, where the emoji is fully drawn.
+ */
+export function NotoEmoji({ name, size = 40 }: { name: NotoName; size?: number }) {
   const reduce = useReducedMotion();
   // Decorative: the words next to it carry the meaning, so screen readers skip it.
   return (
     <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <LottieView source={FILES[name]} autoPlay={!reduce} loop={loop && !reduce} progress={reduce ? 1 : undefined} style={{ width: size, height: size }} />
+      {reduce ? (
+        <LottieView source={FILES[name]} autoPlay={false} progress={0.5} style={{ width: size, height: size }} />
+      ) : (
+        <LottieView source={FILES[name]} autoPlay loop style={{ width: size, height: size }} />
+      )}
     </View>
   );
 }

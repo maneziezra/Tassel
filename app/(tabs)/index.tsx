@@ -8,7 +8,7 @@
 // Hutton blight criteria, and PCPB registered crop guidance.
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -34,6 +34,7 @@ import {
 import {
   getProfile,
   listFarms,
+  saveProfile,
   listIncidents,
   listOutbreaks,
   type Farm,
@@ -103,6 +104,28 @@ export default function HomeScreen() {
   const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // P0.1 root cause found on the TECNO (26 Oct): an anonymous account that never
+  // went through sign-up has no name anywhere, so Home asks once, in one field.
+  const [nameOpen, setNameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const saveName = async () => {
+    const name = nameDraft.trim();
+    if (!name) return;
+    setSavingName(true);
+    try {
+      await saveProfile({ name, phone: profile?.phone ?? null, county: profile?.county ?? null, crops: profile?.crops ?? null });
+      setProfile((p) => (p ? { ...p, name } : p));
+      tick('success');
+      setNameOpen(false);
+    } catch {
+      // saveProfile caches on the phone first, so the name still shows offline
+      setProfile((p) => (p ? { ...p, name } : p));
+      setNameOpen(false);
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const activeFarm = useMemo(() => {
     if (!farms.length) return null;
@@ -271,7 +294,7 @@ export default function HomeScreen() {
       return { text: t('Draw this field to see it from space'), meta: t('Tap to open the field'), tone: 'none' as const };
     }
     if (!activeReading || activeReading.tone === 'none') {
-      return { text: t('Checking your field from space… about a minute'), meta: t('Tassel needs a few clear pictures to learn this field'), tone: 'none' as const };
+      return { text: t('Checking your field from space'), meta: t('About a minute. Tassel needs a few clear pictures to learn this field.'), tone: 'none' as const };
     }
     if (activeReading.tone === 'normal') {
       return { text: t('Your {crop} looks healthy', { crop: crop.toLowerCase() }), meta, tone: 'normal' as const };
@@ -297,9 +320,18 @@ export default function HomeScreen() {
         <View style={[st.hero, { paddingTop: insets.top + 12 }]}>
           <View style={st.heroTop}>
             <View style={{ flex: 1 }}>
-              <Text raw style={st.heroGreeting} numberOfLines={1}>
-                {first ? `${t(greeting())}, ${first}` : t(greeting())}
-              </Text>
+              {first || !loaded ? (
+                <Text raw style={st.heroGreeting} numberOfLines={1}>
+                  {first ? `${t(greeting())}, ${first}` : t(greeting())}
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={() => setNameOpen(true)} accessibilityRole="button" hitSlop={8}>
+                  <Text raw style={st.heroGreeting} numberOfLines={1}>
+                    {t(greeting())}
+                  </Text>
+                  <Text style={[st.heroSub, { color: C.brandGold, fontFamily: FONT.bodyBold }]}>What should we call you?</Text>
+                </TouchableOpacity>
+              )}
               {activeFarm ? (
                 <Text raw style={st.heroSub} numberOfLines={1}>
                   {[
@@ -328,7 +360,7 @@ export default function HomeScreen() {
               {prefs.avatarCrop ? (
                 <CropIcon crop={prefs.avatarCrop} size={44} disc={false} />
               ) : (
-                <Text raw style={st.avatarInitials}>
+                <Text raw style={[st.avatarInitials, prefs.avatarTone ? { color: C.brandDark } : null]}>
                   {initials}
                 </Text>
               )}
@@ -639,6 +671,23 @@ export default function HomeScreen() {
         ) : null}
       </ScrollView>
 
+      <Sheet visible={nameOpen} onClose={() => setNameOpen(false)} title={t('What should we call you?')}>
+        <TextInput
+          value={nameDraft}
+          onChangeText={setNameDraft}
+          placeholder={t('Your name')}
+          placeholderTextColor={C.textLight}
+          autoFocus
+          autoCapitalize="words"
+          maxLength={60}
+          returnKeyType="done"
+          onSubmitEditing={saveName}
+          accessibilityLabel={t('Your name')}
+          style={st.nameInput}
+        />
+        <Btn label="Save" loading={savingName} disabled={!nameDraft.trim()} onPress={saveName} style={{ marginTop: 14 }} />
+      </Sheet>
+
       {/* ── SPRAY HOURS & 5-DAY WEATHER SHEET ───────────────────────────── */}
       <Sheet
         visible={spraySheetOpen}
@@ -764,6 +813,7 @@ const st = StyleSheet.create({
   },
   bigActionTitle: { fontSize: 26, fontFamily: FONT.display, color: C.brandGround },
   bigActionSub: { fontSize: 14, fontFamily: FONT.bodyBold, color: C.brandDark },
+  nameInput: { backgroundColor: C.bg, borderRadius: 16, paddingHorizontal: 16, minHeight: 56, fontSize: 18, fontFamily: FONT.bodyBold, color: C.text },
   avatarBtn: {
     width: 48,
     height: 48,

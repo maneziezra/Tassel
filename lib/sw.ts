@@ -1341,6 +1341,9 @@ export const SW: Record<string, string> = {
   "Scan a sick leaf": "Skani jani gonjwa",
   "No field needed · works offline": "Huhitaji shamba · inafanya kazi bila mtandao",
   "Checking your fields…": "Tunaangalia mashamba yako…",
+  "What should we call you?": "Tukuite nani?",
+  "Checking your field from space": "Tunaangalia shamba lako kutoka angani",
+  "About a minute. Tassel needs a few clear pictures to learn this field.": "Kama dakika moja. Tassel inahitaji picha chache safi ili kulijua shamba hili.",
 
   // ── v2.7 Add field slides ── flagged for native-speaker review
   "Tap the corners on the satellite map. Tassel measures it and watches its health from space.": "Gusa kona za shamba kwenye ramani ya setilaiti. Tassel hulipima na kufuatilia afya yake kutoka angani.",
