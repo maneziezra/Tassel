@@ -5,8 +5,10 @@
 // 2. Name your field (pre-filled smart default)
 // 3. Choose your crop (flat SVG CropIcon visual grid, no typing)
 // 4. Planting date ("Today", "Last week", or pick a date)
-// 5. Size (pre-filled from drawing or quick stepper)
-// 6. Celebration screen & immediate Sentinel-2 satellite check trigger.
+// 5. Size: skipped when the drawing measured it; a stepper in the farmer's units otherwise
+// 6. Done: the new field's outline draws itself under the satellite sweep while the
+//    first Sentinel-2 check runs (the same art as the Home hero).
+// Slides slide in, the progress line moves, and choosing a crop or a date moves on by itself.
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -20,6 +22,7 @@ import {
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import Animated, { FadeInRight, FadeOutLeft, useAnimatedStyle, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 import {
@@ -34,6 +37,7 @@ import {
   tick,
 } from '../components/ui';
 import { DateField } from '../components/DateField';
+import { FieldHero } from '../components/FieldHero';
 import { addFarm, listFarms, type LatLng } from '../lib/data';
 import { CROP_CHOICES } from '../lib/counties';
 import { centroid } from '../lib/geo';
@@ -42,6 +46,7 @@ import { ensurePermission, scheduleFieldReminders } from '../lib/notify';
 import { refreshSatellite } from '../lib/satellite';
 import { cropName } from '../lib/diseases';
 import { useLang } from '../lib/i18n';
+import { fmtArea, fromAcres, toAcres, usePrefs } from '../lib/prefs';
 import { C, FONT, RADIUS } from '../lib/theme';
 
 const SUGGESTED_NAMES = ['Home Plot', 'Upper Field', 'River Plot', 'Main Shamba'];
@@ -57,6 +62,7 @@ const DATE_SHORTCUTS = [
 export default function AddFarmScreen() {
   const insets = useSafeAreaInsets();
   const { t, lang } = useLang();
+  const { units } = usePrefs();
   const params = useLocalSearchParams<{ polygon?: string; acres?: string }>();
 
   const polygon: LatLng[] | null = (() => {
@@ -93,8 +99,13 @@ export default function AddFarmScreen() {
       });
   }, []);
 
-  const totalSteps = 5;
-  const progress = Math.min(1, Math.max(0.1, (step + 1) / totalSteps));
+  // With a drawn boundary the size is already measured, so that slide is skipped.
+  const totalSteps = polygon ? 4 : 5;
+  const progressValue = useSharedValue(0);
+  useEffect(() => {
+    progressValue.value = withTiming(Math.min(1, (step + 1) / totalSteps), { duration: 420 });
+  }, [step, totalSteps, progressValue]);
+  const progressStyle = useAnimatedStyle(() => ({ width: `${progressValue.value * 100}%` }));
 
   const nextStep = () => {
     tick('select');
@@ -102,7 +113,9 @@ export default function AddFarmScreen() {
       Alert.alert(t('Name needed'), t('Give the field a name, e.g. "Shamba la juu".'));
       return;
     }
-    if (step < 4) {
+    if (step === 3 && polygon) {
+      saveField();
+    } else if (step < 4) {
       setStep(step + 1);
     } else if (step === 4) {
       saveField();
@@ -191,7 +204,7 @@ export default function AddFarmScreen() {
       {/* Progress line */}
       {step < 5 ? (
         <View style={{ height: 3, backgroundColor: C.sunken }}>
-          <View style={{ width: `${progress * 100}%`, height: 3, backgroundColor: C.primary }} />
+          <Animated.View style={[{ height: 3, backgroundColor: C.primary }, progressStyle]} />
         </View>
       ) : null}
 
@@ -199,6 +212,7 @@ export default function AddFarmScreen() {
         contentContainerStyle={{ flexGrow: 1, padding: 20, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
+        <Animated.View key={step} entering={FadeInRight.duration(280)} exiting={FadeOutLeft.duration(160)} style={{ flex: 1 }}>
         {/* ── SLIDE 0: DRAW FROM SPACE ───────────────────────────────── */}
         {step === 0 && (
           <View style={st.slideWrapper}>
@@ -209,7 +223,7 @@ export default function AddFarmScreen() {
             <View style={{ gap: 8, alignItems: 'center', marginTop: 16 }}>
               <Text style={st.slideTitle}>Draw your field from space</Text>
               <Text style={st.slideSub}>
-                Tap corners on the satellite map to measure your exact acreage and track crop health every 2–3 days.
+                Tap the corners on the satellite map. Tassel measures it and watches its health from space.
               </Text>
             </View>
 
@@ -239,7 +253,7 @@ export default function AddFarmScreen() {
             <View style={{ gap: 6 }}>
               <Text style={st.slideTitle}>Name your field</Text>
               <Text style={st.slideSub}>
-                Give this plot a name so you can recognise it on your home screen and satellite passes.
+                We picked one for you. Change it if you like.
               </Text>
             </View>
 
@@ -287,7 +301,7 @@ export default function AddFarmScreen() {
             <View style={{ gap: 6 }}>
               <Text style={st.slideTitle}>Choose your crop</Text>
               <Text style={st.slideSub}>
-                Pick the primary crop growing in this plot. Tassel configures your crop calendar and diagnosis for it.
+                Tap the crop growing here.
               </Text>
             </View>
 
@@ -300,7 +314,9 @@ export default function AddFarmScreen() {
                     onPress={() => {
                       tick('select');
                       setCrop(c);
+                      setTimeout(() => setStep(3), 220);
                     }}
+                    accessibilityState={{ selected: isSelected }}
                     style={[st.cropCard, isSelected && st.cropCardSelected]}
                   >
                     <CropIcon crop={c} size={48} disc={false} />
@@ -322,7 +338,7 @@ export default function AddFarmScreen() {
             <View style={{ gap: 6 }}>
               <Text style={st.slideTitle}>When did you plant?</Text>
               <Text style={st.slideSub}>
-                This powers your week-by-week calendar with weeding, top-dressing and spray windows.
+                Tassel plans weeding, top-dressing and scouting from this date.
               </Text>
             </View>
 
@@ -338,6 +354,7 @@ export default function AddFarmScreen() {
                       onPress={() => {
                         tick('select');
                         setPlanted(d);
+                        setTimeout(nextStep, 220);
                       }}
                       style={[st.sugChip, isSelected && st.sugChipActive]}
                     >
@@ -384,7 +401,7 @@ export default function AddFarmScreen() {
             ) : null}
 
             <View style={{ flex: 1 }} />
-            <Btn label="Next" onPress={nextStep} style={{ minHeight: 54, marginTop: 30 }} />
+            <Btn label={polygon ? 'Save field' : 'Next'} loading={saving} onPress={nextStep} style={{ minHeight: 56, marginTop: 30 }} />
           </View>
         )}
 
@@ -394,7 +411,7 @@ export default function AddFarmScreen() {
             <View style={{ gap: 6 }}>
               <Text style={st.slideTitle}>How big is this field?</Text>
               <Text style={st.slideSub}>
-                Used to calculate fertiliser bags, pesticide spray quantities, and yield targets.
+                For fertiliser bags and spray amounts.
               </Text>
             </View>
 
@@ -404,7 +421,7 @@ export default function AddFarmScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={st.measuredTitle}>Measured from space</Text>
                   <Text raw style={st.measuredValue}>
-                    {t('Boundary drawn · {n} acres', { n: Number(size).toFixed(2) })}
+                    {fmtArea(Number(size), units)}
                   </Text>
                 </View>
               </View>
@@ -415,8 +432,9 @@ export default function AddFarmScreen() {
               <TouchableOpacity
                 onPress={() => {
                   tick('select');
-                  const cur = Math.max(0.25, Number(size || 1) - 0.5);
-                  setSize(cur.toFixed(2));
+                  const step = units === 'hectares' ? 0.25 : 0.5;
+                  const cur = Math.max(step, fromAcres(Number(size || 1), units) - step);
+                  setSize(toAcres(cur, units).toFixed(3));
                 }}
                 style={st.stepperBtn}
               >
@@ -426,19 +444,24 @@ export default function AddFarmScreen() {
               <View style={{ alignItems: 'center', minWidth: 100 }}>
                 <TextInput
                   style={st.stepperValueText}
-                  value={size}
-                  onChangeText={setSize}
+                  value={String(Number(fromAcres(Number(size || 0), units).toFixed(2)))}
+                  onChangeText={(v) => {
+                    const n = Number(v.replace(',', '.'));
+                    if (!Number.isNaN(n)) setSize(toAcres(n, units).toFixed(3));
+                  }}
                   keyboardType="decimal-pad"
                   selectTextOnFocus
+                  accessibilityLabel={t('Field size')}
                 />
-                <Text style={st.stepperUnitText}>acres</Text>
+                <Text style={st.stepperUnitText}>{units === 'hectares' ? 'hectares' : 'acres'}</Text>
               </View>
 
               <TouchableOpacity
                 onPress={() => {
                   tick('select');
-                  const cur = Number(size || 1) + 0.5;
-                  setSize(cur.toFixed(2));
+                  const step = units === 'hectares' ? 0.25 : 0.5;
+                  const cur = fromAcres(Number(size || 1), units) + step;
+                  setSize(toAcres(cur, units).toFixed(3));
                 }}
                 style={st.stepperBtn}
               >
@@ -450,44 +473,48 @@ export default function AddFarmScreen() {
             <View style={{ marginTop: 24, gap: 10 }}>
               <Text style={st.chipGroupLabel}>Quick sizes</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {['0.5', '1.0', '1.5', '2.0', '3.0', '5.0'].map((val) => (
-                  <TouchableOpacity
-                    key={val}
-                    onPress={() => {
-                      tick('select');
-                      setSize(val);
-                    }}
-                    style={[st.sugChip, size === val && st.sugChipActive]}
-                  >
-                    <Text raw style={[st.sugChipText, size === val && st.sugChipTextActive]}>
-                      {`${val} acres`}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {(units === 'hectares' ? [0.25, 0.5, 1, 2] : [0.5, 1, 2, 3, 5]).map((val) => {
+                  const acres = toAcres(val, units).toFixed(3);
+                  const on = Math.abs(Number(size) - Number(acres)) < 0.001;
+                  return (
+                    <TouchableOpacity
+                      key={val}
+                      onPress={() => {
+                        tick('select');
+                        setSize(acres);
+                      }}
+                      style={[st.sugChip, on && st.sugChipActive]}
+                    >
+                      <Text raw style={[st.sugChipText, on && st.sugChipTextActive]}>
+                        {fmtArea(Number(acres), units)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
 
             <View style={{ flex: 1 }} />
-            <Btn
-              label="Confirm planting"
-              icon="check-circle-outline"
-              loading={saving}
-              onPress={nextStep}
-              style={{ minHeight: 54, marginTop: 30 }}
-            />
+            <Btn label="Save field" icon="check-circle-outline" loading={saving} onPress={nextStep} style={{ minHeight: 56, marginTop: 30 }} />
           </View>
         )}
 
         {/* ── SLIDE 5: CELEBRATION / DONE ───────────────────────────── */}
         {step === 5 && (
           <View style={[st.slideWrapper, { alignItems: 'center', justifyContent: 'center', gap: 16 }]}>
-            <View style={st.celebrationIconWrap}>
-              <Icon name="check-bold" size={44} color="#FFFFFF" />
-            </View>
+            {polygon ? (
+              <View style={st.doneArt}>
+                <FieldHero polygon={polygon} grid={null} width={300} height={190} checking playKey={savedFarmId ?? 'new'} />
+              </View>
+            ) : (
+              <Animated.View entering={ZoomIn.springify().damping(12)} style={st.celebrationIconWrap}>
+                <CropIcon crop={crop} size={64} disc={false} />
+              </Animated.View>
+            )}
 
-            <Text style={st.celebrationTitle}>Field added to your farm!</Text>
+            <Text raw style={st.celebrationTitle}>{t('{name} is on your farm', { name })}</Text>
             <Text style={st.celebrationSub}>
-              Tassel is checking Sentinel-2 images from space… about a minute.
+              {polygon ? 'Checking your field from space… about a minute' : 'Draw it on the map later to see it from space.'}
             </Text>
 
             <View style={st.fieldSummaryCard}>
@@ -495,7 +522,7 @@ export default function AddFarmScreen() {
               <View style={{ flex: 1, gap: 2 }}>
                 <Text raw style={st.summaryName}>{name}</Text>
                 <Text raw style={st.summaryDetails}>
-                  {[cropName(crop), `${size} acres`].filter(Boolean).join(' · ')}
+                  {[cropName(crop), size ? fmtArea(Number(size), units) : null].filter(Boolean).join(' · ')}
                 </Text>
               </View>
             </View>
@@ -510,6 +537,7 @@ export default function AddFarmScreen() {
             />
           </View>
         )}
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -682,11 +710,12 @@ const st = StyleSheet.create({
     color: C.textSub,
     textAlign: 'center',
   },
+  doneArt: { width: 320, height: 210, borderRadius: 20, backgroundColor: C.brandDark, alignItems: 'center', justifyContent: 'center', marginTop: 20 },
   celebrationIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: C.primary,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: C.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 30,

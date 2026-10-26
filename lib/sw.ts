@@ -1341,4 +1341,18 @@ export const SW: Record<string, string> = {
   "Scan a sick leaf": "Skani jani gonjwa",
   "No field needed · works offline": "Huhitaji shamba · inafanya kazi bila mtandao",
   "Checking your fields…": "Tunaangalia mashamba yako…",
+
+  // ── v2.7 Add field slides ── flagged for native-speaker review
+  "Tap the corners on the satellite map. Tassel measures it and watches its health from space.": "Gusa kona za shamba kwenye ramani ya setilaiti. Tassel hulipima na kufuatilia afya yake kutoka angani.",
+  "We picked one for you. Change it if you like.": "Tumekuchagulia jina. Libadilishe ukipenda.",
+  "Tap the crop growing here.": "Gusa zao linalokua hapa.",
+  "Tassel plans weeding, top-dressing and scouting from this date.": "Tassel hupanga palizi, mbolea ya juu na ukaguzi kuanzia tarehe hii.",
+  "For fertiliser bags and spray amounts.": "Kwa mifuko ya mbolea na kiasi cha dawa.",
+  "Draw it on the map later to see it from space.": "Lichore kwenye ramani baadaye ulione kutoka angani.",
+  "{name} is on your farm": "{name} imeongezwa kwenye shamba lako",
+  "Measured from space": "Limepimwa kutoka angani",
+  "Quick sizes": "Ukubwa wa haraka",
+  "Quick choices": "Chaguo za haraka",
+  "Main Shamba": "Shamba Kuu",
+  "Remind me of season tasks (weeding, fertilising, scouting)": "Nikumbushe kazi za msimu (palizi, mbolea, ukaguzi)",
 };
