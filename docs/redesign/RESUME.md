@@ -1,4 +1,15 @@
-# Resume here (saved 26 Oct 2026, night)
+# Resume here (updated 28 Oct 2026)
+
+## 28 Oct session (all on `redesign/p1-home`, checked on the TECNO, nothing pushed)
+- Tasks 1–4 below are done; see README "Third phone pass". Task 5 is still open (release builds only).
+- `npm test` now shows: 16 PCPB, 6 profile, 7 field-art, 4 export, 8 diagram, 3 fertiliser tests, 7 rule guards.
+- The calendar test wrote to Kera Coffee and Evamos (Ezra's choice); both were put back to
+  Coffee, 2025-10-21 and 2025-11-29.
+- Next: the farmer check APK (needs versionCode 7 first); native-speaker review of the new
+  "flagged" strings in `lib/sw.ts`; Noto emoji were not added to the P2 screens (none earned one).
+
+---
+(26 Oct notes follow)
 
 ## Where things are
 - App repo: `Desktop\CropGuard-AI`, branch **`redesign/p1-home`**, last commit at save time below. Nothing pushed.

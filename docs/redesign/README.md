@@ -77,6 +77,29 @@ sees their field "arrive". Reduce-motion shows the final picture.
 - Advisory: animated diagrams for spacing, depth, rotation and certified seed, drawn only from the
   numbers in each step (`lib/diagramFacts.ts`, `scripts/test-diagrams.mjs`).
 
+## Third phone pass (28 Oct)
+
+Screenshots: `docs/redesign/shots/before-p2-*.jpg`, `after-p2-*.jpg`, `*-calendar-*`, `*-advisory-*`.
+
+- **Planting calendar (P0.3)**: field → crop → date → done → "Add another" → switch works.
+  Fixed: lowercase crop keys (names never translated), "Add another" kept the last date,
+  invisible white date chips (now 56 px tiles).
+- **Advisory cards**: the caption cut the step at 9 words with "…" and then repeated it; spacing
+  labels ran off the card. Certified-seed (beans) and tomato 60 × 45 cm cards render as designed.
+- **PCPB catalogue (rule 2)**: crops and problems were paired by clause, so Dorado was listed for
+  coffee berry disease on tomato and Shikwekwe 2,4-D for coffee ("NOT FOR USE IN COFFEE"). Now
+  paired by word order; 609 false pairs removed, products unchanged (1,118).
+- **Community (rule 3)**: a "Not sure" scan was posted as "Scanner detected Late blight (52%)" and the
+  feed showed guessed diseases. `isSure()` now gates the feed, post page and new post.
+- **Fertiliser (rule 1)**: coffee fields were planned with maize rates; crops with no guide are now
+  named and left off the list.
+- **Outbreaks**: the headline summed farmers across diseases; "this month" / "near you" are now
+  the real window and place; one all-clear message; map label no longer overlaps.
+- **Prices**: "Down 1.5% this month" was Sep→Nov 2025; now "since Sep 2025" with the price month.
+- **Profile**: spinner instead of "0 fields" while loading, retry on failure, no invented "Maize".
+- **Spray calculator**: scrolls to products after a pick; count no longer clipped; a tomato spray is
+  no longer sized for a coffee field.
+
 ## Not done / needs Ezra
 
 - **Phone checks still to do**: the planting-calendar flow; before/after shots of the other screens.
