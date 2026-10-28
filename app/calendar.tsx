@@ -6,7 +6,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Btn, Chip, CropIcon, Dot, Empty, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Sheet, Text, tick } from '../components/ui';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { TaskRow } from '../components/TaskRow';
+import { NotoEmoji } from '../components/NotoEmoji';
 import { DateField } from '../components/DateField';
 import { listFarms, updateFarm, type Farm } from '../lib/data';
 import { calendarFor, daysSince, fieldTasks, loadTicks, parseDate, saveTicks, toIsoDate, type FieldTask } from '../lib/calendar';
@@ -411,6 +413,16 @@ export default function CalendarScreen() {
               <DateField value={selectedDate} onChange={(iso) => iso && setSelectedDate(iso)} />
             </View>
 
+            {/* A field holds one crop: say so before a planting replaces what is there (e.g. coffee). */}
+            {selectedField?.crop && selectedField.crop.toLowerCase() !== selectedCrop.toLowerCase() ? (
+              <View style={st.replaceNote}>
+                <Icon name="swap-horizontal" size={20} color={C.accentDark} />
+                <Text raw style={[st.small, { flex: 1, color: C.text }]}>
+                  {t('This replaces {old} in {field}.', { old: cropName(selectedField.crop, lang), field: selectedField.name })}
+                </Text>
+              </View>
+            ) : null}
+
             <Btn
               label={t('Confirm planting')}
               icon="check"
@@ -421,7 +433,13 @@ export default function CalendarScreen() {
           </View>
         ) : (
           <View style={{ alignItems: 'center', gap: 14, paddingVertical: 12 }}>
-            <CropIcon crop={selectedCrop} size={64} />
+            {/* the season starts: the crop pops in and a seedling sprouts beside it */}
+            <Animated.View entering={ZoomIn.springify().damping(12)} style={{ width: 96, height: 80, alignItems: 'center', justifyContent: 'center' }}>
+              <CropIcon crop={selectedCrop} size={64} />
+              <View style={{ position: 'absolute', right: 0, bottom: 0 }}>
+                <NotoEmoji name="plant" size={40} />
+              </View>
+            </Animated.View>
             <Text style={{ fontSize: 22, fontFamily: FONT.display, color: C.text, textAlign: 'center' }}>
               {t('Planting calendar ready!')}
             </Text>
@@ -479,6 +497,7 @@ const st = StyleSheet.create({
   wizardRowTitle: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
   cropChoice: { width: '30%', minWidth: 90, flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 14, backgroundColor: C.bg, borderWidth: 1.5, borderColor: 'transparent' },
   cropChoiceSelected: { borderColor: C.primary, backgroundColor: C.primaryTint },
+  replaceNote: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: C.accentTint },
   dateChoice: { width: '47%', flexGrow: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderRadius: 14, backgroundColor: C.bg, borderWidth: 1.5, borderColor: 'transparent' },
   cropChoiceText: { fontSize: 14, color: C.textMid, textAlign: 'center' },
 });

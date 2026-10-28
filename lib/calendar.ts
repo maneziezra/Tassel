@@ -221,7 +221,10 @@ export function fieldTasks(farm: Farm, ticks: string[], lang: Lang = getLang(), 
   return cal.tasks.map((task) => {
     const startDate = new Date(planted.getTime() + task.start * DAY);
     const endDate = new Date(planted.getTime() + task.end * DAY);
-    const ticked = ticks.includes(task.id);
+    // A planting-day task is the planting the farmer recorded with this date: once that day has
+    // come it is done, not "missed" (a farmer who entered "planted 3 weeks ago" saw it in red).
+    const planting = task.end <= 0 && now >= startDate.getTime();
+    const ticked = ticks.includes(task.id) || planting;
     let status: TaskStatus;
     if (ticked) status = 'done';
     else if (now > endDate.getTime()) status = 'missed';
