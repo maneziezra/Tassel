@@ -1,6 +1,6 @@
 // Market — interactive prices, not a table.
 // Defaults automatically to the farmer's crops and county.
-// Each crop card features an SVG trend line sparkline and plain-language summary ("Up 8% this month").
+// Each crop card features an SVG trend line sparkline and plain-language summary ("Down 1.5% since Sep 2025", with the real dates).
 // One-tap quick report button and placeholder for direct market connection (P3 hook).
 
 import React, { useCallback, useMemo, useState } from 'react';
@@ -188,11 +188,14 @@ export default function MarketScreen() {
             const up = (change ?? 0) > 0;
             const tColor = change === null || change === 0 ? C.textSub : up ? C.primary : C.error;
 
+            // Name the real dates: reference prices can be months old, so "this month" was not true.
+            const month = (iso: string) => new Date(iso).toLocaleDateString(locale(lang), { month: 'short', year: 'numeric' });
             let changeWord = t('Reference price');
-            if (change !== null) {
-              if (change > 0) changeWord = t('Up {pct}% this month', { pct: change.toFixed(1) });
-              else if (change < 0) changeWord = t('Down {pct}% this month', { pct: Math.abs(change).toFixed(1) });
-              else changeWord = t('Steady this month');
+            if (change !== null && prev) {
+              const since = month(prev.observed_on);
+              if (change > 0) changeWord = t('Up {pct}% since {date}', { pct: change.toFixed(1), date: since });
+              else if (change < 0) changeWord = t('Down {pct}% since {date}', { pct: Math.abs(change).toFixed(1), date: since });
+              else changeWord = t('No change since {date}', { date: since });
             }
 
             return (
@@ -208,7 +211,7 @@ export default function MarketScreen() {
                   </Text>
                   <CropIcon crop={s.crop} size={22} disc={false} />
                 </View>
-                <Text style={st.market}>{s.market}</Text>
+                <Text raw style={st.market}>{`${t(s.market)} · ${month(last.observed_on)}`}</Text>
 
                 <Text raw style={st.amount}>
                   KES {last.price_kes.toLocaleString()}
@@ -223,7 +226,7 @@ export default function MarketScreen() {
                 {/* Plain-Language Change Word */}
                 <View style={st.changeRow}>
                   <Icon name={change === null || change === 0 ? 'minus' : up ? 'trending-up' : 'trending-down'} size={14} color={tColor} />
-                  <Text raw style={[st.change, { color: tColor }]}>
+                  <Text raw style={[st.change, { color: tColor, flex: 1 }]}>
                     {changeWord}
                   </Text>
                 </View>
@@ -428,8 +431,8 @@ const st = StyleSheet.create({
   market: { fontSize: 13, color: C.textSub, marginBottom: 4 },
   amount: { fontSize: 24, fontFamily: FONT.display, color: C.text },
   unit: { fontSize: 13, color: C.textSub, fontFamily: FONT.body },
-  changeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
-  change: { fontSize: 12, fontFamily: FONT.bodyBold },
+  changeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 4, marginTop: 8 },
+  change: { fontSize: 13, lineHeight: 17, fontFamily: FONT.bodyBold },
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, height: 130, paddingTop: 10 },
   bar: { width: '70%', borderRadius: 6 },
   barVal: { fontSize: 13, fontFamily: FONT.bodyBold, color: C.text },

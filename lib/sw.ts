@@ -1231,6 +1231,10 @@ export const SW: Record<string, string> = {
   "Up {pct}% this month": "Imepanda {pct}% mwezi huu",
   "Down {pct}% this month": "Imeshuka {pct}% mwezi huu",
   "Steady this month": "Imetulia mwezi huu",
+  // v2.7 prices: name the real dates (flagged for native-speaker review)
+  "Up {pct}% since {date}": "Imepanda {pct}% tangu {date}",
+  "Down {pct}% since {date}": "Imeshuka {pct}% tangu {date}",
+  "No change since {date}": "Haijabadilika tangu {date}",
   "Reference price": "Bei ya marejeleo",
   "Direct Market Connection": "Muunganisho wa Moja kwa Moja wa Soko",
   "Connect directly with verified local produce buyers, aggregators and millers.": "Ungana moja kwa moja na wanunuzi walioidhinishwa, wakusanyaji na wasagaji.",
