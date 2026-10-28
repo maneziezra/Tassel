@@ -121,7 +121,7 @@ Smallholder agriculture sustains over seventy-five percent of Kenya's population
 
 The engineering methodology deployed a quantized MobileNetV2 convolutional neural network across 154 disease, pest, and healthy classes spanning 34 crops. For field-scale surveillance, an automated satellite pipeline ingests European Space Agency Sentinel-2 Level-2A imagery at native resolution—computing 10-meter Normalized Difference Vegetation Index (NDVI) for canopy vigor and 20-meter Normalized Difference Water Index (NDWI_CROP) for liquid water stress—coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria. Chemical safety was operationalized through direct algorithmic enforcement of PCPB June 2025 gazette restrictions and automated dual knapsack tank-mix dilution calculations (16L and 20L sprayers).
 
-On 16,254 held-out dataset images the model reached 94.04% top-1 accuracy (macro F1 0.9266, calibration error 0.0096), and 97.33% when it reports at least 75% confidence; it runs offline from a 4.86 MB file. Field accuracy on Kenyan farm photos has not been measured yet. The pesticide catalogue was rebuilt from the official PCPB register (1,118 open-field products), with doses taken only from product labels. Tassel proves that edge artificial intelligence, strict regulatory compliance, and native multispectral remote sensing can be democratized to bolster smallholder food security, public health, and ecological resilience across Kenya.
+On 16,254 held-out dataset images the model reached 94.04% top-1 accuracy (macro F1 0.9266, calibration error 0.0096), and 97.33% when it reports at least 75% confidence; it runs offline from a 4.86 MB file. Field accuracy on Kenyan farm photos has not been measured yet. The pesticide catalogue was rebuilt from the official PCPB register (1,118 open-field products), with doses taken only from product labels. Tassel shows that offline crop-disease detection, PCPB-compliant spray advice and native-resolution satellite readings can be combined in one free app for Kenyan smallholders; its effect on harvests has not yet been measured.
 
 
 > **KSEF Metric Verification:** Abstract Word Count: Exactly 252 words. Structures Purpose, Methodology, Observations/Results, and Conclusion in strict adherence to official KSEF Guidelines.
@@ -245,7 +245,7 @@ Kenyan smallholder farmers operate in an information and technological vacuum ch
 
 The genesis of this research stems from direct personal observation of devastating agricultural realities in Uasin Gishu County, Kenya—a major agricultural grain and potato hub. Witnessing smallholders repeatedly losing entire potato harvests to Late Blight within forty-eight hours, and observing farm laborers mixing unmeasured quantities of dangerous, restricted chemicals like chlorpyrifos and dimethoate with bare hands, provided the compelling catalyst to engineer a locally calibrated, scientifically grounded technological intervention.
 
-The originality of Tassel (formerly CropGuard AI) lies in its novel synthesis of four previously disconnected technical domains into a zero-marginal-cost, offline mobile platform: (1) An ultra-lightweight, 154-class Convolutional Neural Network (MobileNetV2) trained on diverse agro-ecological datasets and quantized to execute 100% offline on low-cost Android hardware with sub-100 millisecond latency; (2) The world's first programmatic integration of Kenya's Pest Control Products Board (PCPB) June 2025 regulatory register, strictly excluding withdrawn carcinogens (e.g., chlorothalonil, open-field dimethoate, carbofuran) and providing lawful, localized chemical remedies; (3) An automated volumetric knapsack calibration engine that mathematically computes exact chemical and water dilution ratios for 16L and 20L tanks based on specific field area; and (4) Direct integration of European Space Agency (ESA) Sentinel-2 multispectral remote sensing data processed at native spatial resolutions (10m NDVI canopy vigor, 20m NDWI_CROP liquid moisture) coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria. Unlike existing commercial applications that treat African agriculture as a secondary market for generic cloud models, Tassel is engineered specifically from first principles for the Kenyan rural context.
+The originality of Tassel (formerly CropGuard AI) lies in its novel synthesis of four previously disconnected technical domains into a zero-marginal-cost, offline mobile platform: (1) An ultra-lightweight, 154-class Convolutional Neural Network (MobileNetV2) trained on diverse agro-ecological datasets and quantized to run fully offline on low-cost Android hardware (on-device latency not yet benchmarked); (2) A programmatic catalogue built from Kenya's Pest Control Products Board (PCPB) register of crop products (table of 24 Aug 2026), excluding the actives withdrawn or restricted in June 2025, such as withdrawn carcinogens chlorothalonil, open-field dimethoate and carbofuran, and naming only registered products for each crop and problem; (3) A knapsack calculator that scales the dose quoted on the product label to 16 L and 20 L tanks and to the field's area (no dose is shown unless it is quoted from the label); and (4) Direct integration of European Space Agency (ESA) Sentinel-2 multispectral remote sensing data processed at native spatial resolutions (10m NDVI canopy vigor, 20m NDWI_CROP liquid moisture) coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria. Unlike existing commercial applications that treat African agriculture as a secondary market for generic cloud models, Tassel is engineered specifically from first principles for the Kenyan rural context.
 
 
 ## 1.3 SMART Objectives
@@ -256,8 +256,8 @@ To design, develop, mathematically calibrate, and evaluate an offline-first Edge
 
 **Specific Research Objectives (SMART):** Specific Objectives:
 
-- **Specific Objective 1 (Edge-AI Model):** To curate, balance, train, and quantize an efficient MobileNetV2 deep learning architecture across 154 foliar disease, pest, and healthy plant classes, achieving greater than 94.0% top-1 validation accuracy and an on-device offline inference latency under 100 milliseconds on standard Android smartphones without internet connectivity.
-- **Specific Objective 2 (PCPB Compliance & Knapsack Calibration):** To formulate and embed an offline regulatory and agronomic decision-support engine strictly compliant with Kenya Pest Control Products Board (PCPB) June 2025 gazetted restrictions, featuring an exact volumetric dilution calculator for 16-liter and 20-liter knapsack sprayers that eliminates farmer dosage estimation errors.
+- **Specific Objective 1 (Edge-AI Model):** To curate, balance, train, and quantize an efficient MobileNetV2 deep learning architecture across 154 foliar disease, pest, and healthy plant classes, achieving greater than 94.0% top-1 accuracy on held-out dataset images, and running offline on standard Android smartphones without internet connectivity (target: under 100 milliseconds per scan; not yet benchmarked).
+- **Specific Objective 2 (PCPB Compliance & Knapsack Calibration):** To formulate and embed an offline regulatory and agronomic decision-support engine strictly compliant with Kenya Pest Control Products Board (PCPB) June 2025 gazetted restrictions, featuring a dilution calculator for 16-liter and 20-liter knapsack sprayers that scales only doses quoted on the product label.
 - **Specific Objective 3 (Multispectral Satellite Telemetry & Microclimate):** To engineer an automated Sentinel-2 multispectral satellite pipeline processing native 10-meter NDVI canopy vigor and native 20-meter NDWI_CROP liquid water stress (without spatial resampling distortion) coupled with Open-Meteo microclimate telemetry to evaluate Hutton Late Blight epidemiological risk at farm scale.
 - **Specific Objective 4 (Privacy-Preserving Edge Architecture & Community Alerts):** To construct an offline-first mobile application architecture utilizing local SQLite storage and Supabase Edge Functions with Row Level Security (RLS) to aggregate anonymized county-level disease outbreaks (at a statutory threshold of >= 2 independent farmers) and track hyper-local agricultural commodity market price medians.
 
@@ -267,9 +267,9 @@ The socio-economic and scientific justification for this project aligns directly
 
 From a food security and economic standpoint, empowering smallholder farmers to detect fungal and bacterial pathogens at the initial lesion stage prevents catastrophic harvest collapse. Acting on late blight or armyworm early, before they spread through the field, gives the farmer the best chance of protecting the harvest and household income. Avoiding unnecessary or wrong chemical purchases also saves money. Tassel has not yet measured these effects; the planned field pilot (Chapter 5) will.
 
-From a public health and ecological safety perspective, direct algorithmic enforcement of Kenya PCPB regulations represents a revolutionary safeguard. Chemical stockists and uneducated applicators frequently misuse restricted organophosphates and carcinogenic fungicides. By filtering recommendations through the June 2025 PCPB register, Tassel eliminates exposure to banned carcinogens (such as chlorothalonil) and prevents environmental contamination of rural water tables. Furthermore, precision knapsack dilution calculations prevent soil toxicity and chemical runoff.
+From a public health and ecological safety perspective, building PCPB rules into the app is a practical safeguard. Tassel never recommends the actives PCPB withdrew or restricted in June 2025 (such as chlorothalonil), and its tank calculator only scales the dose printed on the label, which should reduce overdosing and runoff. These effects have not yet been measured.
 
-From a technological perspective, Tassel pioneers edge artificial intelligence in African agriculture. By decoupling machine learning inference from cloud servers, the platform delivers zero-latency, free diagnostics to remote farmers situated beyond the reach of cellular broadband networks, bridging the digital divide in rural Kenya.
+From a technological perspective, Tassel runs its disease model on the phone rather than on a cloud server, so a scan needs no data bundle and works for farmers beyond the reach of mobile broadband.
 
 
 ## 1.5 Limitations (Merits and Demerits)
@@ -382,7 +382,7 @@ To detect liquid water stress before permanent cellular wilting occurs, Tassel d
 
 *Equation 2.6 (Canopy Water Content Index):* NDWI_CROP = ( ρ_NIR - ρ_SWIR ) / ( ρ_NIR + ρ_SWIR ) = ( Band 8A - Band 11 ) / ( Band 8A + Band 11 )
 
-Crucially, Tassel strictly enforces spatial resolution discipline: Sentinel-2 Band 11 is natively captured at 20-meter spatial resolution. Unlike flawed commercial systems that interpolate Band 11 to 10 meters, Tassel computes crop water stress strictly on the native 20-meter analysis grid, averaging the four 10-meter VNIR pixels inside each 20-meter cell via an exact 2 x 2 block average, guaranteeing zero synthetic interpolation artifacts.
+Crucially, Tassel strictly enforces spatial resolution discipline: Sentinel-2 Band 11 is natively captured at 20-meter spatial resolution. Rather than resampling Band 11 to 10 meters, Tassel computes crop water stress on the native 20-meter grid, averaging the 10-meter Band 8 values inside each 20-meter cell, so no 10-meter water information is invented.
 
 
 ### 2.3.4 Epidemiological Microclimate Modeling (The Hutton Criteria)
@@ -396,7 +396,7 @@ By interfacing with the Open-Meteo hourly weather telemetry API, Tassel evaluate
 
 ### 2.3.5 Kenya PCPB Regulatory Framework and Volumetric Knapsack Spray Mathematics
 
-Kenya's Pest Control Products Act (Cap 346) mandates that only chemically evaluated, toxicologically approved commercial formulations may be distributed or applied. Tassel programmatically encodes the official June 2025 PCPB Gazette register, establishing an absolute software filter that eliminates withdrawn actives and flags restricted substances.
+Kenya's Pest Control Products Act (Cap 346) mandates that only chemically evaluated, toxicologically approved commercial formulations may be distributed or applied. Tassel's catalogue is built by a script from the official PCPB register of crop products (pcpb.go.ke, table of 24 Aug 2026). The build drops the actives withdrawn or restricted in the June 2025 review and products marked "not for open field", and flags mancozeb as under review.
 
 To bridge the gap between commercial product labels and smallholder reality, Tassel derives an exact volumetric knapsack dilution formula. If a commercial chemical formulation has a statutory recommended label rate of R_label (expressed in liters/hectare for liquid formulations or kilograms/hectare for wettable powders) and a recommended carrier water volume of V_water (in liters/hectare, typically 200 to 400 L/ha for foliar application), the precise chemical dose required per knapsack tank D_tank (in milliliters or grams) is mathematically derived as:
 
@@ -450,7 +450,7 @@ A pre-trained MobileNetV2 architecture (pre-trained on ImageNet-1K) was instanti
 
 **Phase 3: Edge Quantization.** Phase 3: Post-Training Quantization and Mobile Benchmarking
 
-The trained TensorFlow model was exported to TensorFlow Lite format using post-training Float16 quantization. The quantized flatbuffer model (cropguard.tflite) was packaged directly into the mobile application's local asset directory. Automated benchmarking scripts utilizing the Android Debug Bridge (ADB) executed 500 consecutive inference cycles on the physical test smartphone to record inference latency, CPU utilization, and thermal stability.
+The trained TensorFlow model was exported to TensorFlow Lite format using post-training Float16 quantization. The quantized flatbuffer model (cropguard.tflite) was packaged directly into the mobile application's local asset directory. On-device inference latency, CPU use and thermal behaviour have not yet been benchmarked; they are part of the planned pilot.
 
 **Phase 4: Mobile System Engineering.** Phase 4: Edge Application Architecture and Offline Data Pipeline
 
@@ -486,9 +486,9 @@ In accordance with scientific rigor, the experimental variables manipulated, mea
 **Responding Variables:** 2. Responding (Dependent) Variables:
 
 - **a. Accuracy:** Classification accuracy metrics (Top-1 Validation Accuracy %, Top-5 Validation Accuracy %).
-- **b. Inference Latency:** On-device edge inference latency (measured in milliseconds, ms).
+- **b. Inference Latency:** On-device edge inference latency in milliseconds (not yet measured; planned).
 - **c. Storage Footprint:** Compiled model binary storage footprint (measured in megabytes, MB).
-- **d. Dosing Accuracy:** Chemical tank dilution dosing accuracy (deviation from statutory PCPB active ingredient concentrations, %).
+- **d. Dosing Accuracy:** Tank-mix dose compared with the dose on the PCPB-approved label (checked by unit tests for the label rates in the app; not measured in the field).
 - **e. Biophysical Indices:** Effective biophysical vegetation indices (NDVI vigor index [0.0 to 1.0], NDWI_CROP water stress index [-1.0 to +1.0]).
 **Controlled Variables:** 3. Controlled Variables:
 
@@ -597,14 +597,14 @@ Regarding optical satellite telemetry, persistent cloud cover during the long ra
 ## 4.4 Planned Pilot Methodology for Kenyan Ground-Truth Field Validation
 
 
-> **Scientific Integrity Statement:** Scientific Rigor Note: In strict adherence to scientific integrity and KSEF competition ethics (Rule 1: Zero Invented Numbers), no fabricated field accuracy claims or fictitious farmer satisfaction surveys are presented in this report. The field validation methodology detailed below represents our fully formulated, peer-reviewed operational protocol scheduled for execution during the upcoming crop season.
+> **Scientific Integrity Statement:** Scientific Rigor Note: In strict adherence to scientific integrity and KSEF competition ethics (Rule 1: Zero Invented Numbers), no fabricated field accuracy claims or fictitious farmer satisfaction surveys are presented in this report. The field validation methodology below is our planned protocol for the upcoming crop season. It has not yet been peer-reviewed, and the sample sizes are proposals to be confirmed with our supervisor.
 
 To rigorously validate Tassel's diagnostic accuracy, agronomic efficacy, and usability under genuine Kenyan farming conditions, a comprehensive Tier 1 Field Validation Pilot has been designed across Uasin Gishu and Kiambu counties:
 
 - **1. Cohort Selection & Scale:** Target Population: 500 smallholder farmers (250 in Uasin Gishu cultivating maize, wheat, and potato; 250 in Kiambu cultivating tomato, beans, and cabbage). Deployment will be executed in collaboration with local registered agrovets and youth agricultural field champions.
-- **2. Agronomist Ground-Truthing:** Collection and professional annotation of 500+ fresh, in-situ Kenyan crop leaf photographs captured directly in smallholder fields under diverse lighting conditions. Three independent KALRO/university phytopathologists will perform blind microscopic ground-truth diagnoses to establish a gold-standard local validation benchmark (kenya_test).
+- **2. Agronomist Ground-Truthing:** At least 100 fresh leaf photographs taken in Eldoret-area smallholder fields under real lighting, each labelled by an agronomist who does not see the app's answer, scanned with the current build and logged; accuracy reported with a confidence interval and per-class precision and recall (kenya_test).
 - **3. Satellite Ground-Truth Calibration:** Execution of 250 physical farm field visits to measure in-situ soil moisture, stomatal conductance, and visual canopy stress across mapped polygons, correlating ground-truth measurements with Sentinel-2 10m NDVI and 20m NDWI_CROP satellite readings across 10-day intervals.
-- **4. Kiswahili Linguistic Validation:** Comprehensive linguistic and agronomic review of all 1,177 localized Kiswahili strings (lib/sw.ts) by native agricultural extension officers to guarantee absolute terminological precision and rural farmer comprehension.
+- **4. Kiswahili Linguistic Validation:** Review of the Kiswahili strings in lib/sw.ts (about 1,100) by native speakers with agricultural knowledge, starting with those flagged for review, to check the terms and that farmers understand them.
 - **5. Economic Impact Assessment:** Evaluation of chemical expenditure, disease incidence rates, and final crop yields across a 6-month longitudinal trial comparing Tassel-guided smallholders against a matched control group practicing conventional visual scouting and uncalibrated chemical application.
 
 
@@ -622,10 +622,10 @@ This research successfully designed, developed, mathematically calibrated, and e
 The project decisively achieved all four of its SMART objectives:
 
 - **1. Objective 1 Attainment:** A MobileNetV2 model (v5) was trained across 154 classes on 34 crops and reached 94.04% top-1 accuracy on 16,254 held-out dataset images (macro F1 0.9266, calibration error 0.0096; 97.33% when at least 75% confident). It runs offline from a 4.86 MB file. Field accuracy has not been measured yet.
-- **2. Objective 2 Attainment:** The platform successfully embedded Kenya's Pest Control Products Act (Cap 346) and June 2025 PCPB gazetted restrictions into an offline regulatory engine, completely eliminating banned carcinogens and termiticides while providing exact, mathematically validated knapsack tank-mix dilution calculations (16L and 20L sprayers) that eliminate farmer dosing errors.
+- **2. Objective 2 Attainment:** The app's offline catalogue lists only products on the PCPB register, excludes the actives withdrawn or restricted in June 2025, pairs each product only with the crops and problems the register names it for, and shows a tank mix for 16 L and 20 L sprayers only when the dose is quoted from the product label (otherwise "See the label"). Its effect on farmers' dosing has not yet been measured.
 - **3. Objective 3 Attainment:** An automated Sentinel-2 multispectral remote sensing pipeline was operationalized at native spatial resolution (10m NDVI canopy vigor, 20m NDWI_CROP liquid moisture) coupled with Open-Meteo microclimate forecasting executing the Hutton Late Blight criteria, enabling proactive preventative disease management without expensive on-farm hardware sensors.
 - **4. Objective 4 Attainment:** A privacy-preserving mobile architecture was constructed utilizing local SQLite persistence and Supabase Edge Functions with Row Level Security, enabling anonymized county-level disease outbreak tracking (threshold >= 2 farmers) and localized commodity market price transparency.
-In conclusion, Tassel proves that advanced artificial intelligence and spaceborne satellite remote sensing can be democratized into a zero-marginal-cost, legally compliant, offline mobile tool that empowers Kenyan smallholders, protects public health from toxic chemicals, and bolsters national food security.
+In conclusion, Tassel shows that a disease model, satellite field readings and PCPB-compliant spray advice can be built into one free, offline-first mobile tool for Kenyan smallholders. Whether it improves harvests, income or chemical use is what the planned field pilot will measure.
 
 
 ## 5.2 Recommendations for Further Research and Expansion

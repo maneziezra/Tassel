@@ -28,6 +28,14 @@ test('rule 1: none of the fabricated study figures appear in the app', () => {
   for (const f of files) for (const re of banned) assert.ok(!re.test(read(f)), `${path.relative(root, f)} matches ${re}`);
 });
 
+test('rule 1: the KSEF report claims no fabricated or unmeasured result', () => {
+  const report = read(path.join(root, 'docs/KSEF_2026_TASSEL_PROJECT_REPORT.md'));
+  const banned = [/86\s?%\s?vs\.?\s?40\s?%/i, /\b43\s?\/\s?50\b/, /\b4\.4\s?\/\s?5\b/, /\b4\.8\s?\/\s?5\b/, /100\s?% of 50/i, /\b5\.1\s?\/\s?6\b/, /\b97\.4\s?%/, /\b94\.7\s?%/,
+    /sub-100 millisecond/i, /500 consecutive inference/i, /world's first/i, /peer-reviewed operational protocol/i, /eliminates farmer dos/i];
+  for (const re of banned) assert.ok(!re.test(report), `report matches ${re}`);
+  assert.match(report, /Field accuracy[^.|]*not (been )?measured/i, 'the report says field accuracy is not measured');
+});
+
 test('rule 1: every model count written in the app matches assets/model/class_labels.json', () => {
   const labels = JSON.parse(read(path.join(root, 'assets/model/class_labels.json')));
   const list = Array.isArray(labels) ? labels : Object.values(labels);
