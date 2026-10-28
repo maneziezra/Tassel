@@ -1239,6 +1239,8 @@ export const SW: Record<string, string> = {
   "{area} total": "jumla {area}",
   // v2.7 offline: no forecast is said, not guessed (flagged for native-speaker review)
   "No forecast for today": "Hakuna utabiri wa leo",
+  "No reading from space on this phone yet": "Bado hakuna kipimo cha setilaiti kwenye simu hii",
+  "It loads when you have signal.": "Kitapakia ukipata mtandao.",
   "Offline. Scanning still works; your fields are shown as last saved.": "Hakuna mtandao. Ukaguzi bado unafanya kazi; mashamba yako yanaonyeshwa kama yalivyohifadhiwa mwisho.",
   "Spray advice needs a forecast. It updates when you have signal.": "Ushauri wa kunyunyizia unahitaji utabiri. Utasasishwa ukipata mtandao.",
   "Based on 50 kg bag prices": "Kwa bei za mifuko ya kilo 50",

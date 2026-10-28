@@ -224,9 +224,16 @@ export default function HomeScreen() {
     try {
       setIncidents(await listIncidents({ limit: 30 }));
       setOffline(false);
-      latestSatellite().then(setSatSummaries).catch(() => {});
+      latestSatellite()
+        .then((s) => {
+          setSatSummaries(s);
+          saveCached('satSummaries', s); // offline the verdict reads the last one (it said "Checking…")
+        })
+        .catch(() => {});
     } catch {
       setOffline(true);
+      const s = await loadCached<Awaited<ReturnType<typeof latestSatellite>>>('satSummaries');
+      if (s) setSatSummaries(s);
     } finally {
       loadWeather(f);
       setLoaded(true);
@@ -298,6 +305,10 @@ export default function HomeScreen() {
     if (!activeFarm.polygon) {
       return { text: t('Draw this field to see it from space'), meta: t('Tap to open the field'), tone: 'none' as const };
     }
+    if (!activeReading && offline) {
+      // not "checking": nothing is being checked without signal
+      return { text: t('No reading from space on this phone yet'), meta: t('It loads when you have signal.'), tone: 'none' as const };
+    }
     if (!activeReading || activeReading.tone === 'none') {
       return { text: t('Checking your field from space'), meta: t('About a minute. Tassel needs a few clear pictures to learn this field.'), tone: 'none' as const };
     }
@@ -312,7 +323,7 @@ export default function HomeScreen() {
       };
     }
     return { text: t('Part of your field is drying — check {zone}', { zone: zoneName(activeReading.zone) }), meta, tone: 'watch' as const };
-  }, [activeFarm, activeReading, t, lang]);
+  }, [activeFarm, activeReading, offline, t, lang]);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
