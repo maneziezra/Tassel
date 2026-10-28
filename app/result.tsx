@@ -1,12 +1,15 @@
-// Scan result — one clear verdict first (crop, problem, how sure), then what it
-// looks like, what to do in order, where to buy inputs, and the next actions.
-// v2.2: calm layout (no tinted panels), steps as numbered lists, field picker sheet.
+// Scan result — v2.7: pictures, not paragraphs (Ezra, 29 Oct: "items not information").
+// Order: the leaf, one verdict (crop, problem, how sure, how urgent), what it is and how it
+// spreads as pictures, "do this now" as three picture tiles (tap for the full step), sprays as
+// one tile (PCPB-registered only), then the next actions as an icon grid. The long text is
+// folded under "More details". Rule 3: below 75 % nothing names a disease or offers a spray.
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, tick, type IconName } from '../components/ui';
+import { NotoEmoji } from '../components/NotoEmoji';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
 import { PcpbProductCard } from '../components/PcpbProductCard';
@@ -15,7 +18,8 @@ import { addFarm, listFarms, saveIncident, type Farm } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
 import { openScanner } from '../lib/navigation';
 import { useLang } from '../lib/i18n';
-import { C, FONT, KIND_META, URGENCY_META, confidenceBand } from '../lib/theme';
+import { KIND_PICTURE, URGENCY_LEVEL, spreadPictures, stepIcon, stepTitle, type Picture } from '../lib/resultPictures';
+import { C, FONT, URGENCY_META, confidenceBand } from '../lib/theme';
 
 export default function ResultScreen() {
   const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string }>();
@@ -43,8 +47,6 @@ export default function ResultScreen() {
     [uncertain, label, raw, base]
   );
 
-  const scroll = useRef<ScrollView>(null);
-  const [todoY, setTodoY] = useState(0);
   // A confirmation you can feel: success for a healthy leaf, a light tap otherwise.
   useEffect(() => {
     tick(!uncertain && base.healthy ? 'success' : 'light');
@@ -56,6 +58,9 @@ export default function ResultScreen() {
   const [savedId, setSavedId] = useState<string | null>(p.incidentId ?? null);
   const [agrovets, setAgrovets] = useState<Agrovet[] | null>(null);
   const [agroStatus, setAgroStatus] = useState('');
+  const [step, setStep] = useState<number | null>(null); // the "do this now" tile opened
+  const [sprays, setSprays] = useState(false);
+  const [details, setDetails] = useState(false);
 
   // English names are stored in the database; the screen shows the app language.
   const cropEn = raw?.crop ?? base.crop;
@@ -63,7 +68,7 @@ export default function ResultScreen() {
   const crop = info?.crop ?? cropName(base.crop, lang);
   const disease = info?.disease ?? base.disease;
   const healthy = base.healthy;
-  const pct = `${(confidence * 100).toFixed(1)}%`;
+  const pct = `${Math.round(confidence * 100)}%`;
   const altName = (l: string) => {
     const d = getDisease(l);
     const loc = d ? localizeDisease(d, lang) : null;
@@ -71,11 +76,12 @@ export default function ResultScreen() {
     return `${loc?.crop ?? cropName(b.crop, lang)} — ${loc?.disease ?? b.disease}`;
   };
 
-  const status: { text: string; icon: IconName; color: string } = uncertain
-    ? { text: 'Not sure — check again', icon: 'help-circle', color: C.warn }
-    : healthy
-    ? { text: 'Healthy leaf', icon: 'check-circle', color: C.primary }
-    : { text: 'Disease detected', icon: 'alert-circle', color: C.error };
+  // Pictures come from the English guide text (same pictures in Kiswahili); words from the app language.
+  const kindPic = info && !healthy ? KIND_PICTURE[info.kind] : undefined;
+  const spreadPics = !healthy ? spreadPictures(raw?.spread) : [];
+  const steps = (info?.cultural ?? []).slice(0, 3).map((text, i) => ({ text, title: stepTitle(text), icon: stepIcon(raw?.cultural[i] ?? text) as IconName }));
+  const urgency = info ? URGENCY_META[info.urgency] : URGENCY_META.medium;
+  const urgencyLevel = info ? URGENCY_LEVEL[info.urgency] ?? 2 : 0;
 
   const openSave = async () => {
     try {
@@ -92,6 +98,7 @@ export default function ResultScreen() {
     try {
       const rec = await saveIncident({ farm_id: farmId, class_label: label, crop: cropEn, disease: diseaseEn, confidence, uncertain, notes: null });
       setSavedId(rec.id);
+      tick('success');
       Alert.alert(t('Saved'), farmId ? t("Added to the field's disease history.") : t('Saved to your scan history.'));
     } catch (e) {
       Alert.alert(t('Save failed'), e instanceof Error ? e.message : t('Please try again.'));
@@ -110,8 +117,8 @@ export default function ResultScreen() {
   };
 
   const shareText = () =>
-    `${t('Tassel scan')}\n${t('Crop')}: ${crop}\n${t('Result')}: ${uncertain ? t('Uncertain (best guess: {d})', { d: disease }) : disease}\n${t('Confidence')}: ${pct}\n` +
-    (info && !healthy ? `${t('What to do first')}: ${info.cultural[0]}\n` : '') +
+    `${t('Tassel scan')}\n${t('Crop')}: ${crop}\n${t('Result')}: ${uncertain ? t('Not sure') : disease}\n${t('Confidence')}: ${pct}\n` +
+    (info && !healthy && !uncertain ? `${t('What to do first')}: ${info.cultural[0]}\n` : '') +
     t('Checked on-device with Tassel. Confirm with your extension officer.');
 
   const shareWhatsApp = async () => {
@@ -137,7 +144,6 @@ export default function ResultScreen() {
     });
 
   // AI photo check (online): second opinion for pests, deficiencies and crops the offline model does not know.
-  const photoCheckLabel = lang === 'sw' ? 'Ukaguzi wa picha wa AI (wadudu, upungufu)' : 'AI photo check (pests, deficiencies)';
   const openPhotoCheck = () =>
     router.push({ pathname: '/photo-check', params: { uri: p.uri ?? '', crop: cropEn, scanLabel: label, scanConfidence: String(confidence) } });
 
@@ -159,285 +165,296 @@ export default function ResultScreen() {
   };
 
   const listenText = () => {
-    const parts = [t(status.text), `${crop}. ${disease}. ${t('Confidence')} ${Math.round(confidence * 100)}%.`];
-    if (uncertain) parts.push(t('Confidence is low. Retake the photo of a single leaf in daylight, or ask an extension officer.'));
-    if (info) {
-      parts.push(info.symptoms);
-      parts.push(`${t(healthy ? 'Good practice' : 'Do this first (cultural)')}: ${info.cultural.join(' ')}`);
-      if (info.biological.length) parts.push(`${t('Organic / biological options')}: ${info.biological.join(' ')}`);
-    }
+    if (uncertain) return `${t('Not sure')}. ${t('Retake the photo of one leaf, in daylight, close and steady.')}`;
+    const parts = [`${crop}. ${healthy ? t('Healthy leaf') : disease}. ${t(band.word)}.`];
+    if (info && !healthy) parts.push(t(urgency.label));
+    if (steps.length) parts.push(`${t(healthy ? 'Keep it healthy' : 'Do this now')}: ${steps.map((s) => s.text).join(' ')}`);
     return parts.join(' ');
   };
 
-  const kind = info ? KIND_META[info.kind] : KIND_META.Fungal;
-  const urgency = info ? URGENCY_META[info.urgency] : URGENCY_META.medium;
+  // The next actions, as an icon grid. Only what applies to this result.
+  const actions: { icon: IconName; label: string; onPress: () => void; on?: boolean }[] = [
+    ...(info && !healthy && !uncertain
+      ? [{ icon: 'calendar-clock' as IconName, label: 'Day-by-day plan', onPress: () => router.push({ pathname: '/treatment-plan', params: { label, incidentId: savedId ?? '' } }) }]
+      : []),
+    { icon: savedId ? 'check-circle' : 'content-save-outline', label: savedId ? 'Saved' : 'Save to my farm', onPress: () => !savedId && openSave(), on: Boolean(savedId) },
+    { icon: 'account-group-outline', label: 'Ask the community', onPress: askCommunity },
+    ...(p.uri ? [{ icon: 'image-search-outline' as IconName, label: 'Check online (AI)', onPress: openPhotoCheck }] : []),
+    ...(!uncertain ? [{ icon: 'chat-processing-outline' as IconName, label: 'Ask the AI advisor', onPress: () => router.push({ pathname: '/chat', params: { crop: cropEn, disease: diseaseEn, confidence: String(confidence) } }) }] : []),
+    { icon: 'whatsapp', label: 'Share', onPress: shareWhatsApp },
+    ...(!uncertain ? [{ icon: 'camera-retake-outline' as IconName, label: 'Scan another leaf', onPress: openScanner }] : []),
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Header
-        title="Scan result"
-        subtitle={p.inferMs ? t('Analysed on this phone in {ms} ms', { ms: Number(p.prepareMs ?? 0) + Number(p.inferMs) }) : undefined}
-        right={<ListenButton compact text={listenText} />}
-      />
-      <ScrollView ref={scroll} contentContainerStyle={{ paddingBottom: 48 }}>
-        {p.uri ? <Image source={{ uri: p.uri }} style={st.leaf} resizeMode="cover" /> : null}
+      <Header title="Scan result" right={<ListenButton compact text={listenText} />} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+        {p.uri ? <Image source={{ uri: p.uri }} style={st.leaf} resizeMode="cover" accessibilityLabel={t('Your photo')} /> : null}
 
-        {/* Verdict */}
-        <Animated.View entering={FadeInDown.springify().damping(16)} style={st.panel}>
-          {/* Rule 3: below the threshold nothing on this card names a crop or disease as fact. */}
-          {!uncertain ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <CropIcon crop={cropEn} size={44} />
-            <View style={{ flex: 1 }}>
-              <Text raw style={st.crop}>
-                {crop}
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Dot color={status.color} />
-                <Text style={[st.status, { color: status.color }]}>{status.text}</Text>
+        {/* ── Verdict ─────────────────────────────────────────────── */}
+        <Animated.View entering={FadeInDown.springify().damping(16)} style={st.verdict}>
+          {uncertain ? (
+            // Rule 3: no crop or disease as fact; the guess is small.
+            <View style={{ alignItems: 'center', gap: 6 }}>
+              <Animated.View entering={ZoomIn.springify().damping(12)} style={[st.bigBadge, { backgroundColor: C.warnTint ?? C.accentTint }]}>
+                <Icon name="help" size={44} color={C.warn} />
+              </Animated.View>
+              <Text style={st.verdictWord}>Not sure</Text>
+              <Text raw style={st.small}>{t('Best guess: {d}', { d: `${crop} — ${disease}` })}</Text>
+            </View>
+          ) : healthy ? (
+            <View style={{ alignItems: 'center', gap: 6 }}>
+              <Animated.View entering={ZoomIn.springify().damping(12)} style={[st.bigBadge, { backgroundColor: C.primaryTint }]}>
+                <NotoEmoji name="party" size={64} />
+              </Animated.View>
+              <Text style={st.verdictWord}>Healthy leaf</Text>
+              <View style={st.cropRow}>
+                <CropIcon crop={cropEn} size={28} disc={false} />
+                <Text raw style={st.cropName}>{crop}</Text>
               </View>
             </View>
+          ) : (
+            <>
+              <View style={st.cropRow}>
+                <CropIcon crop={cropEn} size={36} />
+                <Text raw style={st.cropName}>{crop}</Text>
+              </View>
+              <Text raw style={st.disease}>{disease}</Text>
+            </>
+          )}
+
+          {/* How sure: three steps, the word carries the meaning (not only colour) */}
+          <View style={st.meterRow}>
+            <Text style={st.meterLabel}>How sure</Text>
+            <View style={st.meter}>
+              {[0.0001, 0.75, 0.9].map((from, i) => (
+                <View key={i} style={[st.meterSeg, { backgroundColor: confidence >= from ? band.color : C.sunken }]} />
+              ))}
             </View>
-          ) : null}
-          <Text raw style={st.disease}>
-            {uncertain ? t('Not sure') : disease}
-          </Text>
-          {uncertain ? (
-            <Text raw style={[st.small, { marginTop: -4, marginBottom: 6 }]}>
-              {t('Best guess: {d}', { d: `${crop} — ${disease}` })}
-            </Text>
-          ) : null}
-          <View style={{ gap: 6 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              {!uncertain ? (
-                <View style={[st.confPill, { backgroundColor: band.tint }]}>
-                  <Text style={[st.confWord, { color: band.color }]}>{band.word}</Text>
-                </View>
-              ) : (
-                <Text style={st.small}>Confidence</Text>
-              )}
-              <Text raw style={[st.small, { color: band.color, fontFamily: FONT.bodyBold }]}>
-                {pct}
-              </Text>
-            </View>
-            <ProgressBar value={confidence} color={band.color} height={8} />
+            <Text raw style={[st.meterWord, { color: band.color }]}>{`${t(band.word)} · ${pct}`}</Text>
           </View>
+
+          {/* How urgent: four steps, from the guide's urgency */}
           {info && !healthy && !uncertain ? (
-            <Text raw style={[st.small, { marginTop: 12 }]}>
-              {[t(info.kind), info.pathogen].filter(Boolean).join(' · ')}
-              {'  '}
-              <Text raw style={{ color: urgency.color, fontFamily: FONT.bodyBold }}>
-                {t(urgency.label)}
-              </Text>
-            </Text>
+            <View style={st.meterRow}>
+              <Text style={st.meterLabel}>How urgent</Text>
+              <View style={st.meter}>
+                {[1, 2, 3, 4].map((lvl) => (
+                  <View key={lvl} style={[st.meterSeg, { backgroundColor: lvl <= urgencyLevel ? urgency.color : C.sunken }]} />
+                ))}
+              </View>
+              <Text style={[st.meterWord, { color: urgency.color }]}>{urgency.label}</Text>
+            </View>
           ) : null}
+
           {info?.notifiable && !uncertain ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
-              <Dot color={C.error} />
-              <Text style={[st.small, { color: C.error, fontFamily: FONT.bodyBold }]}>Report to authorities</Text>
+            <View style={st.alertRow}>
+              <Icon name="bullhorn-outline" size={20} color={C.error} />
+              <Text style={[st.small, { color: C.error, fontFamily: FONT.bodyBold, flex: 1 }]}>Report to your county agricultural officer</Text>
             </View>
           ) : null}
         </Animated.View>
 
-        {/* The three next steps (confident results; "Not sure" has its own panel below) */}
-        {!uncertain ? (
-          <View style={st.actions}>
-            {info ? <Btn label={healthy ? 'Keep it healthy' : 'What to do'} icon="clipboard-check-outline" kind="signature" onPress={() => scroll.current?.scrollTo({ y: todoY, animated: true })} /> : null}
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ flex: 1 }} onPress={askCommunity} />
-              {p.uri ? <Btn label="Check online (AI)" icon="image-search-outline" kind="secondary" style={{ flex: 1 }} onPress={openPhotoCheck} /> : null}
+        {/* ── Not sure: retake first, tips as pictures ────────────── */}
+        {uncertain ? (
+          <View style={{ marginHorizontal: 16, marginTop: 14, gap: 12 }}>
+            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={openScanner} />
+            <View style={st.tipRow}>
+              {[
+                { icon: 'white-balance-sunny' as IconName, label: 'Daylight' },
+                { icon: 'leaf' as IconName, label: 'One leaf' },
+                { icon: 'hand-back-right-outline' as IconName, label: 'Close and steady' },
+              ].map((x) => (
+                <View key={x.label} style={st.tipItem}>
+                  <View style={st.tipIcon}>
+                    <Icon name={x.icon} size={28} color={C.primaryDark} />
+                  </View>
+                  <Text style={st.tipLabel}>{x.label}</Text>
+                </View>
+              ))}
             </View>
           </View>
         ) : null}
 
-        {/* Uncertain: no fabricated diagnosis */}
-        {uncertain ? (
-          <View style={st.actions}>
-            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={openScanner} />
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {p.uri ? <Btn label="Check online (AI)" icon="image-search-outline" kind="secondary" style={{ flex: 1 }} onPress={openPhotoCheck} /> : null}
-              <Btn label="Ask the community" icon="account-group-outline" kind="secondary" style={{ flex: 1 }} onPress={askCommunity} />
+        {/* ── What it is · how it spreads ─────────────────────────── */}
+        {!uncertain && (kindPic || spreadPics.length) ? (
+          <View style={st.section}>
+            <View style={st.picRow}>
+              {kindPic ? <PictureItem pic={kindPic} caption="What it is" strong /> : null}
+              {spreadPics.map((pic) => (
+                <PictureItem key={pic.key} pic={pic} caption="Spreads by" />
+              ))}
             </View>
           </View>
         ) : null}
-        {uncertain ? (
-          <View style={st.panel}>
-            <Text style={st.h}>The scanner is not sure</Text>
-            <Text style={st.body}>
-              {t('Confidence is below {n}%, so treat this as a guess. Retake the photo of a single leaf in daylight, or show the plant to an extension officer or agro-dealer.', {
-                n: Math.round(CONFIDENCE_THRESHOLD * 100),
-              })}
-            </Text>
-            {hints.length ? (
-              <>
-                <Text style={[st.h2, { marginTop: 14 }]}>Also check for pests the scanner can miss:</Text>
-                {hints.map((h) => (
-                  <View key={h} style={st.li}>
-                    <View style={{ paddingTop: 8 }}>
-                      <Dot color={C.textLight} size={5} />
+
+        {/* ── Do this now: three picture tiles; tap for the full step ─ */}
+        {!uncertain && steps.length ? (
+          <View style={st.section}>
+            <Text style={st.h}>{healthy ? 'Keep it healthy' : 'Do this now'}</Text>
+            <View style={{ gap: 10 }}>
+              {steps.map((s, i) => (
+                <Animated.View key={i} entering={FadeInDown.delay(120 + i * 90)}>
+                  <TouchableOpacity style={st.stepTile} onPress={() => setStep(i)} accessibilityRole="button" accessibilityHint={t('Opens the full step')}>
+                    <View style={st.stepIcon}>
+                      <Icon name={s.icon} size={30} color={C.primaryDark} />
+                      <View style={st.stepNum}>
+                        <Text raw style={st.stepNumTxt}>{String(i + 1)}</Text>
+                      </View>
                     </View>
-                    <Text raw style={[st.body, { flex: 1 }]}>
-                      {h}
-                    </Text>
+                    <Text raw style={st.stepTitle}>{s.title}</Text>
+                    <Icon name="chevron-right" size={22} color={C.textLight} />
+                  </TouchableOpacity>
+                </Animated.View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {/* ── Spray: one tile, PCPB-registered only ───────────────── */}
+        {!uncertain && !healthy && info?.chemical.length ? (
+          <View style={st.section}>
+            <TouchableOpacity style={st.sprayTile} onPress={() => setSprays((v) => !v)} accessibilityRole="button" accessibilityState={{ expanded: sprays }}>
+              <View style={[st.stepIcon, { backgroundColor: C.accentTint }]}>
+                <Icon name="spray" size={30} color={C.accentDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={st.stepTitle}>Spray only if needed</Text>
+                <Text raw style={st.small}>
+                  {pcpbProducts.length ? t('{n} registered products in Kenya', { n: pcpbProducts.length }) : t('See the active ingredients in More details')}
+                </Text>
+              </View>
+              <Icon name={sprays ? 'chevron-up' : 'chevron-down'} size={22} color={C.textLight} />
+            </TouchableOpacity>
+            {sprays ? (
+              <View style={{ gap: 10, marginTop: 10 }}>
+                {pcpbProducts.map((prod) => (
+                  <PcpbProductCard key={prod.r} product={prod} crop={pcpbCrop} problem={pcpbProblem} />
+                ))}
+                {pcpbProducts.length ? <Text style={st.disclaimer}>{PCPB_DISCLAIMER}</Text> : null}
+                <Btn
+                  label="Work out the spray mix"
+                  icon="calculator-variant-outline"
+                  kind="secondary"
+                  onPress={() => router.push({ pathname: '/pesticide-calc', params: { crop: base.crop, problem: label } })}
+                />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* ── Next: icon grid ─────────────────────────────────────── */}
+        <View style={[st.section, st.grid]}>
+          {actions.map((a) => (
+            <TouchableOpacity key={a.label} style={st.gridItem} onPress={a.onPress} disabled={saving && a.icon === 'content-save-outline'} accessibilityRole="button">
+              <View style={[st.gridIcon, a.on && { backgroundColor: C.primaryTint }]}>
+                <Icon name={a.icon} size={28} color={a.on ? C.primary : C.primaryDark} />
+              </View>
+              <Text style={st.gridLabel}>{a.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* ── More details: the long text, folded ─────────────────── */}
+        <TouchableOpacity style={st.moreBtn} onPress={() => setDetails((v) => !v)} accessibilityRole="button" accessibilityState={{ expanded: details }}>
+          <Text style={st.moreTxt}>More details</Text>
+          <Icon name={details ? 'chevron-up' : 'chevron-down'} size={20} color={C.primary} />
+        </TouchableOpacity>
+        {details ? (
+          <View style={st.panel}>
+            {uncertain ? (
+              <>
+                <Text raw style={st.body}>
+                  {t('Confidence is below {n}%, so treat this as a guess. Retake the photo of a single leaf in daylight, or show the plant to an extension officer or agro-dealer.', {
+                    n: Math.round(CONFIDENCE_THRESHOLD * 100),
+                  })}
+                </Text>
+                {hints.length ? <Bullets title="Also check for pests the scanner can miss:" items={hints} /> : null}
+              </>
+            ) : null}
+            {info && !healthy && !uncertain ? (
+              <>
+                <Bullets title="What it looks like" items={[info.symptoms]} />
+                {info.spread ? <Bullets title="How it spreads" items={[info.spread]} /> : null}
+                {info.kenya ? <Bullets title="In Kenya" items={[info.kenya]} /> : null}
+                {info.pathogen ? <Bullets title="Cause" items={[info.pathogen]} /> : null}
+              </>
+            ) : null}
+            {info && !uncertain ? <Bullets title={healthy ? 'Good practice' : 'All steps'} items={info.cultural} numbered /> : null}
+            {info && !uncertain && info.biological.length ? <Bullets title="Organic / biological options" items={info.biological} numbered /> : null}
+            {info && !uncertain && info.chemical.length ? (
+              <>
+                <Bullets title="Chemical options (active ingredient)" items={info.chemical.map((c) => (c.note ? `${c.active} — ${c.note}` : c.active))} />
+                <Text raw style={[st.small, { marginTop: 8 }]}>{chemicalRules(lang)}</Text>
+              </>
+            ) : null}
+            {alts.length ? (
+              <View style={{ marginTop: 16 }}>
+                <Text style={st.h2}>Other possibilities</Text>
+                {alts.map(([l, c]) => (
+                  <View key={l} style={{ marginTop: 8, gap: 4 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                      <Text raw style={[st.body, { flex: 1 }]}>{altName(l)}</Text>
+                      <Text raw style={st.small}>{`${Math.round(c * 100)}%`}</Text>
+                    </View>
+                    <ProgressBar value={c} color={C.textLight} height={5} />
                   </View>
                 ))}
-              </>
-            ) : null}
-          </View>
-        ) : null}
-
-        {/* What it looks like (not for a guess: rule 3) */}
-        {info && !healthy && !uncertain ? (
-          <View style={st.panel}>
-            <Text style={st.h}>What it looks like</Text>
-            <Text raw style={st.body}>
-              {info.symptoms}
-            </Text>
-            {info.spread ? (
-              <>
-                <Text style={[st.h2, { marginTop: 14 }]}>How it spreads</Text>
-                <Text raw style={st.body}>
-                  {info.spread}
-                </Text>
-              </>
-            ) : null}
-            {info.kenya ? (
-              <View style={[st.li, { marginTop: 14 }]}>
-                <Icon name="map-marker-outline" size={18} color={C.textSub} />
-                <Text raw style={[st.small, { flex: 1 }]}>
-                  {info.kenya}
-                </Text>
               </View>
             ) : null}
-          </View>
-        ) : null}
-
-        {/* Other possibilities */}
-        {alts.length ? (
-          <View style={st.panel}>
-            <Text style={st.h}>Other possibilities</Text>
-            {alts.map(([l, c]) => (
-              <View key={l} style={{ marginTop: 10, gap: 6 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-                  <Text raw style={[st.body, { flex: 1 }]}>
-                    {altName(l)}
-                  </Text>
-                  <Text raw style={st.small}>
-                    {(c * 100).toFixed(1)}%
-                  </Text>
-                </View>
-                <ProgressBar value={c} color={C.textLight} height={5} />
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        {/* What to do (not for a guess: rule 3) */}
-        {info && !uncertain ? (
-          <View style={st.panel} onLayout={(e) => setTodoY(e.nativeEvent.layout.y - 12)}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={st.h}>{healthy ? 'Keep it healthy' : 'What to do'}</Text>
-              <ListenButton
-                compact
-                text={() =>
-                  [info.cultural.join(' '), info.biological.join(' '), info.chemical.map((c) => (c.note ? `${c.active}. ${c.note}` : c.active)).join('. ')]
-                    .filter(Boolean)
-                    .join(' ')
-                }
-              />
-            </View>
-            <Steps title={healthy ? 'Good practice' : 'Do this first (cultural)'} items={info.cultural} />
-            {info.biological.length ? <Steps title="Organic / biological options" items={info.biological} /> : null}
-            {info.chemical.length ? (
-              <>
-                <Steps title="Chemical options (active ingredient)" items={info.chemical.map((c) => (c.note ? `${c.active} — ${c.note}` : c.active))} />
-                <Text raw style={[st.small, { marginTop: 12 }]}>
-                  {chemicalRules(lang)}
-                </Text>
-
-                {pcpbProducts.length > 0 ? (
-                  <View style={{ marginTop: 16, gap: 10 }}>
-                    <Text style={[st.h2, { fontSize: 17 }]}>Registered products in Kenya</Text>
-                    {pcpbProducts.map((prod) => (
-                      <PcpbProductCard key={prod.r} product={prod} crop={pcpbCrop} problem={pcpbProblem} onPanel />
-                    ))}
-                    <Text style={st.pcpbDisclaimer}>{PCPB_DISCLAIMER}</Text>
-                    <Btn
-                      label="Work out the spray mix"
-                      icon="calculator-variant-outline"
-                      kind="secondary"
-                      onPress={() => router.push({ pathname: '/pesticide-calc', params: { crop: base.crop, problem: label } })}
-                    />
-                  </View>
-                ) : null}
-              </>
-            ) : null}
-            {!healthy ? (
-              <Btn
-                label="Open day-by-day treatment plan"
-                icon="clipboard-list-outline"
-                kind="secondary"
-                style={{ marginTop: 16 }}
-                onPress={() => router.push({ pathname: '/treatment-plan', params: { label, incidentId: savedId ?? '' } })}
-              />
-            ) : null}
-          </View>
-        ) : null}
-
-        {/* Nearby agro-dealers (OpenStreetMap) */}
-        {!healthy && !uncertain ? (
-          <View style={st.panel}>
-            <Text style={st.h}>Nearby agro-dealers</Text>
-            {agrovets?.length ? (
-              agrovets.map((a) => (
-                <TouchableOpacity key={a.id} style={st.agroRow} onPress={() => Linking.openURL(mapsUrl(a.lat, a.lng, a.name))}>
-                  <View style={{ flex: 1 }}>
-                    <Text raw style={st.agroName}>
-                      {a.name}
-                    </Text>
-                    <Text raw style={st.small}>
-                      {t('{km} km away', { km: a.distanceKm.toFixed(1) })}
-                      {a.address ? `, ${a.address}` : ''}
-                    </Text>
-                  </View>
-                  {a.phone ? (
-                    <TouchableOpacity style={st.agroIcon} onPress={() => Linking.openURL(`tel:${a.phone}`)} accessibilityLabel={t('Call')}>
-                      <Icon name="phone-outline" size={20} color={C.text} />
+            {!healthy && !uncertain ? (
+              <View style={{ marginTop: 16 }}>
+                <Text style={st.h2}>Nearby agro-dealers</Text>
+                {agrovets?.length ? (
+                  agrovets.map((a) => (
+                    <TouchableOpacity key={a.id} style={st.agroRow} onPress={() => Linking.openURL(mapsUrl(a.lat, a.lng, a.name))}>
+                      <View style={{ flex: 1 }}>
+                        <Text raw style={st.agroName}>{a.name}</Text>
+                        <Text raw style={st.small}>
+                          {t('{km} km away', { km: a.distanceKm.toFixed(1) })}
+                          {a.address ? `, ${a.address}` : ''}
+                        </Text>
+                      </View>
+                      {a.phone ? (
+                        <TouchableOpacity style={st.agroIcon} onPress={() => Linking.openURL(`tel:${a.phone}`)} accessibilityLabel={t('Call')}>
+                          <Icon name="phone-outline" size={20} color={C.text} />
+                        </TouchableOpacity>
+                      ) : null}
+                      <View style={st.agroIcon}>
+                        <Icon name="directions" size={20} color={C.text} />
+                      </View>
                     </TouchableOpacity>
-                  ) : null}
-                  <View style={st.agroIcon}>
-                    <Icon name="directions" size={20} color={C.text} />
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <>
-                {agroStatus ? (
-                  <Text raw style={[st.body, { marginBottom: 10 }]}>
-                    {agroStatus}
-                  </Text>
-                ) : null}
-                <Btn label="Find agro-dealers near me" icon="map-marker-radius-outline" kind="secondary" onPress={loadAgrovets} />
-              </>
-            )}
-            <Text style={[st.small, { marginTop: 10, fontSize: 13 }]}>Data © OpenStreetMap contributors</Text>
+                  ))
+                ) : (
+                  <>
+                    {agroStatus ? <Text raw style={[st.body, { marginBottom: 10 }]}>{agroStatus}</Text> : null}
+                    <Btn label="Find agro-dealers near me" icon="map-marker-radius-outline" kind="secondary" onPress={loadAgrovets} />
+                  </>
+                )}
+                <Text style={[st.small, { marginTop: 10 }]}>Data © OpenStreetMap contributors</Text>
+              </View>
+            ) : null}
+            {p.inferMs ? (
+              <Text raw style={[st.small, { marginTop: 16 }]}>
+                {t('Analysed on this phone in {ms} ms', { ms: Number(p.prepareMs ?? 0) + Number(p.inferMs) })}
+              </Text>
+            ) : null}
           </View>
         ) : null}
-
-        {/* Actions */}
-        <View style={{ paddingHorizontal: 16, marginTop: 24, gap: 10 }}>
-          <Btn
-            label="Ask the AI advisor"
-            icon="chat-processing-outline"
-            onPress={() => router.push({ pathname: '/chat', params: { crop: cropEn, disease: diseaseEn, confidence: String(confidence) } })}
-          />
-          <Btn label={savedId ? 'Saved ✓' : 'Save to my farm'} icon="content-save-outline" kind="secondary" onPress={openSave} loading={saving} disabled={Boolean(savedId)} />
-          {!uncertain ? <Btn label="Ask the community" icon="account-group-outline" kind="secondary" onPress={askCommunity} /> : null}
-          {!uncertain && p.uri ? <Btn label={photoCheckLabel} icon="image-search-outline" kind="secondary" onPress={openPhotoCheck} /> : null}
-          <Btn label="Share on WhatsApp" icon="whatsapp" kind="secondary" onPress={shareWhatsApp} />
-          {!uncertain ? <Btn label="Scan another leaf" icon="camera-retake-outline" kind="ghost" onPress={openScanner} /> : null}
-        </View>
       </ScrollView>
+
+      {/* The full step behind a tile */}
+      <Sheet visible={step !== null} onClose={() => setStep(null)} title={step !== null ? t('Step {n}', { n: step + 1 }) : undefined}>
+        {step !== null && steps[step] ? (
+          <View style={{ gap: 16, alignItems: 'center', paddingBottom: 8 }}>
+            <View style={[st.bigBadge, { backgroundColor: C.primaryTint }]}>
+              <Icon name={steps[step].icon} size={48} color={C.primaryDark} />
+            </View>
+            <Text raw style={[st.body, { fontSize: 18, lineHeight: 26, textAlign: 'center', color: C.text }]}>{steps[step].text}</Text>
+            <ListenButton text={steps[step].text} />
+          </View>
+        ) : null}
+      </Sheet>
 
       {/* Field picker */}
       <Sheet visible={picker} onClose={() => setPicker(false)} title="Save this scan to…">
@@ -445,9 +462,7 @@ export default function ResultScreen() {
           <TouchableOpacity key={f.id} style={st.farmRow} onPress={() => save(f.id)}>
             <CropIcon crop={f.crop} size={40} />
             <View style={{ flex: 1 }}>
-              <Text raw style={st.agroName}>
-                {f.name}
-              </Text>
+              <Text raw style={st.agroName}>{f.name}</Text>
               <Text raw style={st.small}>
                 {[f.crop ? cropName(f.crop, lang) : null, f.size_acres ? t('{n} acres', { n: Number(f.size_acres).toFixed(2) }) : null].filter(Boolean).join(', ') || t('Field')}
               </Text>
@@ -471,18 +486,33 @@ export default function ResultScreen() {
   );
 }
 
-function Steps({ title, items }: { title: string; items: string[] }) {
+/** One picture with a word under it: an icon, or a Noto emoji where it carries the meaning. */
+function PictureItem({ pic, caption, strong }: { pic: Picture; caption: string; strong?: boolean }) {
   return (
-    <View style={{ marginTop: 16 }}>
+    <View style={st.picItem}>
+      <Text style={st.picCaption}>{caption}</Text>
+      <View style={[st.picIcon, strong && { backgroundColor: C.errorTint }]}>
+        {pic.noto ? <NotoEmoji name={pic.noto} size={40} /> : <Icon name={pic.icon as IconName} size={32} color={strong ? C.error : C.primaryDark} />}
+      </View>
+      <Text style={st.picLabel}>{pic.label}</Text>
+    </View>
+  );
+}
+
+function Bullets({ title, items, numbered }: { title: string; items: string[]; numbered?: boolean }) {
+  return (
+    <View style={{ marginTop: 14 }}>
       <Text style={st.h2}>{title}</Text>
       {items.map((x, i) => (
         <View key={i} style={st.li}>
-          <Text raw style={st.num}>
-            {items.length > 1 ? `${i + 1}` : '•'}
-          </Text>
-          <Text raw style={[st.body, { flex: 1 }]}>
-            {x}
-          </Text>
+          {numbered && items.length > 1 ? (
+            <Text raw style={st.num}>{String(i + 1)}</Text>
+          ) : (
+            <View style={{ paddingTop: 9 }}>
+              <Dot color={C.textLight} size={5} />
+            </View>
+          )}
+          <Text raw style={[st.body, { flex: 1 }]}>{x}</Text>
         </View>
       ))}
     </View>
@@ -490,23 +520,51 @@ function Steps({ title, items }: { title: string; items: string[] }) {
 }
 
 const st = StyleSheet.create({
-  actions: { marginHorizontal: 16, marginTop: 12, gap: 10 },
-  confPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
-  confWord: { fontSize: 15, fontFamily: FONT.bodyBold },
-  leaf: { height: 240, marginHorizontal: 16, borderRadius: 16, marginTop: 4 },
-  panel: { backgroundColor: C.surface, borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 12 },
-  crop: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
-  status: { fontSize: 15, fontFamily: FONT.bodyBold },
-  disease: { fontSize: 32, lineHeight: 38, fontFamily: FONT.display, color: C.text, marginTop: 14, marginBottom: 14 },
-  h: { fontSize: 21, fontFamily: FONT.display, color: C.text, marginBottom: 8 },
-  h2: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, marginBottom: 6 },
+  leaf: { height: 200, marginHorizontal: 16, borderRadius: 16, marginTop: 4 },
+  verdict: { backgroundColor: C.surface, borderRadius: 20, padding: 18, marginHorizontal: 16, marginTop: 12, gap: 12 },
+  bigBadge: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
+  verdictWord: { fontSize: 30, lineHeight: 36, fontFamily: FONT.display, color: C.text, textAlign: 'center' },
+  cropRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cropName: { fontSize: 17, fontFamily: FONT.bodyBold, color: C.textMid },
+  disease: { fontSize: 32, lineHeight: 38, fontFamily: FONT.display, color: C.text },
+  meterRow: { gap: 6 },
+  meterLabel: { fontSize: 13, color: C.textSub, fontFamily: FONT.bodyBold, textTransform: 'uppercase', letterSpacing: 0.6 },
+  meter: { flexDirection: 'row', gap: 6 },
+  meterSeg: { flex: 1, height: 10, borderRadius: 5 },
+  meterWord: { fontSize: 16, fontFamily: FONT.bodyBold },
+  alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.errorTint, borderRadius: 12, padding: 12 },
+  section: { marginHorizontal: 16, marginTop: 18 },
+  h: { fontSize: 22, fontFamily: FONT.display, color: C.text, marginBottom: 10 },
+  h2: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, marginBottom: 4 },
   body: { fontSize: 16, color: C.textMid, lineHeight: 23 },
   small: { fontSize: 14, color: C.textSub, lineHeight: 20 },
+  picRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  picItem: { width: '30%', flexGrow: 1, alignItems: 'center', gap: 6, backgroundColor: C.surface, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 6 },
+  picCaption: { fontSize: 13, color: C.textSub },
+  picIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: C.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  picLabel: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text, textAlign: 'center' },
+  stepTile: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderRadius: 16, padding: 12, minHeight: 72 },
+  stepIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: C.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  stepNum: { position: 'absolute', top: -6, left: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: C.primaryDark, alignItems: 'center', justifyContent: 'center' },
+  stepNumTxt: { color: '#fff', fontSize: 13, fontFamily: FONT.bodyBold },
+  stepTitle: { flex: 1, fontSize: 17, lineHeight: 22, fontFamily: FONT.bodyBold, color: C.text },
+  sprayTile: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderRadius: 16, padding: 12, minHeight: 72 },
+  disclaimer: { fontSize: 13, color: C.textSub, lineHeight: 18 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  gridItem: { width: '31%', flexGrow: 1, alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 6, minHeight: 104 },
+  gridIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
+  gridLabel: { fontSize: 14, lineHeight: 18, fontFamily: FONT.bodyBold, color: C.text, textAlign: 'center' },
+  tipRow: { flexDirection: 'row', gap: 10 },
+  tipItem: { flex: 1, alignItems: 'center', gap: 6, backgroundColor: C.surface, borderRadius: 16, paddingVertical: 12 },
+  tipIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  tipLabel: { fontSize: 14, fontFamily: FONT.bodyBold, color: C.text, textAlign: 'center' },
+  moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 48, marginTop: 18 },
+  moreTxt: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.primary },
+  panel: { backgroundColor: C.surface, borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 4 },
   li: { flexDirection: 'row', gap: 10, marginTop: 6 },
   num: { width: 18, fontSize: 16, lineHeight: 23, fontFamily: FONT.bodyBold, color: C.primary },
   agroRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   agroName: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
-  agroIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
+  agroIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' },
   farmRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
-  pcpbDisclaimer: { fontSize: 13, color: C.textSub, marginTop: 4, lineHeight: 18 },
 });

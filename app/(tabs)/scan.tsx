@@ -11,8 +11,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDiseaseModel } from '../../lib/useDiseaseModel';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { classifyPhoto, type ScanStep } from '../../lib/classifier';
-import { DETECTABLE_CROPS, SCANNABLE_DISEASES } from '../../lib/diseases';
-import { Icon, Text } from '../../components/ui';
+
+import { Icon, Text, tick } from '../../components/ui';
+import { NotoEmoji } from '../../components/NotoEmoji';
 import { useLang } from '../../lib/i18n';
 import { C } from '../../lib/theme';
 
@@ -114,13 +115,31 @@ export default function ScanScreen() {
     }
   };
 
+  // The shutter always works (Ezra, 29 Oct: "it can't even press to shoot"): if the model is
+  // still loading, the photo waits on screen and is checked the moment the model is ready.
+  const [pending, setPending] = useState<{ uri: string; width: number; height: number } | null>(null);
+  useEffect(() => {
+    if (pending && tflite.state === 'loaded') {
+      const photo = pending;
+      setPending(null);
+      analyze(photo);
+    }
+    if (pending && tflite.state === 'error') setError(t('The disease model failed to load'));
+  }, [pending, tflite.state]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const capture = async () => {
     if (!cameraRef.current || busy || running.current || !settled()) return;
     try {
+      tick('select');
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
-      if (photo) await analyze(photo);
+      if (!photo) return;
+      if (tflite.state === 'loaded') await analyze(photo);
+      else {
+        setPhotoUri(photo.uri);
+        setPending(photo);
+      }
     } catch {
-      setError('Could not take a photo. Please try again.');
+      setError(t('Could not take a photo. Please try again.'));
     }
   };
 
@@ -129,7 +148,12 @@ export default function ScanScreen() {
     const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
     if (!picked.canceled && picked.assets?.[0]) {
       const a = picked.assets[0];
-      await analyze({ uri: a.uri, width: a.width, height: a.height });
+      const photo = { uri: a.uri, width: a.width, height: a.height };
+      if (tflite.state === 'loaded') await analyze(photo);
+      else {
+        setPhotoUri(photo.uri);
+        setPending(photo);
+      }
     }
   };
 
@@ -163,13 +187,7 @@ export default function ScanScreen() {
     );
   };
 
-  const modelReady = tflite.state === 'loaded';
-  const status =
-    tflite.state === 'error'
-      ? t('The disease model failed to load')
-      : modelReady
-      ? t('{d} diseases, {n} crops, works offline', { d: SCANNABLE_DISEASES, n: DETECTABLE_CROPS.length })
-      : t('Loading disease model…');
+  const status = tflite.state === 'error' ? t('The disease model failed to load') : t('Works without data');
 
   let viewport: React.ReactNode;
   if (photoUri) {
@@ -223,63 +241,56 @@ export default function ScanScreen() {
         </View>
       ) : null}
 
-      {/* Analysis overlay with real, timed steps */}
+      {/* Checking: a moving leaf and three words (the timed technical steps live in More details) */}
       {photoUri ? (
         <View style={st.overlay}>
           <View style={st.overlayCard}>
-            <Text style={st.overlayTitle}>{error ? 'Something went wrong' : 'Analysing leaf…'}</Text>
-            {(['prepare', 'infer', 'done'] as ScanStep[]).map((k) => {
-              const s = steps.find((x) => x.step === k);
-              const finished = s?.ms !== undefined;
-              return (
-                <View key={k} style={st.stepRow}>
-                  {finished ? (
-                    <Icon name="check-circle" size={20} color={C.secondary} />
-                  ) : s ? (
-                    <ActivityIndicator size="small" color={C.secondary} />
-                  ) : (
-                    <Icon name="circle-outline" size={20} color="#4B5563" />
-                  )}
-                  <Text style={[st.stepTxt, !s && { color: '#9AA7A0' }]}>{STEP_TEXT[k]}</Text>
-                  {finished && k !== 'done' ? <Text raw style={st.stepMs}>{`${s!.ms} ms`}</Text> : null}
-                </View>
-              );
-            })}
             {error ? (
               <>
-                <Text style={st.errorTxt}>{error}</Text>
-                <TouchableOpacity style={st.permBtn} onPress={() => { setPhotoUri(null); setError(null); }}>
-                  <Text style={{ color: '#fff', fontWeight: '800' }}>Try again</Text>
+                <Icon name="alert-circle-outline" size={48} color="#F2B8A6" />
+                <Text style={st.overlayTitle}>{error}</Text>
+                <TouchableOpacity style={st.permBtn} onPress={() => { setPhotoUri(null); setPending(null); setError(null); }}>
+                  <Text style={{ color: '#fff', fontWeight: '800', fontSize: 16 }}>Try again</Text>
                 </TouchableOpacity>
               </>
-            ) : null}
+            ) : (
+              <>
+                <NotoEmoji name="leaves" size={72} />
+                <Text style={st.overlayTitle}>Checking your leaf…</Text>
+                <ActivityIndicator color={C.gold} />
+              </>
+            )}
           </View>
         </View>
       ) : null}
 
       {/* AI photo check entry (pests, deficiencies, other crops) */}
       {!photoUri ? (
-        <TouchableOpacity style={[st.aiPill, { bottom: insets.bottom + 132 }]} onPress={photoCheck} accessibilityRole="button">
+        <TouchableOpacity style={[st.aiPill, { bottom: insets.bottom + 150 }]} onPress={photoCheck} accessibilityRole="button">
           <Icon name="bug-check-outline" size={18} color={C.gold} />
           <Text raw style={st.aiPillTxt}>
-            {sw ? 'Wadudu au zao jingine? Ukaguzi wa picha wa AI' : 'Pest or other crop? AI photo check'}
+            {sw ? 'Wadudu au zao jingine? Kagua mtandaoni' : 'Pest or other crop? Check online'}
           </Text>
         </TouchableOpacity>
       ) : null}
 
       {/* Bottom controls */}
       <View style={[st.bottom, { paddingBottom: insets.bottom + 20 }]}>
-        <TouchableOpacity style={st.sideBtn} onPress={pick} disabled={!modelReady || busy} accessibilityLabel={t('Choose from gallery')}>
-          <Icon name="image-multiple-outline" size={26} color="#fff" />
+        <TouchableOpacity style={st.sideBtn} onPress={pick} disabled={busy} accessibilityLabel={t('Choose from gallery')}>
+          <Icon name="image-multiple-outline" size={28} color="#fff" />
           <Text style={st.sideTxt}>Gallery</Text>
         </TouchableOpacity>
+        {/* Big and never greyed out by the model (it waits for it instead) */}
         <TouchableOpacity
-          style={[st.shutter, (!modelReady || !permission?.granted || busy) && { opacity: 0.4 }]}
+          style={[st.shutter, (!permission?.granted || busy) && { opacity: 0.4 }]}
           onPress={capture}
-          disabled={!modelReady || !permission?.granted || busy}
+          disabled={!permission?.granted || busy}
           accessibilityLabel={t('Take photo and scan')}
+          hitSlop={12}
         >
-          <View style={st.shutterInner} />
+          <View style={st.shutterInner}>
+            <Icon name="camera" size={34} color={C.dark} />
+          </View>
         </TouchableOpacity>
         <TouchableOpacity style={st.sideBtn} onPress={() => settled() && router.push('/encyclopedia')} accessibilityLabel={t('Disease library')}>
           <Icon name="book-open-page-variant-outline" size={26} color="#fff" />
@@ -298,7 +309,7 @@ const st = StyleSheet.create({
   topBar: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, backgroundColor: 'rgba(0,0,0,0.35)' },
   roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
   title: { color: '#fff', fontSize: 17, fontWeight: '900' },
-  status: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
+  status: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 2 },
   frameWrap: { ...FILL, justifyContent: 'center', alignItems: 'center' },
   frame: { width: '72%', aspectRatio: 1 },
   corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: C.gold },
@@ -307,19 +318,19 @@ const st = StyleSheet.create({
   bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderBottomLeftRadius: 12 },
   br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 12 },
   tipPill: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
-  tipTxt: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  tipTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
   overlay: { ...FILL, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
-  overlayCard: { backgroundColor: C.dark, borderRadius: 20, padding: 20, gap: 14 },
-  overlayTitle: { color: '#fff', fontSize: 18, fontWeight: '900', marginBottom: 4 },
+  overlayCard: { backgroundColor: C.dark, borderRadius: 24, padding: 28, gap: 16, alignItems: 'center' },
+  overlayTitle: { color: '#fff', fontSize: 20, fontWeight: '900', textAlign: 'center' },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepTxt: { flex: 1, color: '#E8ECE9', fontSize: 14 },
   stepMs: { color: C.secondary, fontWeight: '800', fontSize: 12 },
   errorTxt: { color: '#F2B8A6', fontSize: 14 },
   bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingTop: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
   sideBtn: { alignItems: 'center', width: 72, gap: 4 },
-  sideTxt: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  shutter: { width: 78, height: 78, borderRadius: 39, borderWidth: 5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' },
-  shutterInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: C.secondary },
+  sideTxt: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  shutter: { width: 96, height: 96, borderRadius: 48, borderWidth: 5, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  shutterInner: { width: 76, height: 76, borderRadius: 38, backgroundColor: C.gold, justifyContent: 'center', alignItems: 'center' },
   permTxt: { color: '#C9D2CC', textAlign: 'center', lineHeight: 20 },
   permBtn: { backgroundColor: C.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   aiPill: { position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.darkRaised, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, maxWidth: '92%' },
