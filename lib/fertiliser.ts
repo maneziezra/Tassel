@@ -80,12 +80,19 @@ export const PLANS: CropPlan[] = [
   },
 ];
 
-export function planFor(crop: string | null | undefined): CropPlan {
+/** The guide's plan for this crop, or null when the guide has none (coffee, tea…): never another crop's rates. */
+export function guideFor(crop: string | null | undefined): CropPlan | null {
   const c = (crop ?? '').toLowerCase();
+  if (!c) return null;
   return (
     PLANS.find((p) => c.includes(p.crop.toLowerCase())) ??
-    (/mahindi|corn/.test(c) ? PLANS[0] : /maharag/.test(c) ? PLANS[1] : /viazi/.test(c) ? PLANS[2] : /nyanya/.test(c) ? PLANS[3] : /ngano/.test(c) ? PLANS[4] : PLANS[0])
+    (/mahindi|corn/.test(c) ? PLANS[0] : /maharag/.test(c) ? PLANS[1] : /viazi/.test(c) ? PLANS[2] : /nyanya/.test(c) ? PLANS[3] : /ngano/.test(c) ? PLANS[4] : null)
   );
+}
+
+/** For the manual picker, whose crop always comes from PLANS. */
+export function planFor(crop: string | null | undefined): CropPlan {
+  return guideFor(crop) ?? PLANS[0];
 }
 
 /** Rate (kg per acre) of `product` that gives the same main nutrient as the guide's reference product. */

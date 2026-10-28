@@ -1385,6 +1385,8 @@ export const SW: Record<string, string> = {
   "{n} cm": "sm {n}",
   "between rows": "kati ya mistari",
   "between plants": "kati ya mimea",
+  // v2.7 fertiliser: crops with no guide (flagged for native-speaker review)
+  "No fertiliser guide for {crops} yet, so {fields} are not on this list.": "Bado hakuna mwongozo wa mbolea kwa {crops}, kwa hiyo {fields} haziko kwenye orodha hii.",
   "{n} cm deep": "kina cha sm {n}",
   "Soil surface": "Uso wa udongo",
   "Other crops for {n} seasons": "Mazao mengine kwa misimu {n}",

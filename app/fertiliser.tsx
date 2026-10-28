@@ -10,13 +10,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Btn, Chip, CropIcon, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
 import { listFarms, type Farm } from '../lib/data';
 import { cropName } from '../lib/diseases';
-import { BAG_KG, FERTS, PLANS, equivalentRate, planFor, toBags, type Application, type FertId } from '../lib/fertiliser';
+import { BAG_KG, FERTS, PLANS, equivalentRate, guideFor, planFor, toBags, type Application, type FertId } from '../lib/fertiliser';
 import { useLang } from '../lib/i18n';
 import { fmtArea, fromAcres, setPrefs, toAcres, usePrefs, type Units } from '../lib/prefs';
 import { C, FONT } from '../lib/theme';
 
 type Choice = { product: FertId; rate: number };
 const PRICE_KEY = 'fert:prices';
+
+/** A field can go on the list only with a size and a crop the guide covers (no maize rates for coffee). */
+const plannable = (f: Farm) => !!(f.size_acres && Number(f.size_acres) > 0 && guideFor(f.crop));
 
 export default function FertiliserScreen() {
   const { t } = useLang();
@@ -38,7 +41,7 @@ export default function FertiliserScreen() {
       listFarms()
         .then((list) => {
           setFarms(list);
-          const valid = list.filter((f) => f.size_acres && Number(f.size_acres) > 0);
+          const valid = list.filter(plannable);
           if (valid.length > 0) {
             // All saved fields selected by default per P2 spec
             setSelectedFieldIds((prev) => (prev.length === 0 ? valid.map((f) => f.id) : prev));
@@ -76,7 +79,7 @@ export default function FertiliserScreen() {
 
   const toggleSelectAll = () => {
     tick('select');
-    const valid = farms.filter((f) => f.size_acres && Number(f.size_acres) > 0);
+    const valid = farms.filter(plannable);
     if (selectedFieldIds.length === valid.length) {
       setSelectedFieldIds([]);
       setManualMode(true);
@@ -89,7 +92,7 @@ export default function FertiliserScreen() {
   // Primary active crop for application customisation
   const activeCrop = useMemo(() => {
     if (manualMode || selectedFarms.length === 0) return manualCrop;
-    return selectedFarms[0].crop ? planFor(selectedFarms[0].crop).crop : 'Maize';
+    return guideFor(selectedFarms[0].crop)?.crop ?? manualCrop;
   }, [manualMode, selectedFarms, manualCrop]);
 
   const plan = useMemo(() => planFor(activeCrop), [activeCrop]);
@@ -127,10 +130,11 @@ export default function FertiliserScreen() {
 
     if (!manualMode && selectedFarms.length > 0) {
       selectedFarms.forEach((f) => {
-        const fCrop = planFor(f.crop ?? 'Maize').crop;
+        const fPlan = guideFor(f.crop);
+        if (!fPlan) return; // only plannable fields are selectable; never fill in another crop's plan
+        const fCrop = fPlan.crop;
         const fAcres = Number(f.size_acres) || 1;
         sumAcres += fAcres;
-        const fPlan = planFor(fCrop);
 
         const prods = fPlan.apps.map((a) => {
           const c = choices[`${fCrop}:${a.key}`] ?? { product: a.ref, rate: a.refKgPerAcre };
@@ -198,7 +202,7 @@ export default function FertiliserScreen() {
       <Header title="Fertiliser" subtitle={t('What to buy for your fields')} />
       <ScrollView contentContainerStyle={{ paddingBottom: 56 }}>
         {/* Field selector strip */}
-        {farms.some((f) => f.size_acres) ? (
+        {farms.some(plannable) ? (
           <View style={st.panel}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <View>
@@ -211,14 +215,14 @@ export default function FertiliserScreen() {
               </View>
               <TouchableOpacity onPress={toggleSelectAll} hitSlop={8}>
                 <Text style={st.link}>
-                  {selectedFieldIds.length === farms.filter((f) => f.size_acres).length ? t('Clear all') : t('Select all')}
+                  {selectedFieldIds.length === farms.filter(plannable).length ? t('Clear all') : t('Select all')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
               {farms
-                .filter((f) => f.size_acres)
+                .filter(plannable)
                 .map((f) => {
                   const on = selectedFieldIds.includes(f.id);
                   return (
@@ -242,6 +246,19 @@ export default function FertiliserScreen() {
                   );
                 })}
             </ScrollView>
+          </View>
+        ) : null}
+
+        {/* Fields whose crop the guide doesn't cover are named, not planned with another crop's rates */}
+        {farms.some((f) => f.crop && !guideFor(f.crop)) ? (
+          <View style={[st.panel, { flexDirection: 'row', gap: 10, alignItems: 'flex-start' }]}>
+            <Icon name="information-outline" size={20} color={C.textSub} />
+            <Text raw style={[st.small, { flex: 1 }]}>
+              {t('No fertiliser guide for {crops} yet, so {fields} are not on this list.', {
+                crops: [...new Set(farms.filter((f) => f.crop && !guideFor(f.crop)).map((f) => cropName(f.crop!)))].join(', '),
+                fields: farms.filter((f) => f.crop && !guideFor(f.crop)).map((f) => f.name).join(', '),
+              })}
+            </Text>
           </View>
         ) : null}
 
