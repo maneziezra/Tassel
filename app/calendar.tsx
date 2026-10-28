@@ -85,20 +85,20 @@ export default function CalendarScreen() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedField, setSelectedField] = useState<Farm | null>(null);
-  const [selectedCrop, setSelectedCrop] = useState<string>('maize');
+  const [selectedCrop, setSelectedCrop] = useState<string>('Maize');
   const [selectedDate, setSelectedDate] = useState<string>(toIsoDate(new Date()));
   const [savingPlanting, setSavingPlanting] = useState(false);
 
   const openPlantingWizard = (f?: Farm) => {
     if (f) {
       setSelectedField(f);
-      setSelectedCrop(f.crop && calendarFor(f.crop) ? f.crop : 'maize');
+      setSelectedCrop(f.crop && calendarFor(f.crop) ? f.crop : 'Maize');
       setSelectedDate(f.planting_date || toIsoDate(new Date()));
       setWizardStep(2);
     } else {
       const defaultField = unplanned[0] ?? farms?.[0] ?? null;
       setSelectedField(defaultField);
-      setSelectedCrop(defaultField?.crop && calendarFor(defaultField.crop) ? defaultField.crop : 'maize');
+      setSelectedCrop(defaultField?.crop && calendarFor(defaultField.crop) ? defaultField.crop : 'Maize');
       setSelectedDate(toIsoDate(new Date()));
       setWizardStep(1);
     }
@@ -342,10 +342,14 @@ export default function CalendarScreen() {
             </View>
             <Text style={st.small}>{t('Which crop are you planting in {name}?', { name: selectedField?.name ?? '' })}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {['maize', 'beans', 'potato', 'tomato', 'wheat'].map((c) => (
+              {['Maize', 'Beans', 'Potato', 'Tomato', 'Wheat'].map((c) => {
+                const on = calendarFor(selectedCrop)?.id === calendarFor(c)?.id;
+                return (
                 <TouchableOpacity
                   key={c}
-                  style={[st.cropChoice, selectedCrop === c && st.cropChoiceSelected]}
+                  style={[st.cropChoice, on && st.cropChoiceSelected]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
                   onPress={() => {
                     tick('select');
                     setSelectedCrop(c);
@@ -353,11 +357,12 @@ export default function CalendarScreen() {
                   }}
                 >
                   <CropIcon crop={c} size={50} />
-                  <Text raw style={[st.cropChoiceText, selectedCrop === c && { color: C.primaryDark, fontFamily: FONT.bodyBold }]}>
+                  <Text raw style={[st.cropChoiceText, on && { color: C.primaryDark, fontFamily: FONT.bodyBold }]}>
                     {cropName(c, lang)}
                   </Text>
                 </TouchableOpacity>
-              ))}
+                );
+              })}
             </View>
           </View>
         ) : wizardStep === 3 ? (
@@ -369,10 +374,10 @@ export default function CalendarScreen() {
               </TouchableOpacity>
             </View>
             <Text style={st.small}>
-              {selectedCrop === 'tomato' ? t('When were the seedlings transplanted?') : t('When was this crop planted?')}
+              {calendarFor(selectedCrop)?.id === 'tomato' ? t('When were the seedlings transplanted?') : t('When was this crop planted?')}
             </Text>
 
-            {/* Quick date chips */}
+            {/* Quick dates: paper tiles like the crop choices (white chips vanish on the white sheet) */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {[
                 { l: t('Today'), d: toIsoDate(new Date()) },
@@ -380,18 +385,25 @@ export default function CalendarScreen() {
                 { l: t('2 weeks ago'), d: toIsoDate(new Date(Date.now() - 14 * DAY)) },
                 { l: t('3 weeks ago'), d: toIsoDate(new Date(Date.now() - 21 * DAY)) },
                 { l: t('1 month ago'), d: toIsoDate(new Date(Date.now() - 30 * DAY)) },
-              ].map((chip) => (
-                <Chip
-                  key={chip.d}
-                  label={chip.l}
-                  raw
-                  active={selectedDate === chip.d}
-                  onPress={() => {
-                    tick('select');
-                    setSelectedDate(chip.d);
-                  }}
-                />
-              ))}
+              ].map((chip) => {
+                const on = selectedDate === chip.d;
+                return (
+                  <TouchableOpacity
+                    key={chip.d}
+                    style={[st.dateChoice, on && st.cropChoiceSelected]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    onPress={() => {
+                      tick('select');
+                      setSelectedDate(chip.d);
+                    }}
+                  >
+                    <Text raw style={[st.cropChoiceText, { fontSize: 15 }, on && { color: C.primaryDark, fontFamily: FONT.bodyBold }]}>
+                      {chip.l}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <View style={{ marginTop: 8 }}>
@@ -430,7 +442,10 @@ export default function CalendarScreen() {
                 kind="secondary"
                 icon="plus"
                 onPress={() => {
+                  // A new planting starts fresh: today's date, not the one just saved.
                   setSelectedField(unplanned.find((u) => u.id !== selectedField?.id) ?? null);
+                  setSelectedCrop('Maize');
+                  setSelectedDate(toIsoDate(new Date()));
                   setWizardStep(1);
                 }}
               />
@@ -464,5 +479,6 @@ const st = StyleSheet.create({
   wizardRowTitle: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
   cropChoice: { width: '30%', minWidth: 90, flexGrow: 1, alignItems: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 14, backgroundColor: C.bg, borderWidth: 1.5, borderColor: 'transparent' },
   cropChoiceSelected: { borderColor: C.primary, backgroundColor: C.primaryTint },
+  dateChoice: { width: '47%', flexGrow: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderRadius: 14, backgroundColor: C.bg, borderWidth: 1.5, borderColor: 'transparent' },
   cropChoiceText: { fontSize: 14, color: C.textMid, textAlign: 'center' },
 });
