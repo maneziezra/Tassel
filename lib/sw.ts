@@ -1231,6 +1231,8 @@ export const SW: Record<string, string> = {
   "Up {pct}% this month": "Imepanda {pct}% mwezi huu",
   "Down {pct}% this month": "Imeshuka {pct}% mwezi huu",
   "Steady this month": "Imetulia mwezi huu",
+  // v2.7 profile loading state (flagged for native-speaker review)
+  "Loading": "Inapakia",
   // v2.7 community post: no guess named below 75 % (flagged for native-speaker review)
   "The scanner says {disease} ({pct}%). What treatment worked for you?": "Kikaguzi kinasema {disease} ({pct}%). Ni tiba gani ilikufaa wewe?",
   "The scanner was not sure what this is. Can anyone help?": "Kikaguzi hakikuwa na uhakika ni nini. Kuna anayeweza kusaidia?",

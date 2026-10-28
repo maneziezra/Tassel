@@ -4,7 +4,7 @@
 // Cleanly regrouped into clear sections without clutter.
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Linking, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Linking, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -81,7 +81,8 @@ export default function ProfileScreen() {
   const { session, isAnonymous, email } = useSession();
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [farms, setFarms] = useState<Farm[]>([]);
+  const [farms, setFarms] = useState<Farm[] | null>(null); // null while loading: never show "0 fields" before we know
+  const [farmsError, setFarmsError] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', county: '', crops: '' });
   const [edit, setEdit] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -106,17 +107,25 @@ export default function ProfileScreen() {
       // offline fallback
     }
 
+    // Separate calls: a failed scan count must not hide the fields.
     try {
-      const [farmList, scans] = await Promise.all([listFarms(), countIncidents()]);
+      const farmList = await listFarms();
       setFarms(farmList);
+      setFarmsError(false);
       setStats((prev) => ({
         ...prev,
         fields: farmList.length,
-        scans,
         acres: farmList.reduce((a, f) => a + (Number(f.size_acres) || 0), 0),
       }));
     } catch {
-      // offline fallback
+      setFarmsError(true);
+      setFarms((prev) => prev ?? []);
+    }
+    try {
+      const scans = await countIncidents();
+      setStats((prev) => ({ ...prev, scans }));
+    } catch {
+      // offline: keep the last count
     }
   }, [session?.user.created_at]);
 
@@ -209,8 +218,8 @@ export default function ProfileScreen() {
               {/* 4 Clean Metrics */}
               <View style={st.stats}>
                 {[
-                  { v: String(stats.fields), l: t('fields') },
-                  { v: stats.acres ? (prefs.units === 'hectares' ? (stats.acres * 0.4047).toFixed(1) : stats.acres.toFixed(1)) : '0', l: t(prefs.units === 'hectares' ? 'hectares' : 'acres') },
+                  { v: farms === null ? '–' : String(stats.fields), l: t('fields') },
+                  { v: farms === null ? '–' : stats.acres ? (prefs.units === 'hectares' ? (stats.acres * 0.4047).toFixed(1) : stats.acres.toFixed(1)) : '0', l: t(prefs.units === 'hectares' ? 'hectares' : 'acres') },
                   { v: String(stats.scans), l: t('scans') },
                   { v: String(stats.days), l: t('days') },
                 ].map((x) => (
@@ -226,11 +235,23 @@ export default function ProfileScreen() {
 
             {/* 2. My Fields as Small Map Tiles (P2 Requirement) */}
             <Section
-              title={t('My fields ({n})', { n: farms.length })}
+              title={farms === null ? t('My fields') : t('My fields ({n})', { n: farms.length })}
               action={t('+ Add field')}
               onAction={() => router.push('/add-farm')}
             />
-            {farms.length > 0 ? (
+            {farms === null ? (
+              <Card style={{ marginHorizontal: 16 }}>
+                <ActivityIndicator color={C.primary} style={{ paddingVertical: 28 }} accessibilityLabel={t('Loading')} />
+              </Card>
+            ) : farmsError && farms.length === 0 ? (
+              <Card style={{ marginHorizontal: 16 }}>
+                <View style={{ alignItems: 'center', gap: 8, paddingVertical: 12 }}>
+                  <Icon name="wifi-off" size={28} color={C.textSub} />
+                  <Text style={st.itemLbl}>Could not load your fields.</Text>
+                  <Btn label="Try again" kind="secondary" icon="refresh" onPress={load} />
+                </View>
+              </Card>
+            ) : farms.length > 0 ? (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -251,13 +272,13 @@ export default function ProfileScreen() {
                     />
                     <View style={st.fieldTileMeta}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <CropIcon crop={f.crop ?? 'Maize'} size={20} disc={false} />
+                        {f.crop ? <CropIcon crop={f.crop} size={20} disc={false} /> : null}
                         <Text raw style={st.fieldTileName} numberOfLines={1}>
                           {f.name}
                         </Text>
                       </View>
                       <Text raw style={st.fieldTileSub}>
-                        {fmtArea(Number(f.size_acres) || 0, prefs.units)} · {cropName(f.crop ?? 'Maize')}
+                        {[f.size_acres ? fmtArea(Number(f.size_acres), prefs.units) : null, f.crop ? cropName(f.crop) : null].filter(Boolean).join(' · ')}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -504,7 +525,7 @@ const st = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 10, marginTop: 18, width: '100%' },
   stat: { flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 12, alignItems: 'center', gap: 2 },
   statV: { fontSize: 20, fontFamily: FONT.display, color: C.text },
-  statL: { fontSize: 12, color: C.textSub },
+  statL: { fontSize: 13, color: C.textSub },
 
   // My fields tiles
   fieldTile: {
