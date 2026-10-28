@@ -57,7 +57,7 @@ import { getPosition } from '../../lib/geo';
 import { describeCode, getWeather, type Weather } from '../../lib/weather';
 import type { Grid } from '../../lib/satelliteCore';
 import { loadCached, saveCached } from '../../lib/store';
-import { currentStage, daysSince, fieldTasks, loadTicks, saveTicks, type FieldTask } from '../../lib/calendar';
+import { currentStage, daysSince, fieldTasks, loadTicks, saveTicks, toIsoDate, type FieldTask } from '../../lib/calendar';
 import { alertOnce } from '../../lib/notify';
 import { locale, useLang } from '../../lib/i18n';
 import { fmtArea, usePrefs } from '../../lib/prefs';
@@ -206,26 +206,29 @@ export default function HomeScreen() {
       // offline: keep cached profile
     }
 
+    // Fields and scans load separately: offline the scan list fails, and in one Promise.all that
+    // also threw away the fields (which listFarms keeps on the phone).
+    let f: Farm[] = [];
     try {
-      const [f, i] = await Promise.all([listFarms(), listIncidents({ limit: 30 })]);
+      f = await listFarms();
       setFarms(f);
-      setIncidents(i);
-      setOffline(false);
-
       if (f.length > 0 && !activeFarmId) {
         setActiveFarmId(f[0].id);
       }
-
       const tk: Record<string, string[]> = {};
       for (const x of f) tk[x.id] = await loadTicks(x.id);
       setTicks(tk);
-
-      loadWeather(f);
+    } catch {
+      setOffline(true);
+    }
+    try {
+      setIncidents(await listIncidents({ limit: 30 }));
+      setOffline(false);
       latestSatellite().then(setSatSummaries).catch(() => {});
     } catch {
       setOffline(true);
-      loadWeather([]);
     } finally {
+      loadWeather(f);
       setLoaded(true);
     }
   }, [loadWeather, loadOutbreaks, activeFarmId]);
@@ -265,7 +268,9 @@ export default function HomeScreen() {
     await saveTicks(x.farmId, next);
   };
 
-  const todaySpray = weather?.spray?.[0];
+  // Today's entry only: the cached forecast can be days old, and offline its first day is not today.
+  const todayIso = toIsoDate(new Date());
+  const todaySpray = weather?.spray?.find((d) => d.date === todayIso);
   const primaryTask = tasks.find((t) => !t.ticked) ?? tasks[0] ?? null;
   const topOutbreak = outbreaks[0] ?? null;
 
@@ -462,7 +467,7 @@ export default function HomeScreen() {
         {offline ? (
           <View style={st.offlineNotice}>
             <Dot color={C.warn} />
-            <Text style={st.offlineNoticeText}>Offline. Scanning still works; your fields load when you reconnect.</Text>
+            <Text style={st.offlineNoticeText}>{farms.length ? 'Offline. Scanning still works; your fields are shown as last saved.' : 'Offline. Scanning still works; your fields load when you reconnect.'}</Text>
           </View>
         ) : null}
 
@@ -496,27 +501,30 @@ export default function HomeScreen() {
           >
             {/* a sky disc: the white Noto cloud vanished on the paper-grey one */}
             <View style={[st.actionCardIconWrap, { backgroundColor: '#CFE0EA' }]}>
-              <NotoEmoji name={todaySpray?.window ? 'droplet' : 'rain'} size={34} />
+              {todaySpray ? <NotoEmoji name={todaySpray.window ? 'droplet' : 'rain'} size={34} /> : <Icon name="weather-cloudy-alert" size={28} color={C.textMid} />}
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={st.actionCardTitle}>
-                  {todaySpray?.window ? 'Good spray window today' : 'Spray window closed today'}
+                  {!todaySpray ? 'No forecast for today' : todaySpray.window ? 'Good spray window today' : 'Spray window closed today'}
                 </Text>
-                {weather ? (
+                {weather && todaySpray ? (
                   <Text raw style={st.tempSnippet}>
                     {Math.round(weather.temp)}°C
                   </Text>
                 ) : null}
               </View>
               <Text raw style={st.actionCardDesc}>
-                {todaySpray?.window
+                {/* never a guess: no forecast (offline) says so; no invented wind or temperature */}
+                {!todaySpray
+                  ? t('Spray advice needs a forecast. It updates when you have signal.')
+                  : todaySpray.window && weather
                   ? t('Safe to spray until {time} · Wind {w} km/h, {t}°C', {
                       time: todaySpray.window.split('–')[1] ?? todaySpray.window,
-                      w: Math.round(weather?.wind ?? 8),
-                      t: Math.round(weather?.temp ?? 22),
+                      w: Math.round(weather.wind),
+                      t: Math.round(weather.temp),
                     })
-                  : todaySpray?.reason
+                  : todaySpray.reason
                   ? t(todaySpray.reason)
                   : t('Rain or high wind expected. Wait for clear conditions.')}
               </Text>

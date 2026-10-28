@@ -1237,6 +1237,10 @@ export const SW: Record<string, string> = {
   // v2.7 plain text that had no Kiswahili (found on the TECNO; flagged for native-speaker review)
   "Price/bag (KES)": "Bei/mfuko (KES)",
   "{area} total": "jumla {area}",
+  // v2.7 offline: no forecast is said, not guessed (flagged for native-speaker review)
+  "No forecast for today": "Hakuna utabiri wa leo",
+  "Offline. Scanning still works; your fields are shown as last saved.": "Hakuna mtandao. Ukaguzi bado unafanya kazi; mashamba yako yanaonyeshwa kama yalivyohifadhiwa mwisho.",
+  "Spray advice needs a forecast. It updates when you have signal.": "Ushauri wa kunyunyizia unahitaji utabiri. Utasasishwa ukipata mtandao.",
   "Based on 50 kg bag prices": "Kwa bei za mifuko ya kilo 50",
   "Agro-dealers": "Maduka ya pembejeo",
   "Monthly reference prices from verified institutions. Always confirm today's prices before selling.": "Bei za marejeleo za kila mwezi kutoka taasisi zilizothibitishwa. Hakikisha bei ya leo kabla ya kuuza.",

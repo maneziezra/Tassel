@@ -30,6 +30,7 @@ import {
 import { fmtArea, fromAcres, setPrefs, toAcres, usePrefs, type Units } from '../lib/prefs';
 import { C, FONT } from '../lib/theme';
 import { getWeather, type Weather } from '../lib/weather';
+import { toIsoDate } from '../lib/calendar';
 
 const HA_PER_ACRE = 0.404686;
 const SHOWN = 4;
@@ -113,7 +114,7 @@ export default function PesticideCalcScreen() {
   const hectares = acres * HA_PER_ACRE;
   const plan = product ? planMix(product, crop, activeProblem, tankL, hectares, tanksOverride) : null;
   const use = plan?.use ?? null;
-  const today = weather?.spray?.[0] ?? null;
+  const today = weather?.spray?.find((d) => d.date === toIsoDate(new Date())) ?? null; // today's date, not the first entry
 
   const chooseCrop = (c: string) => {
     tick('select');

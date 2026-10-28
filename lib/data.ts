@@ -220,17 +220,45 @@ async function rememberPlanting(id: string, date: string | null | undefined) {
   }
 }
 
+// The last field list that loaded is kept on the phone. Offline (checked on the TECNO in flight
+// mode) Home treated the farmer as having no fields and offered "Draw my field"; the calendar,
+// fertiliser and spray screens were empty too. Saved fields must work without signal.
+const FARMS_CACHE = 'farms:last';
+
 export async function listFarms(): Promise<Farm[]> {
-  await currentUserId();
-  const { data, error } = await supabase.from('farms').select('*').order('created_at', { ascending: true });
-  fail(error, 'load your fields');
-  return Promise.all(((data ?? []) as Farm[]).map(withLocalPlanting));
+  try {
+    await currentUserId();
+    const { data, error } = await supabase.from('farms').select('*').order('created_at', { ascending: true });
+    fail(error, 'load your fields');
+    const list = await Promise.all(((data ?? []) as Farm[]).map(withLocalPlanting));
+    AsyncStorage.setItem(FARMS_CACHE, JSON.stringify(list)).catch(() => {});
+    return list;
+  } catch (e) {
+    const cached = await cachedFarms();
+    if (cached) return cached;
+    throw e;
+  }
+}
+
+async function cachedFarms(): Promise<Farm[] | null> {
+  try {
+    const raw = await AsyncStorage.getItem(FARMS_CACHE);
+    return raw ? await Promise.all((JSON.parse(raw) as Farm[]).map(withLocalPlanting)) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getFarm(id: string): Promise<Farm | null> {
-  const { data, error } = await supabase.from('farms').select('*').eq('id', id).maybeSingle();
-  fail(error, 'load this field');
-  return data ? withLocalPlanting(data as Farm) : null;
+  try {
+    const { data, error } = await supabase.from('farms').select('*').eq('id', id).maybeSingle();
+    fail(error, 'load this field');
+    return data ? withLocalPlanting(data as Farm) : null;
+  } catch (e) {
+    const hit = (await cachedFarms())?.find((f) => f.id === id);
+    if (hit) return hit;
+    throw e;
+  }
 }
 
 export type NewFarm = Partial<Omit<Farm, 'id' | 'created_at'>> & { name: string };
