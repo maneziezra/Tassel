@@ -4,9 +4,10 @@
 // estimate total costs, share via WhatsApp, or find nearby agro-dealers.
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { Image, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, Share, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { Btn, Chip, CropIcon, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
 import { listFarms, type Farm } from '../lib/data';
 import { cropName } from '../lib/diseases';
@@ -438,70 +439,59 @@ export default function FertiliserScreen() {
           {[...grandTotals].map(([id, kg]) => {
             const b = toBags(kg);
             return (
-              <View key={id} style={st.shopRow}>
+              // Rows slide in and out as fields or products change; the bag count re-fades on each change.
+              <Animated.View key={id} style={st.shopRow} entering={FadeInDown} exiting={FadeOut} layout={LinearTransition}>
                 <Image source={FERTS[id].image} style={{ width: 44, height: 38 }} resizeMode="contain" />
                 <View style={{ flex: 1 }}>
                   <Text raw style={st.shopName}>{`${FERTS[id].name} ${FERTS[id].grade}`}</Text>
-                  <Text raw style={st.shopBags}>
-                    {bagText(b.bags, b.extraKg)}
-                  </Text>
-                  <Text raw style={st.small}>
-                    {kg} kg total
-                  </Text>
+                  <Animated.View key={`${id}:${kg}`} entering={FadeIn.duration(250)}>
+                    <Text raw style={st.shopBags}>
+                      {bagText(b.bags, b.extraKg)}
+                    </Text>
+                    <Text raw style={st.small}>
+                      {t('{kg} kg total', { kg })}
+                    </Text>
+                  </Animated.View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={st.priceLbl}>Price/bag (KES)</Text>
-                  <View style={st.priceBox}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        tick('select');
-                        savePrice(id, Math.max(0, (prices[id] ?? 2500) - 100));
-                      }}
-                      hitSlop={6}
-                      accessibilityLabel={t('Less')}
-                    >
-                      <Icon name="minus" size={16} color={C.text} />
-                    </TouchableOpacity>
-                    <Text raw style={st.priceVal}>
-                      {prices[id] ? prices[id]!.toLocaleString() : t('Add')}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        tick('select');
-                        savePrice(id, (prices[id] ?? 2500) + 100);
-                      }}
-                      hitSlop={6}
-                      accessibilityLabel={t('More')}
-                    >
-                      <Icon name="plus" size={16} color={C.text} />
-                    </TouchableOpacity>
-                  </View>
+                  {/* The farmer types the price they were quoted. The old ± buttons started from an
+                      invented KES 2,500 and were 16 px targets. */}
+                  <TextInput
+                    style={st.priceBox}
+                    value={prices[id] ? String(prices[id]) : ''}
+                    onChangeText={(v) => {
+                      const n = Number(v.replace(/[^0-9]/g, ''));
+                      savePrice(id, n);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    placeholder={t('Add')}
+                    placeholderTextColor={C.textSub}
+                    accessibilityLabel={t('Price per 50 kg bag of {name}, in KES', { name: FERTS[id].name })}
+                  />
                 </View>
-              </View>
+              </Animated.View>
             );
           })}
 
           {cost > 0 ? (
+            // Stacked: side by side, "KES 5,600" ran off a 360 dp card.
             <View style={st.costRow}>
-              <View>
-                <Text style={st.label}>{priced ? 'Total estimated cost' : 'Total so far'}</Text>
-                <Text style={st.small}>Based on 50 kg bag prices</Text>
-              </View>
-              <Text raw style={st.cost}>{`KES ${Math.round(cost).toLocaleString()}`}</Text>
+              <Text style={st.label}>{priced ? 'Total estimated cost' : 'Total so far'}</Text>
+              <Animated.View key={Math.round(cost)} entering={FadeIn.duration(250)}>
+                <Text raw style={st.cost} numberOfLines={1} adjustsFontSizeToFit>{`KES ${Math.round(cost).toLocaleString()}`}</Text>
+              </Animated.View>
+              <Text style={st.small}>Based on 50 kg bag prices</Text>
             </View>
           ) : (
             <Text style={[st.small, { marginTop: 12 }]}>Add your agro-dealer's bag price to calculate total expenditure.</Text>
           )}
 
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            <Btn label="Share list" icon="share-variant" kind="primary" onPress={shareList} style={{ flex: 1 }} />
-            <Btn
-              label="Agro-dealers"
-              icon="store-outline"
-              kind="secondary"
-              onPress={() => router.push('/market')}
-              style={{ flex: 1 }}
-            />
+          {/* full-width buttons: side by side, "Agro-dealers" broke into "Agro-dealer / s" */}
+          <View style={{ gap: 10, marginTop: 16 }}>
+            <Btn label="Share list" icon="share-variant" kind="primary" onPress={shareList} />
+            <Btn label="Agro-dealers" icon="store-outline" kind="secondary" onPress={() => router.push('/market')} />
           </View>
         </View>
 
@@ -577,10 +567,9 @@ const st = StyleSheet.create({
   shopRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14 },
   shopName: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text },
   shopBags: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.primary },
-  priceLbl: { fontSize: 12, color: C.textSub, marginBottom: 3 },
-  priceBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.bg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 5 },
-  priceVal: { fontSize: 14, fontFamily: FONT.bodyBold, color: C.text, minWidth: 42, textAlign: 'center' },
-  costRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: C.border },
-  cost: { fontSize: 26, fontFamily: FONT.display, color: C.text },
+  priceLbl: { fontSize: 13, color: C.textSub, marginBottom: 3 },
+  priceBox: { minWidth: 96, minHeight: 48, backgroundColor: C.bg, borderRadius: 10, borderWidth: 1, borderColor: C.border, paddingHorizontal: 10, fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, textAlign: 'center' },
+  costRow: { gap: 2, marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: C.border },
+  cost: { fontSize: 32, fontFamily: FONT.display, color: C.text },
   foot: { fontSize: 13, color: C.textSub, textAlign: 'center', marginHorizontal: 28, marginTop: 18, lineHeight: 19 },
 });

@@ -7,7 +7,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Btn, Chip, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
 import { PcpbProductCard } from '../components/PcpbProductCard';
 import { listFarms, type Farm } from '../lib/data';
@@ -85,6 +85,21 @@ export default function PesticideCalcScreen() {
 
   const crop = cropKey(cropText) ?? cropKey(prefs.avatarCrop) ?? 'maize';
 
+  // Label intervals are days ("7-10") or weeks ("3 weeks"): "repeat every 3 weeks days" showed for coffee rust.
+  const repeatEvery = (interval: string) => {
+    const weeks = interval.match(/^([\d–-]+)\s*weeks?$/i);
+    if (weeks) return t('repeat every {d} weeks', { d: weeks[1] });
+    return /^[\d–-]+$/.test(interval) ? t('repeat every {d} days', { d: interval }) : interval;
+  };
+
+  // The farmer's own field crops first: coffee was the 13th chip, off screen when selected.
+  // (Fields only, so the chips do not jump when one is tapped.)
+  const cropChips = useMemo(() => {
+    const all = CROP_CHOICES.filter((c) => cropKey(c));
+    const mine = new Set(farms.map((f) => cropKey(f.crop)).filter(Boolean));
+    return [...all.filter((c) => mine.has(cropKey(c))), ...all.filter((c) => !mine.has(cropKey(c)))];
+  }, [farms]);
+
   // Problems that have at least one registered product for this crop.
   const problems = useMemo(
     () => (Object.keys(PROBLEMS) as ProblemKey[]).filter((k) => productsFor(PCPB, { crop, problem: k, limit: 1 }).length > 0),
@@ -137,7 +152,7 @@ export default function PesticideCalcScreen() {
         {/* 1. Crop */}
         <Text style={st.step}>Your crop</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.chips}>
-          {CROP_CHOICES.filter((c) => cropKey(c)).map((c) => (
+          {cropChips.map((c) => (
             <Chip key={c} crop={c} label={cropName(c)} raw active={cropKey(c) === crop} onPress={() => chooseCrop(c)} />
           ))}
         </ScrollView>
@@ -281,7 +296,8 @@ export default function PesticideCalcScreen() {
               ) : null}
             </View>
 
-            <View style={st.mix} accessibilityLiveRegion="polite">
+            {/* re-enters when the product or tank changes, so the farmer sees the mix update */}
+            <Animated.View key={`${product?.r}:${tankL}`} entering={FadeInDown.duration(300)} style={st.mix} accessibilityLiveRegion="polite">
               {plan?.perTank ? (
                 <>
                   <Text raw style={st.mixLabel}>
@@ -312,7 +328,7 @@ export default function PesticideCalcScreen() {
                   {use ? (
                     <Text raw style={st.mixNote}>
                       {t('From the label: {crop}, {problem}', { crop: use.labelCrop, problem: use.labelProblem })}
-                      {use.interval ? ` · ${t('repeat every {d} days', { d: use.interval })}` : ''}
+                      {use.interval ? ` · ${repeatEvery(use.interval)}` : ''}
                       {use.maxSprays ? ` · ${t('at most {n} sprays a season', { n: use.maxSprays })}` : ''}
                     </Text>
                   ) : null}
@@ -323,7 +339,7 @@ export default function PesticideCalcScreen() {
                   <Text style={st.mixNote}>We only show a dose that we have read on this product's PCPB label for your crop.</Text>
                 </>
               )}
-            </View>
+            </Animated.View>
 
             {/* 5. Safety */}
             {use?.phiDays !== undefined || product.lab?.reiHours !== undefined || product.lab?.ppe.length ? (

@@ -153,7 +153,8 @@ export default function MarketScreen() {
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Header
         title="Market"
-        subtitle={county ? t('Market prices for {county}', { county }) : t('Kenyan reference and farmer prices')}
+        // Reference prices are national/Nairobi, not county: "Market prices for Uasin Gishu" over Nairobi cards was not true.
+        subtitle={t('Kenyan reference and farmer prices')}
       />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 56 }}>

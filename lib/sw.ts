@@ -1194,7 +1194,7 @@ export const SW: Record<string, string> = {
   "Season story guides & inputs": "Hadithi za mwongozo wa msimu na pembejeo",
   "PCPB tank mixer": "Mchanganyiko wa tanki wa PCPB",
   "Dated field tasks": "Kazi za shambani zenye tarehe",
-  "Season Stages (Tap to play story)": "Hatua za Msimu (Gusa ili uone hadithi)",
+  "Season stages": "Hatua za msimu",
   "Watch out for at this stage": "Zingatia haya katika hatua hii",
   "STAGE HEALTH ALERT": "TAHADHARI YA AFYA YA ZAO",
   "Local Hutton blight risk": "Hatari ya ugonjwa wa ukungu (Hutton)",
@@ -1231,6 +1231,13 @@ export const SW: Record<string, string> = {
   "Up {pct}% this month": "Imepanda {pct}% mwezi huu",
   "Down {pct}% this month": "Imeshuka {pct}% mwezi huu",
   "Steady this month": "Imetulia mwezi huu",
+  // v2.7 fertiliser: the farmer types the bag price (flagged for native-speaker review)
+  "1 acre": "ekari 1",
+  "repeat every {d} weeks": "rudia kila wiki {d}",
+  "{kg} kg total": "jumla kilo {kg}",
+  "Price per 50 kg bag of {name}, in KES": "Bei ya mfuko wa kilo 50 wa {name}, kwa KES",
+  // v2.7 calendar: a planting replaces the field's crop (flagged for native-speaker review)
+  "This replaces {old} in {field}.": "Hii itachukua nafasi ya {old} katika {field}.",
   // v2.7 profile loading state (flagged for native-speaker review)
   "Loading": "Inapakia",
   // v2.7 community post: no guess named below 75 % (flagged for native-speaker review)

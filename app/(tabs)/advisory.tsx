@@ -294,7 +294,7 @@ export default function AdvisoryScreen() {
 
         {/* Season Stage Story Cards */}
         <View style={st.timeline}>
-          <Text style={st.sectionHeader}>Season Stages (Tap to play story)</Text>
+          <Text style={st.sectionHeader}>Season stages</Text>
           {crop.stages.map((stage, idx) => {
             const watch = getStageWatchOut(cropId, stage.id);
             return (

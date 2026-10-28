@@ -65,7 +65,8 @@ const HA_PER_ACRE = 0.404686;
 export function fmtArea(acres: number, units: Units, digits = 2): string {
   const v = units === 'hectares' ? acres * HA_PER_ACRE : acres;
   const n = Number(v.toFixed(digits));
-  return units === 'hectares' ? tr('{n} ha', { n }) : tr('{n} acres', { n });
+  if (units === 'hectares') return tr('{n} ha', { n });
+  return n === 1 ? tr('1 acre') : tr('{n} acres', { n }); // "1 acres" showed on the fertiliser list
 }
 
 export const toAcres = (v: number, units: Units) => (units === 'hectares' ? v / HA_PER_ACRE : v);
