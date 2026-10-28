@@ -4,9 +4,10 @@
 // Crop and field come from the farmer's saved fields; the problem from the scan.
 // A dose appears only when it is quoted from the product label (lib/pcpbCore.ts).
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useReducedMotion } from 'react-native-reanimated';
 import { Btn, Chip, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
 import { PcpbProductCard } from '../components/PcpbProductCard';
 import { listFarms, type Farm } from '../lib/data';
@@ -51,14 +52,24 @@ export default function PesticideCalcScreen() {
   const [fieldId, setFieldId] = useState<string | null>(null);
   const [tanksOverride, setTanksOverride] = useState<number | null>(null);
   const [weather, setWeather] = useState<Weather | null>(null);
+  // The products sit below a dozen problem tiles: bring them into view after a pick.
+  const scroller = useRef<ScrollView>(null);
+  const productsY = useRef<number | null>(null);
+  const pendingScroll = useRef(false);
+  const reduceMotion = useReducedMotion();
+  const showProducts = () => {
+    pendingScroll.current = false;
+    if (productsY.current !== null) scroller.current?.scrollTo({ y: Math.max(0, productsY.current - 8), animated: !reduceMotion });
+  };
 
   useFocusEffect(
     useCallback(() => {
       listFarms()
         .then((list) => {
           setFarms(list);
-          // Pre-fill from the farmer's first field unless a crop was passed in.
-          const first = list.find((f) => f.size_acres);
+          // Pre-fill from the farmer's first field; when a crop was passed in, only a field growing it
+          // (a tomato spray was being sized for a 10.75-acre coffee field).
+          const first = list.find((f) => f.size_acres && (!prm.crop || cropKey(f.crop) === cropKey(prm.crop)));
           if (first && !fieldId) {
             setFieldId(first.id);
             setAcres(Number(first.size_acres));
@@ -93,6 +104,7 @@ export default function PesticideCalcScreen() {
     tick('select');
     setCropText(c);
     setProblem(null);
+    productsY.current = null; // the products block unmounts until a problem is picked again
     setRegNo(null);
     setShowAll(false);
     setTanksOverride(null);
@@ -121,7 +133,7 @@ export default function PesticideCalcScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Header title="Spray calculator" subtitle={t('PCPB registered products only')} />
-      <ScrollView contentContainerStyle={{ paddingBottom: 56 }}>
+      <ScrollView ref={scroller} contentContainerStyle={{ paddingBottom: 56 }}>
         {/* 1. Crop */}
         <Text style={st.step}>Your crop</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.chips}>
@@ -145,6 +157,9 @@ export default function PesticideCalcScreen() {
                     setRegNo(null);
                     setShowAll(false);
                     setTanksOverride(null);
+                    // first pick: scroll once the products block lays out; later picks: it is already there
+                    if (productsY.current === null) pendingScroll.current = true;
+                    else showProducts();
                   }}
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
@@ -163,7 +178,13 @@ export default function PesticideCalcScreen() {
         {/* 3. Registered options */}
         {activeProblem ? (
           <>
-            <View style={st.stepRow}>
+            <View
+              style={st.stepRow}
+              onLayout={(e) => {
+                productsY.current = e.nativeEvent.layout.y;
+                if (pendingScroll.current) showProducts();
+              }}
+            >
               <Text style={st.step}>Registered products</Text>
               <Text raw style={st.count}>
                 {t('{n} on the PCPB list', { n: products.length })}
@@ -374,8 +395,8 @@ function cropLabel(key: string): string {
 
 const st = StyleSheet.create({
   step: { fontSize: 22, color: C.text, marginHorizontal: 16, marginTop: 28, marginBottom: 10 },
-  stepRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingRight: 16 },
-  count: { fontSize: 13, color: C.textSub },
+  stepRow: { paddingRight: 16 }, // the count sits under the heading: beside it, it ran off a 360 dp screen
+  count: { fontSize: 13, color: C.textSub, marginLeft: 16, marginTop: -6 },
   chips: { gap: 8, paddingHorizontal: 16 },
   problemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
   problem: {
