@@ -273,7 +273,8 @@ export default function FertiliserScreen() {
               ))}
             </ScrollView>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, marginBottom: 8 }}>
+            {/* wraps: in Kiswahili "Ukubwa wa shamba" + "Ekari | Hektari" ran off the screen */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between', marginTop: 14, marginBottom: 8 }}>
               <Text style={st.label}>Field size</Text>
               <Segmented
                 value={units}
@@ -309,7 +310,7 @@ export default function FertiliserScreen() {
 
           return (
             <View key={a.key} style={st.panel}>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <Text style={st.appTitle}>{a.title}</Text>
                 <Text style={st.small}>{a.when}</Text>
               </View>
@@ -377,10 +378,11 @@ export default function FertiliserScreen() {
 
               {/* Rate */}
               <TouchableOpacity style={st.rateRow} onPress={() => setEditRate(editing ? null : a.key)} accessibilityRole="button">
-                <Text raw style={[st.rateTxt, { flex: 1 }]}>
+                {/* the rate keeps at least half the row: the Kiswahili link squeezed it to "Kipim / o: kilo / 50" */}
+                <Text raw style={[st.rateTxt, { flexGrow: 1, flexBasis: '50%' }]}>
                   {t('Rate: {kg} kg per acre', { kg: c.rate })}
                 </Text>
-                <Text style={st.link}>{editing ? t('Done') : t('From a soil test?')}</Text>
+                <Text style={[st.link, { flexShrink: 1, textAlign: 'right' }]}>{editing ? t('Done') : t('From a soil test?')}</Text>
               </TouchableOpacity>
               {editing ? (
                 <View style={{ marginTop: 8 }}>
@@ -431,9 +433,9 @@ export default function FertiliserScreen() {
 
         {/* Live Aggregated Shopping list and cost */}
         <View style={st.panel}>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, alignItems: 'baseline', justifyContent: 'space-between' }}>
             <Text style={st.appTitle}>Live shopping list</Text>
-            <Text style={st.small}>{fmtArea(totalAcreage, units)} total</Text>
+            <Text raw style={st.small}>{t('{area} total', { area: fmtArea(totalAcreage, units) })}</Text>
           </View>
 
           {[...grandTotals].map(([id, kg]) => {

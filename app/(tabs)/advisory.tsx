@@ -346,7 +346,7 @@ export default function AdvisoryScreen() {
         </Press>
 
         <Text style={st.footnote}>
-          Pesticide guidance strictly follows Kenya PCPB registrations as reviewed in June 2025. Always follow product labels. Not sponsored.
+          Products come from the PCPB register (Aug 2026), without the actives withdrawn in June 2025. Always follow the label. Not sponsored.
         </Text>
       </ScrollView>
 

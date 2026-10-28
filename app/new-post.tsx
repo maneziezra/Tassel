@@ -255,7 +255,7 @@ export default function NewPostScreen() {
         ) : null}
 
         <Text style={st.hint}>
-          Posts are shared with registered farmers in your community. Photos stay on phone unless posted.
+          Posts are seen by everyone who uses Tassel. Your photo leaves the phone only if you post it.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

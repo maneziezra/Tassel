@@ -153,7 +153,15 @@ export function KenyaOutbreakMap({ farmerCounty, outbreaks }: Props) {
             <Circle cx={farmerPos.x} cy={farmerPos.y} r={18} fill="none" stroke={C.brandGold} strokeWidth="2.5" strokeDasharray="4 2" />
             <Circle cx={farmerPos.x} cy={farmerPos.y} r={5} fill={C.brandGold} />
             {/* one string: two text children were drawn on top of each other ("Uasin Gishu" over "(You)") */}
-            <SvgText x={farmerPos.x} y={farmerPos.y - 26} fill={C.brandGold} fontSize="13" fontFamily={FONT.bodyBold} textAnchor="middle">
+            {/* anchored away from the nearer edge: centred, "Uasin Gishu (wewe)" was cut at the left */}
+            <SvgText
+              x={farmerPos.x < MAP_W * 0.35 ? farmerPos.x - 14 : farmerPos.x > MAP_W * 0.65 ? farmerPos.x + 14 : farmerPos.x}
+              y={farmerPos.y - 26}
+              fill={C.brandGold}
+              fontSize="13"
+              fontFamily={FONT.bodyBold}
+              textAnchor={farmerPos.x < MAP_W * 0.35 ? 'start' : farmerPos.x > MAP_W * 0.65 ? 'end' : 'middle'}
+            >
               {t('{county} (you)', { county: farmerCounty ?? '' })}
             </SvgText>
           </G>
