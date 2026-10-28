@@ -269,7 +269,7 @@ export default function AdvisoryScreen() {
         <View style={st.tools}>
           <Press style={st.tool} onPress={() => router.push('/fertiliser')}>
             <Image source={FERTS.DAP.image} style={{ width: 44, height: 38 }} resizeMode="contain" />
-            <Text style={st.toolTitle}>Fertiliser</Text>
+            <Text style={st.toolTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.87}>Fertiliser</Text>
             <Text style={st.small}>Live shopping list</Text>
           </Press>
           <Press
@@ -282,12 +282,12 @@ export default function AdvisoryScreen() {
             }
           >
             <Icon name="spray" size={32} color={C.primary} style={{ height: 38 }} />
-            <Text style={st.toolTitle}>Pesticides</Text>
+            <Text style={st.toolTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.87}>Pesticides</Text>
             <Text style={st.small}>PCPB tank mixer</Text>
           </Press>
           <Press style={st.tool} onPress={() => router.push('/calendar')}>
             <Icon name="calendar-check-outline" size={32} color={C.text} style={{ height: 38 }} />
-            <Text style={st.toolTitle}>Calendar</Text>
+            <Text style={st.toolTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.87}>Calendar</Text>
             <Text style={st.small}>Dated field tasks</Text>
           </Press>
         </View>
