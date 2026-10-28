@@ -100,6 +100,20 @@ Screenshots: `docs/redesign/shots/before-p2-*.jpg`, `after-p2-*.jpg`, `*-calenda
 - **Spray calculator**: scrolls to products after a pick; count no longer clipped; a tomato spray is
   no longer sized for a coffee field.
 
+## Farmer pass (28 Oct, evening)
+
+Every request re-checked against the brief's five questions, on the TECNO:
+- Calendar: the planting itself no longer shows as "Missed"; choosing a field that grows another
+  crop says "This replaces Coffee in Kera Coffee."; the ready screen springs in with a Noto seedling.
+- Fertiliser: bag prices are typed (the old +/- began at an invented KES 2,500 and were 16 px);
+  total and buttons no longer overflow; list rows animate on change.
+- Spray calculator: the farmer's own crops first; mix card animates; "every 3 weeks days" fixed.
+- Prices subtitle no longer claims county prices; "1 acres" fixed app-wide.
+- Kiswahili pass: map label, fertiliser rows and headers fixed; 17 untranslated strings added;
+  two of them corrected first (posts are public to all Tassel users; PCPB register Aug 2026).
+- Offline check: the debug build cannot start in flight mode (it loads its code from Metro), so
+  the offline check needs the release APK.
+
 ## Not done / needs Ezra
 
 - **Phone checks still to do**: the planting-calendar flow; before/after shots of the other screens.
