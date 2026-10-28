@@ -71,12 +71,11 @@ const TYPE_ICON: Record<string, IconName> = {
   'Bio-input': 'leaf',
 };
 
-/** Generate punchy 5-10 word caption from an activity string */
-function makeCaption(activity: string): string {
-  const cleaned = activity.split('.')[0].trim();
-  const words = cleaned.split(' ');
-  if (words.length <= 10) return cleaned;
-  return words.slice(0, 9).join(' ') + '…';
+/** The step's first sentence is the caption, whole (a cut-off "…" hid facts); the rest goes underneath. */
+function splitStep(activity: string): { caption: string; rest: string } {
+  const m = activity.match(/^(.+?[.!?])(\s+|$)/); // sentence end, not a decimal point like "2.5"
+  const caption = (m ? m[1] : activity).trim();
+  return { caption, rest: activity.slice(caption.length).trim() };
 }
 
 /** Stage disease watch-outs */
@@ -157,6 +156,7 @@ export default function AdvisoryScreen() {
       type: 'watchout' | 'action' | 'products';
       title: string;
       caption?: string;
+      rest?: string;
       body: string;
       index?: number;
       facts?: DiagramFact[];
@@ -177,7 +177,7 @@ export default function AdvisoryScreen() {
       cards.push({
         type: 'action',
         title: `${t('Action')} ${idx + 1}`,
-        caption: makeCaption(act),
+        ...splitStep(act),
         body: act,
         index: idx,
         facts: diagramFacts(sourceStage?.activities[idx] ?? act),
@@ -217,7 +217,8 @@ export default function AdvisoryScreen() {
 
   const readCard = () => {
     if (!activeCard) return;
-    const textToSpeak = `${activeCard.title}. ${activeCard.caption ?? ''}. ${activeCard.body}`;
+    // An action's caption is part of its body: read the step once.
+    const textToSpeak = activeCard.type === 'action' ? `${activeCard.title}. ${activeCard.body}` : `${activeCard.title}. ${activeCard.caption ?? ''}. ${activeCard.body}`;
     speak(textToSpeak, { lang });
   };
 
@@ -440,9 +441,11 @@ export default function AdvisoryScreen() {
                     <Text raw style={st.actionCaption}>
                       {activeCard.caption}
                     </Text>
-                    <Text raw style={st.cardBody}>
-                      {activeCard.body}
-                    </Text>
+                    {activeCard.rest ? (
+                      <Text raw style={[st.cardBody, { textAlign: 'left', marginTop: 8 }]}>
+                        {activeCard.rest}
+                      </Text>
+                    ) : null}
 
                     <View style={{ marginTop: 18, alignSelf: 'flex-start' }}>
                       <Btn

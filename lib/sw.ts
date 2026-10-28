@@ -1384,6 +1384,7 @@ export const SW: Record<string, string> = {
   "Plants {n} cm apart": "Mimea sm {n} kati yake",
   "{n} cm": "sm {n}",
   "between rows": "kati ya mistari",
+  "between plants": "kati ya mimea",
   "{n} cm deep": "kina cha sm {n}",
   "Soil surface": "Uso wa udongo",
   "Other crops for {n} seasons": "Mazao mengine kwa misimu {n}",

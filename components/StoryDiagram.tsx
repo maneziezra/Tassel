@@ -74,8 +74,8 @@ function Seed({ p, i, n, x, y }: { p: SharedValue<number>; i: number; n: number;
 function Spacing({ fact, width, k, compact }: { fact: Extract<DiagramFact, { kind: 'spacing' }>; width: number; k: string; compact?: boolean }) {
   const { t } = useLang();
   const p = useClock(k, 1800);
-  const L = 92; // label column: room for "45–50 cm" on one line
-  const T = 34; // room for the plant bracket
+  const L = 124; // label column: room for "45–50 cm" on one line (108 still cut it on the TECNO)
+  const T = 54; // room for the two-line plant label and its bracket
   const r = compact ? 42 : 58; // px between rows
   const ratio = mid(fact.plant) / mid(fact.row);
   const pp = Math.max(16, r * ratio); // px between plants (true ratio unless very tight)
@@ -101,9 +101,13 @@ function Spacing({ fact, width, k, compact }: { fact: Extract<DiagramFact, { kin
         <View style={st.hLine} />
         <View style={st.hTickR} />
       </Reveal>
-      <Reveal p={p} from={0.66} style={{ position: 'absolute', left: L + 6 + pp + 8, top: T - 30 }}>
-        <Text raw style={st.dimTxt}>
-          {plantTxt}
+      {/* two short lines, like the row label: one long line ran off the card */}
+      <Reveal p={p} from={0.66} style={{ position: 'absolute', left: L + 6 + pp + 8, right: 4, top: T - 54 }}>
+        <Text raw style={st.dimTxt} numberOfLines={1}>
+          {t('{n} cm', { n: rangeLabel(fact.plant) })}
+        </Text>
+        <Text style={st.dimSub} numberOfLines={1}>
+          between plants
         </Text>
       </Reveal>
       {/* row bracket between the first two rows */}
@@ -112,7 +116,7 @@ function Spacing({ fact, width, k, compact }: { fact: Extract<DiagramFact, { kin
         <View style={st.vLine} />
         <View style={st.vTickB} />
       </Reveal>
-      <Reveal p={p} from={0.76} style={{ position: 'absolute', left: 0, width: L - 26, top: T + 8 + r / 2 - 18 }}>
+      <Reveal p={p} from={0.76} style={{ position: 'absolute', left: 0, width: L - 28, top: T + 8 + r / 2 - 18 }}>
         <Text raw style={[st.dimTxt, { textAlign: 'right' }]} numberOfLines={1}>
           {t('{n} cm', { n: rangeLabel(fact.row) })}
         </Text>
