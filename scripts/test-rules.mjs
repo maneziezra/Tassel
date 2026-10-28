@@ -28,6 +28,16 @@ test('rule 1: none of the fabricated study figures appear in the app', () => {
   for (const f of files) for (const re of banned) assert.ok(!re.test(read(f)), `${path.relative(root, f)} matches ${re}`);
 });
 
+test('offline scan: the model loads through a file:// URL, not useTensorflowModel(require) (fails in the release APK)', () => {
+  for (const f of files) {
+    if (f.endsWith('useDiseaseModel.ts')) continue;
+    assert.doesNotMatch(read(f), /useTensorflowModel\s*\(/, `${path.relative(root, f)} calls useTensorflowModel; use lib/useDiseaseModel`);
+  }
+  const hook = read(path.join(root, 'lib/useDiseaseModel.ts'));
+  assert.match(hook, /Asset\.fromModule\(MODEL\)/);
+  assert.match(hook, /loadTensorflowModel\(\{ url \}/);
+});
+
 test('rule 1: the KSEF report claims no fabricated or unmeasured result', () => {
   const report = read(path.join(root, 'docs/KSEF_2026_TASSEL_PROJECT_REPORT.md'));
   const banned = [/86\s?%\s?vs\.?\s?40\s?%/i, /\b43\s?\/\s?50\b/, /\b4\.4\s?\/\s?5\b/, /\b4\.8\s?\/\s?5\b/, /100\s?% of 50/i, /\b5\.1\s?\/\s?6\b/, /\b97\.4\s?%/, /\b94\.7\s?%/,

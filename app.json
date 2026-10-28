@@ -70,7 +70,8 @@
           "color": "#137A5A"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-asset"
     ]
   }
 }

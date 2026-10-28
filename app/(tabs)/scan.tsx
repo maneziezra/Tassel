@@ -8,7 +8,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTensorflowModel } from 'react-native-fast-tflite';
+import { useDiseaseModel } from '../../lib/useDiseaseModel';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { classifyPhoto, type ScanStep } from '../../lib/classifier';
 import { DETECTABLE_CROPS, SCANNABLE_DISEASES } from '../../lib/diseases';
@@ -16,7 +16,6 @@ import { Icon, Text } from '../../components/ui';
 import { useLang } from '../../lib/i18n';
 import { C } from '../../lib/theme';
 
-const MODEL = require('../../assets/model/cropguard.tflite');
 
 const TIPS = [
   'Fill the frame with one leaf',
@@ -61,7 +60,7 @@ export default function ScanScreen() {
   }, [reduceMotion, breathe]);
   const frameStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathe.value }] }));
   const [permission, requestPermission] = useCameraPermissions();
-  const tflite = useTensorflowModel(MODEL, []);
+  const tflite = useDiseaseModel();
   const [torch, setTorch] = useState(false);
   const [tip, setTip] = useState(0);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
