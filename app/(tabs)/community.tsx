@@ -9,7 +9,7 @@ import { Btn, Chip, CropIcon, Empty, ErrorNote, Icon, Loading, Text, timeAgo } f
 import { listPosts, photoUrl, type Post } from '../../lib/data';
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { useLang } from '../../lib/i18n';
-import { C, CATEGORY_COLOR } from '../../lib/theme';
+import { C, CATEGORY_COLOR, isSure } from '../../lib/theme';
 
 const CATEGORIES = ['All', 'Pests', 'Diseases', 'Market', 'General'];
 
@@ -149,7 +149,7 @@ export default function CommunityScreen() {
                     <View style={st.scanTag}>
                       <Icon name="line-scan" size={12} color={C.primary} />
                       <Text raw style={st.scanTxt} numberOfLines={1}>
-                        {scan.disease}
+                        {isSure(item.scan_confidence) ? scan.disease : t('Not sure')}
                       </Text>
                     </View>
                   ) : null}

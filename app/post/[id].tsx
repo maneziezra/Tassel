@@ -10,7 +10,7 @@ import { addReply, deletePost, flagPost, getPost, listReplies, photoUrl, type Po
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { useSession } from '../../lib/session';
 import { useLang } from '../../lib/i18n';
-import { C, CATEGORY_COLOR } from '../../lib/theme';
+import { C, CATEGORY_COLOR, isSure } from '../../lib/theme';
 
 export default function PostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -153,8 +153,9 @@ export default function PostScreen() {
             <TouchableOpacity style={st.scan} onPress={() => router.push({ pathname: '/result', params: { label: post.scan_label!, confidence: String(post.scan_confidence ?? 0) } })}>
               <Icon name="line-scan" size={18} color={C.primary} />
               <Text raw style={st.scanTxt}>
-                {t('Scanner result')}: {scan?.disease ?? post.scan_label}
-                {post.scan_confidence != null ? `, ${Math.round(post.scan_confidence * 100)}%` : ''}
+                {isSure(post.scan_confidence)
+                  ? `${t('Scanner result')}: ${scan?.disease ?? post.scan_label}, ${Math.round(post.scan_confidence! * 100)}%`
+                  : `${t('Scanner result')}: ${t('Not sure')}`}
               </Text>
               <Icon name="chevron-right" size={18} color={C.primary} />
             </TouchableOpacity>

@@ -68,6 +68,15 @@ test('rule 3: below 75% the result screen offers no product examples', () => {
   assert.match(classifier, /CONFIDENCE_THRESHOLD\s*=\s*0\.75/);
 });
 
+test('rule 3: community posts name a scanned disease only when sure (75%+)', () => {
+  assert.match(read(path.join(root, 'lib/theme.ts')), /isSure = \(c[^)]*\)[^=]*=> c != null && c >= 0\.75/);
+  assert.match(read(path.join(root, 'app/(tabs)/community.tsx')), /isSure\(item\.scan_confidence\) \? scan\.disease : t\('Not sure'\)/);
+  assert.match(read(path.join(root, 'app/post/[id].tsx')), /isSure\(post\.scan_confidence\)/);
+  const np = read(path.join(root, 'app/new-post.tsx'));
+  assert.match(np, /const sure = isSure\(/);
+  assert.doesNotMatch(np, /agronomist/i, 'no agronomist reviews posts');
+});
+
 test('decision 26 Oct: no system emoji in app code (Noto Animated Emoji only)', () => {
   const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2B50}\u{2705}]/u;
   for (const f of files) assert.ok(!emoji.test(read(f)), `${path.relative(root, f)} contains a system emoji`);

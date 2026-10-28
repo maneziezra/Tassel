@@ -77,6 +77,9 @@ export function confidenceBand(c: number): { label: string; word: string; color:
   return { label: 'Low confidence', word: 'Not sure', color: C.error, tint: C.errorTint };
 }
 
+/** Rule 3: a scan may name its disease only at 75 % or more. Unknown confidence (old posts) counts as not sure. */
+export const isSure = (c: number | null | undefined): boolean => c != null && c >= 0.75;
+
 export const URGENCY_META: Record<string, { label: string; color: string; tint: string }> = {
   low: { label: 'Low urgency', color: C.primaryDark, tint: C.primaryTint },
   medium: { label: 'Act this week', color: C.accentDark, tint: C.accentTint },

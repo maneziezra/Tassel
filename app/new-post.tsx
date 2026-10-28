@@ -23,7 +23,7 @@ import { createPost, type Post } from '../lib/data';
 import { CROP_CHOICES } from '../lib/counties';
 import { cropName, getDiseaseL } from '../lib/diseases';
 import { useLang } from '../lib/i18n';
-import { C, FONT } from '../lib/theme';
+import { C, FONT, isSure } from '../lib/theme';
 
 const CATS: Post['category'][] = ['Diseases', 'Pests', 'General', 'Market'];
 
@@ -41,6 +41,8 @@ export default function NewPostScreen() {
 
   const scanInfo = prm.scanLabel ? getDiseaseL(prm.scanLabel) : undefined;
   const scanPct = prm.scanConfidence ? Math.round(Number(prm.scanConfidence) * 100) : null;
+  // Rule 3: below 75 % the post never names the scanner's guess.
+  const sure = isSure(prm.scanConfidence ? Number(prm.scanConfidence) : null);
 
   // Auto-filled defaults
   const defaultCategory: Post['category'] = useMemo(() => {
@@ -55,20 +57,22 @@ export default function NewPostScreen() {
   const defaultTitle = useMemo(() => {
     if (prm.title) return prm.title;
     if (prm.scanLabel) {
-      return `${cropName(prm.crop ?? '')}: ${scanInfo?.disease ?? prm.scanLabel}`;
+      return sure
+        ? `${cropName(prm.crop ?? '')}: ${scanInfo?.disease ?? prm.scanLabel}`
+        : t('Help: what is wrong with my {crop}?', { crop: cropName(prm.crop ?? '') });
     }
     if (prm.crop) {
       return `${cropName(prm.crop)} field inquiry`;
     }
     return 'Farm question';
-  }, [prm.title, prm.scanLabel, prm.crop, scanInfo?.disease]);
+  }, [prm.title, prm.scanLabel, prm.crop, scanInfo?.disease, sure, t]);
 
   const defaultBody = useMemo(() => {
-    if (prm.scanLabel) {
-      return `Scanner detected ${scanInfo?.disease ?? prm.scanLabel} (${scanPct ?? 0}%). Need advice on treatment from fellow farmers.`;
-    }
-    return '';
-  }, [prm.scanLabel, scanInfo?.disease, scanPct]);
+    if (!prm.scanLabel) return '';
+    return sure
+      ? t('The scanner says {disease} ({pct}%). What treatment worked for you?', { disease: scanInfo?.disease ?? prm.scanLabel, pct: scanPct ?? 0 })
+      : t('The scanner was not sure what this is. Can anyone help?');
+  }, [prm.scanLabel, scanInfo?.disease, scanPct, sure, t]);
 
   const [title, setTitle] = useState(defaultTitle);
   const [body, setBody] = useState(defaultBody);
@@ -133,11 +137,8 @@ export default function NewPostScreen() {
         <Text style={st.headerTitle}>
           {prm.scanLabel ? t('Ask Community') : t('New Farm Story')}
         </Text>
-        <TouchableOpacity onPress={post} disabled={saving || !valid} hitSlop={12}>
-          <Text style={[st.postBtn, (!valid || saving) && { opacity: 0.4 }]}>
-            {saving ? t('Posting…') : t('Post')}
-          </Text>
-        </TouchableOpacity>
+        {/* one Post action: the big button below, in thumb reach */}
+        <View style={{ width: 26 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
@@ -158,7 +159,7 @@ export default function NewPostScreen() {
             <View style={{ alignItems: 'center', gap: 6, paddingVertical: 10 }}>
               <Icon name="camera-plus-outline" size={38} color={C.primary} />
               <Text style={st.cameraPromptTitle}>Add a leaf photo</Text>
-              <Text style={st.cameraPromptSub}>Photos help agronomists and neighbours diagnose issues</Text>
+              <Text style={st.cameraPromptSub}>A photo helps other farmers see the problem.</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
               <TouchableOpacity style={st.pickBtn} onPress={() => pick(true)}>
@@ -180,7 +181,7 @@ export default function NewPostScreen() {
             <View style={{ flex: 1 }}>
               <Text style={st.scanTitle}>Attach AI scan result</Text>
               <Text raw style={st.scanSub}>
-                {cropName(prm.crop ?? '')} · {scanInfo?.disease ?? prm.scanLabel} ({scanPct}%)
+                {sure ? `${cropName(prm.crop ?? '')} · ${scanInfo?.disease ?? prm.scanLabel} (${scanPct}%)` : `${cropName(prm.crop ?? '')} · ${t('Not sure')}`}
               </Text>
             </View>
           </TouchableOpacity>
@@ -273,7 +274,6 @@ const st = StyleSheet.create({
     borderBottomColor: C.border,
   },
   headerTitle: { fontSize: 18, fontFamily: FONT.bodyBold, color: C.text },
-  postBtn: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.primary },
   photoHero: {
     width: '100%',
     height: 240,
