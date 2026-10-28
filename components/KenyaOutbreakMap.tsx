@@ -7,6 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { C, FONT } from '../lib/theme';
 import type { Outbreak } from '../lib/data';
+import { useLang } from '../lib/i18n';
 
 type Props = {
   farmerCounty?: string | null;
@@ -79,6 +80,7 @@ function geoToSvg(lat: number, lng: number): { x: number; y: number } {
 }
 
 export function KenyaOutbreakMap({ farmerCounty, outbreaks }: Props) {
+  const { t } = useLang();
   // Aggregate outbreaks by county
   const countyOutbreakCounts = new Map<string, { farmers: number; diseases: string[] }>();
   outbreaks.forEach((o) => {
@@ -150,8 +152,9 @@ export function KenyaOutbreakMap({ farmerCounty, outbreaks }: Props) {
           <G>
             <Circle cx={farmerPos.x} cy={farmerPos.y} r={18} fill="none" stroke={C.brandGold} strokeWidth="2.5" strokeDasharray="4 2" />
             <Circle cx={farmerPos.x} cy={farmerPos.y} r={5} fill={C.brandGold} />
-            <SvgText x={farmerPos.x} y={farmerPos.y - 12} fill={C.brandGold} fontSize="11" fontFamily={FONT.bodyBold} textAnchor="middle">
-              {farmerCounty} (You)
+            {/* one string: two text children were drawn on top of each other ("Uasin Gishu" over "(You)") */}
+            <SvgText x={farmerPos.x} y={farmerPos.y - 26} fill={C.brandGold} fontSize="13" fontFamily={FONT.bodyBold} textAnchor="middle">
+              {t('{county} (you)', { county: farmerCounty ?? '' })}
             </SvgText>
           </G>
         ) : null}

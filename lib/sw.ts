@@ -1231,6 +1231,15 @@ export const SW: Record<string, string> = {
   "Up {pct}% this month": "Imepanda {pct}% mwezi huu",
   "Down {pct}% this month": "Imeshuka {pct}% mwezi huu",
   "Steady this month": "Imetulia mwezi huu",
+  // v2.7 outbreaks: real window and place (flagged for native-speaker review)
+  "in {county} County": "katika Kaunti ya {county}",
+  "in Kenya": "nchini Kenya",
+  "{county} (you)": "{county} (wewe)",
+  "No outbreaks {where} in the last {n} days.": "Hakuna milipuko {where} kwa siku {n} zilizopita.",
+  "{disease}: {n} farmers {where}, last {days} days.": "{disease}: wakulima {n} {where}, siku {days} zilizopita.",
+  "{n} more below. Counted only when 2 or more farmers report it; no names are shown.": "Mengine {n} hapa chini. Huhesabiwa tu wakulima 2 au zaidi wakiripoti; majina hayaonyeshwi.",
+  "Counted only when 2 or more farmers report it; no names are shown.": "Huhesabiwa tu wakulima 2 au zaidi wakiripoti; majina hayaonyeshwi.",
+  "Keep scanning and saving results. It protects your neighbours.": "Endelea kukagua na kuhifadhi matokeo. Inawalinda majirani zako.",
   // v2.7 prices: name the real dates (flagged for native-speaker review)
   "Up {pct}% since {date}": "Imepanda {pct}% tangu {date}",
   "Down {pct}% since {date}": "Imeshuka {pct}% tangu {date}",

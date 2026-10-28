@@ -1,5 +1,5 @@
 // Outbreak alerts — open directly on a map of Kenya with the farmer's county highlighted.
-// Single headline: "Late blight reported by 4 farmers near you this month."
+// Single headline: "Late blight: 4 farmers in Uasin Gishu County, last 30 days."
 // Filters tucked behind one button. Anonymity rules: >= 2 distinct farmers, totals only.
 
 import React, { useCallback, useMemo, useState } from 'react';
@@ -57,21 +57,16 @@ export default function OutbreaksScreen() {
   };
 
   // Top single line summary
+  // Says the real window (14 or 30 days) and place; the count is the top outbreak's own farmers, never a sum across diseases.
   const summaryHeadline = useMemo(() => {
+    const where = scope === 'county' && county ? t('in {county} County', { county }) : t('in Kenya');
     if (!list || list.length === 0) {
-      return county
-        ? t('No disease outbreaks reported in {county} County this month.', { county })
-        : t('No disease outbreaks reported near you this month.');
+      return t('No outbreaks {where} in the last {n} days.', { where, n: days });
     }
     const top = list[0];
     const diseaseName = getDiseaseL(top.class_label)?.disease ?? top.disease;
-    const totalFarmers = list.reduce((sum, o) => sum + o.farmers, 0);
-
-    return t('{disease} reported by {n} farmers near you this month.', {
-      disease: diseaseName,
-      n: totalFarmers,
-    });
-  }, [list, county, t]);
+    return t('{disease}: {n} farmers {where}, last {days} days.', { disease: diseaseName, n: top.farmers, where, days });
+  }, [list, county, scope, days, t]);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -97,7 +92,9 @@ export default function OutbreaksScreen() {
               {summaryHeadline}
             </Text>
             <Text style={st.headlineSub}>
-              {t('Built anonymously from confident scans by >= 2 farmers.')}
+              {list && list.length > 1
+                ? t('{n} more below. Counted only when 2 or more farmers report it; no names are shown.', { n: list.length - 1 })
+                : t('Counted only when 2 or more farmers report it; no names are shown.')}
             </Text>
           </View>
         </View>
@@ -151,11 +148,8 @@ export default function OutbreaksScreen() {
             }
           />
         ) : list && list.length === 0 && !error ? (
-          <Empty
-            icon="shield-check-outline"
-            title="All clear in your county"
-            text="No disease outbreaks confirmed by 2 or more farmers here recently. Keep scanning and saving results — it protects your neighbors."
-          />
+          // The headline already says "no outbreaks"; this only asks for help, once.
+          <Text style={st.allClear}>Keep scanning and saving results. It protects your neighbours.</Text>
         ) : null}
 
         {list && list.length ? (
@@ -237,12 +231,13 @@ const st = StyleSheet.create({
     alignItems: 'center',
   },
   headlineTxt: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, lineHeight: 22 },
-  headlineSub: { fontSize: 12, color: C.textSub, marginTop: 2 },
+  headlineSub: { fontSize: 13, lineHeight: 18, color: C.textSub, marginTop: 4 },
+  allClear: { fontSize: 14, lineHeight: 20, color: C.textSub, textAlign: 'center', marginHorizontal: 32, marginTop: 20 },
   filterToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 4,
+    minHeight: 48,
     paddingHorizontal: 8,
   },
   filterToggleTxt: { fontSize: 13, fontFamily: FONT.bodyBold, color: C.primary },
@@ -258,12 +253,12 @@ const st = StyleSheet.create({
   filterTitle: { fontSize: 13, fontFamily: FONT.bodyBold, color: C.textSub },
   count: { width: 60, height: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   countNum: { fontSize: 24, fontFamily: FONT.display },
-  countLbl: { fontSize: 10, fontFamily: FONT.bodyBold },
-  crop: { fontSize: 11, fontFamily: FONT.bodyBold, color: C.textSub, letterSpacing: 0.5 },
+  countLbl: { fontSize: 13, fontFamily: FONT.bodyBold },
+  crop: { fontSize: 13, fontFamily: FONT.bodyBold, color: C.textSub, letterSpacing: 0.5 },
   disease: { fontSize: 18, fontFamily: FONT.bodyBold, color: C.text, marginTop: 2 },
-  meta: { fontSize: 12, color: C.textSub, marginTop: 4 },
+  meta: { fontSize: 13, color: C.textSub, marginTop: 4 },
   notify: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: C.errorTint, padding: 10, borderRadius: 10, marginTop: 12 },
-  notifyTxt: { flex: 1, color: C.error, fontSize: 12, fontFamily: FONT.bodyBold },
-  action: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12, backgroundColor: C.primaryTint },
-  actionTxt: { color: C.primary, fontFamily: FONT.bodyBold, fontSize: 13 },
+  notifyTxt: { flex: 1, color: C.error, fontSize: 13, fontFamily: FONT.bodyBold },
+  action: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 48, borderRadius: 12, backgroundColor: C.primaryTint },
+  actionTxt: { color: C.primary, fontFamily: FONT.bodyBold, fontSize: 14 },
 });
