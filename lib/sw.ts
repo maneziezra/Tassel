@@ -1241,6 +1241,12 @@ export const SW: Record<string, string> = {
   "No forecast for today": "Hakuna utabiri wa leo",
   // v2.7 scan result as pictures (flagged for native-speaker review)
   "Checking your leaf…": "Tunakagua jani lako…",
+  "{done} of {n} done": "{done} kati ya {n} zimefanyika",
+  "Well done! Scan again in a few days.": "Hongera! Kagua tena baada ya siku chache.",
+  "Mark done": "Weka alama imefanyika",
+  "Ask farmers": "Uliza wakulima",
+  "Scan again": "Kagua tena",
+  "Check online": "Kagua mtandaoni",
   "How sure": "Uhakika",
   "How urgent": "Uharaka",
   "Report to your county agricultural officer": "Ripoti kwa afisa wa kilimo wa kaunti yako",

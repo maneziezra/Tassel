@@ -20,6 +20,10 @@ const FILES = {
   sparkles: require('../assets/lottie/noto-sparkles.json'), // U+2728
   party: require('../assets/lottie/noto-party.json'), // U+1F389
   leaves: require('../assets/lottie/noto-leaves.json'), // U+1F343
+  // The scan result's feeling (Ezra, 29 Oct: "emotions, like just life")
+  sick: require('../assets/lottie/noto-sick.json'), // U+1F912 face with thermometer
+  happy: require('../assets/lottie/noto-happy.json'), // U+1F60A smiling face with smiling eyes
+  thinking: require('../assets/lottie/noto-thinking.json'), // U+1F914 thinking face
 } as const;
 
 export type NotoName = keyof typeof FILES;
