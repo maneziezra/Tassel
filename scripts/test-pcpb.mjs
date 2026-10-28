@@ -22,6 +22,29 @@ test('catalogue comes from the register snapshot with a date', () => {
   assert.ok(cat.products.length > 1000);
 });
 
+test('a problem is paired only with the crop the register names it for (word order)', () => {
+  // "early and late blight on Tomatoes and for control of Coffee Berry Disease in Coffee"
+  const dorado = byName('Dorado');
+  assert.ok(dorado.p.includes('tomato:late_blight') && dorado.p.includes('coffee:cbd'));
+  assert.ok(!dorado.p.includes('tomato:cbd'), 'tomato:cbd came from pairing every crop with every problem');
+  for (const k of ['tomato:cbd', 'tomato:blast', 'tomato:faw', 'tomato:stalk_borer', 'maize:tuta']) {
+    assert.deepEqual(cat.products.filter((p) => p.p.includes(k)).map((p) => p.d), [], k);
+  }
+  // lists keep every crop: "blight in Tomatoes and potatoes"
+  assert.ok(byName('Downmid').p.includes('potato:late_blight'));
+  // the crop inside a problem name, and a crop adjective, still count
+  assert.ok(byName('Quadris').p.includes('coffee:cbd'));
+  assert.ok(byName('Deraphon').p.includes('maize:stalk_borer'));
+  // "(maize weevil, ...) in Maize & Wheat": the whole list
+  assert.ok(byName('Wivoguard').p.includes('wheat:weevils'));
+  // "... in tomatoes and downy mildew in roses": the mildew is on roses
+  assert.ok(!byName('Agrilax').p.includes('tomato:downy_mildew'));
+  // "broad-leaved weeds in maize (NOT FOR USE IN COFFEE)"
+  assert.deepEqual(byName('Shikwekwe').p, ['maize:broadleaf_weeds']);
+  // a long list still reaches its last crop
+  assert.ok(byName('Sulcop').p.includes('tomato:rust'));
+});
+
 test('no June 2025 withdrawn or restricted active is in the catalogue', () => {
   for (const p of cat.products) {
     for (const a of cat.restrictedActives) assert.ok(!p.a.toLowerCase().includes(a), `${p.n} contains ${a}`);

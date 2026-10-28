@@ -79,6 +79,81 @@ PROBLEMS = {
 }
 
 
+CONNECTOR = re.compile(r',|\band\b|&|/|\bor\b', re.I)
+NOT_A_LIST = re.compile(r'\b(control|for|against)\b', re.I)
+ADJECTIVE_GAP = re.compile(r'^\s*((?!and\b|or\b)\w+\s+)?$', re.I)  # "maize stalk borer", "coffee leaf rust"
+OWN_CROP = re.compile(r'\b(in|on|of)\s+\w', re.I)
+OWN_CROP_GAP = re.compile(r'\b(in|on|of)\s+\w+(?=\W+\w)', re.I)
+NOTES = re.compile(r'\b(REI|PHI|MRLs?|WHO\s*Class|Withholding)\b', re.I)  # "in roses and ..." (but "on French beans" is fine)
+
+
+def pair_clause(clause: str) -> tuple[set[str], set[str]]:
+    """Crops named in a clause, and the crop:problem pairs the wording supports.
+
+    The register writes "<problems> on|in|of <crops>", so a problem belongs to the
+    next crop after it and to the crops listed with that one ("blight in tomatoes
+    and potatoes"; "in cotton, French beans, barley and coffee"). Pairing every
+    crop with every problem in the clause was wrong: "blight on Tomatoes and for
+    control of Coffee Berry Disease in Coffee" made tomato:cbd.
+    - A crop word inside a problem name ("Coffee Berry Disease") or right before
+      one ("maize stalk borer", "coffee leaf rust") is that problem's crop, not a
+      list member.
+    - Crops stay in one list while the text between them has a connector
+      ("," "and" "&" "/" "or") and no problem: "Rice Tomatoes" is not a list.
+    - A problem that names a crop the app does not track ("downy mildew in roses
+      and late blight in tomatoes") is not paired with a later or earlier crop.
+    - A problem with no crop after it takes the last crop before it.
+    """
+    full = clause
+    clause = NOTES.split(clause)[0]  # "... on Roses WHO Class III ... PHI: Tomatoes": the notes are not uses
+    probs = [(m.start(), m.end(), k) for k, pat in PROBLEMS.items() for m in re.finditer(pat, clause, re.I)]
+    crop_hits = []
+    pairs = set()
+    crops = {c for c, pat in CROPS.items() if re.search(pat, full, re.I)}  # notes still show the crop is covered
+    claimed: dict[int, str] = {}  # problem start -> the crop its own words name
+    for c, pat in CROPS.items():
+        for m in re.finditer(pat, clause, re.I):
+            end = m.end() + len(re.match(r'\w*', clause[m.end():]).group())  # whole word: "Tomatoes"
+            inside = [(s, k) for s, e, k in probs if s < end and m.start() < e]
+            nxt = [(s, k) for s, _, k in probs if s >= end]
+            if inside:
+                crops.add(c)
+                pairs.update(f'{c}:{k}' for _, k in inside)
+                claimed.update((s, c) for s, _ in inside)
+            elif nxt and ADJECTIVE_GAP.match(clause[end:min(nxt)[0]]):
+                crops.add(c)
+                pairs.add(f'{c}:{min(nxt)[1]}')
+                claimed[min(nxt)[0]] = c
+            else:
+                crop_hits.append((m.start(), end, c))
+    crop_hits.sort()
+    crops.update(c for _, _, c in crop_hits)
+
+    def has_problem(a: int, b: int) -> bool:
+        return any(a <= s < b for s, _, _ in probs)
+
+    for ps, pe, k in probs:
+        after = [h for h in crop_hits if h[0] >= pe]
+        own = OWN_CROP_GAP.search(clause[pe:after[0][0]]) if after else None
+        if own and has_problem(pe + own.end(), after[0][0]):
+            continue  # "downy mildew in roses and late blight in tomatoes": the mildew is on roses
+        if after:
+            group = [after[0]]
+            for h in after[1:]:
+                gap = clause[group[-1][1]:h[0]]
+                if not CONNECTOR.search(gap) or NOT_A_LIST.search(gap) or has_problem(group[-1][1], h[0]):
+                    break
+                group.append(h)
+        elif OWN_CROP.search(clause[pe:]):
+            group = []  # "downy mildew in roses": a crop the app does not track, not the crop before it
+        else:
+            group = [h for h in crop_hits if h[1] <= ps][-1:]
+        if ps in claimed and claimed[ps] not in {c for _, _, c in group}:
+            continue  # "coffee leaf rust, blights in potatoes": coffee's; "(maize weevil) in Maize & Wheat" keeps wheat
+        pairs.update(f'{c}:{k}' for _, _, c in group)
+    return crops, pairs
+
+
 def kind_of(uses: str) -> str:
     u = uses.lower()
     if 'herbicide' in u:
@@ -167,14 +242,18 @@ def main() -> int:
         if NOT_OPEN_FIELD.search(uses):
             dropped['not_open_field'] += 1
             continue
-        # Pair crops with problems clause by clause ("X in maize; Y in tomatoes").
+        # Pair crops with problems clause by clause ("X in maize; Y in tomatoes"), by word order.
         pairs = set()
         crops = set()
         for clause in re.split(r';|\.\s', uses):
-            cs = [c for c, pat in CROPS.items() if re.search(pat, clause, re.I)]
-            ps = [k for k, pat in PROBLEMS.items() if re.search(pat, clause, re.I)]
+            cs, ps = pair_clause(clause)
             crops.update(cs)
-            pairs.update(f'{c}:{k}' for c in cs for k in ps)
+            pairs.update(ps)
+        # A use quoted from the PCPB-approved label is a registered use, whatever the register's wording.
+        lab = label_by_reg.get(norm_reg(regno))
+        if lab:
+            pairs.update(f"{u['crop']}:{u['problem']}" for u in lab['uses'])
+            crops.update(u['crop'] for u in lab['uses'])
         if not crops:
             dropped['no_app_crop'] += 1
             continue
