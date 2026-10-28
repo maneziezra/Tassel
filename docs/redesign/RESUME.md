@@ -2,7 +2,7 @@
 
 ## 28 Oct session (all on `redesign/p1-home`, checked on the TECNO, nothing pushed)
 - Tasks 1–4 below are done; see README "Third phone pass". Task 5 is still open (release builds only).
-- `npm test` now shows: 16 PCPB, 6 profile, 7 field-art, 4 export, 8 diagram, 3 fertiliser tests, 7 rule guards.
+- `npm test` now shows: 16 PCPB, 6 profile, 7 field-art, 4 export, 8 diagram, 3 fertiliser tests, 8 rule guards.
 - The calendar test wrote to Kera Coffee and Evamos (Ezra's choice); both were put back to
   Coffee, 2025-10-21 and 2025-11-29.
 - Next: the farmer check APK (needs versionCode 7 first); native-speaker review of the new

@@ -108,7 +108,7 @@ Screenshots: `docs/redesign/shots/before-p2-*.jpg`, `after-p2-*.jpg`, `*-calenda
 - **Supabase** `pesticide_products` table: written (`cropguard-proxy`, branch
   `tassel-v27-pesticide-products`), not applied — Ezra said "not yet".
 - **Kiswahili**: every new string is in `lib/sw.ts` under "flagged for native-speaker review".
-- **KSEF report** (`docs/KSEF_2026_TASSEL_PROJECT_REPORT.md`) still needs the fabricated results removed.
+- **KSEF report**: fabricated and unmeasured claims removed (28 Oct); a rule guard checks it. The pilot cohort sizes are proposals for Ezra to confirm.
 - **Farmer check** with 3–5 Eldoret farmers (P1 definition of done).
 
 ## How to verify
