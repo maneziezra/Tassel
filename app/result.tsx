@@ -6,7 +6,7 @@
 // buttons. Everything else is folded under "More". Rule 3: below 75 % nothing names a
 // disease or offers a spray.
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Dimensions, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { Easing, FadeInDown, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
@@ -64,6 +64,20 @@ export default function ResultScreen() {
   const [sprays, setSprays] = useState(false);
   const [details, setDetails] = useState(false);
   const [done, setDone] = useState<number[]>([]); // "do this now" cards ticked off
+
+  // A new scan can arrive on this same screen: start fresh (the TECNO showed "3 of 2 done").
+  const page = useRef<ScrollView>(null);
+  const scanKey = `${label}|${p.confidence}|${p.uri ?? ''}`;
+  useEffect(() => {
+    setDone([]);
+    setStep(null);
+    setSprays(false);
+    setDetails(false);
+    setSavedId(p.incidentId ?? null);
+    setAgrovets(null);
+    setAgroStatus('');
+    page.current?.scrollTo({ y: 0, animated: false });
+  }, [scanKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // English names are stored in the database; the screen shows the app language.
   const cropEn = raw?.crop ?? base.crop;
@@ -198,7 +212,7 @@ export default function ResultScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Header title="Scan result" right={<ListenButton compact text={listenText} />} />
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+      <ScrollView ref={page} contentContainerStyle={{ paddingBottom: 48 }}>
         {/* ── The leaf, with a feeling ────────────────────────────── */}
         <View style={st.hero}>
           {p.uri ? (
@@ -273,13 +287,29 @@ export default function ResultScreen() {
 
         {/* ── What it is · how it spreads ─────────────────────────── */}
         {!uncertain && (kindPic || spreadPics.length) ? (
-          <View style={st.section}>
-            <View style={st.picRow}>
-              {kindPic ? <PictureItem pic={kindPic} caption="What it is" strong /> : null}
-              {spreadPics.map((pic) => (
-                <PictureItem key={pic.key} pic={pic} caption="Spreads by" />
-              ))}
-            </View>
+          // One card: what it is on top, then the spread pictures in one row ("Spreads by" once).
+          <View style={[st.section, st.whatCard]}>
+            {kindPic ? (
+              <View style={st.whatRow}>
+                <View style={[st.picIcon, { backgroundColor: C.errorTint }]}>
+                  {kindPic.noto ? <NotoEmoji name={kindPic.noto} size={40} /> : <Icon name={kindPic.icon as IconName} size={32} color={C.error} />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.picCaption}>What it is</Text>
+                  <Text style={st.whatLabel}>{kindPic.label}</Text>
+                </View>
+              </View>
+            ) : null}
+            {spreadPics.length ? (
+              <>
+                <Text style={[st.picCaption, { marginTop: kindPic ? 14 : 0 }]}>Spreads by</Text>
+                <View style={st.picRow}>
+                  {spreadPics.map((pic) => (
+                    <PictureItem key={pic.key} pic={pic} />
+                  ))}
+                </View>
+              </>
+            ) : null}
           </View>
         ) : null}
 
@@ -291,6 +321,7 @@ export default function ResultScreen() {
               <Text raw style={st.small}>{t('{done} of {n} done', { done: done.length, n: steps.length })}</Text>
             </View>
             <ScrollView
+              key={scanKey}
               horizontal
               showsHorizontalScrollIndicator={false}
               snapToInterval={CARD_W + 12}
@@ -536,7 +567,7 @@ function ActionCard({ n, icon, title, done, onOpen, onDone }: { n: number; icon:
             <Icon name={icon} size={44} color={C.primaryDark} />
           )}
         </Animated.View>
-        <Text raw style={st.cardTitle} numberOfLines={3}>{title}</Text>
+        <Text raw style={st.cardTitle}>{title}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[st.doneBtn, done && { backgroundColor: C.primary }]}
@@ -552,12 +583,13 @@ function ActionCard({ n, icon, title, done, onOpen, onDone }: { n: number; icon:
 }
 
 /** One picture with a word under it: an icon, or a Noto emoji where it carries the meaning. */
-function PictureItem({ pic, caption, strong }: { pic: Picture; caption: string; strong?: boolean }) {
+function PictureItem({ pic }: { pic: Picture }) {
+  // A sky disc behind rain and water: the white Noto cloud vanished on the pale green one (TECNO).
+  const sky = pic.noto === 'rain' || pic.noto === 'droplet';
   return (
     <View style={st.picItem}>
-      <Text style={st.picCaption}>{caption}</Text>
-      <View style={[st.picIcon, strong && { backgroundColor: C.errorTint }]}>
-        {pic.noto ? <NotoEmoji name={pic.noto} size={40} /> : <Icon name={pic.icon as IconName} size={32} color={strong ? C.error : C.primaryDark} />}
+      <View style={[st.picIcon, sky && { backgroundColor: '#CFE0EA' }]}>
+        {pic.noto ? <NotoEmoji name={pic.noto} size={40} /> : <Icon name={pic.icon as IconName} size={32} color={C.primaryDark} />}
       </View>
       <Text style={st.picLabel}>{pic.label}</Text>
     </View>
@@ -618,8 +650,11 @@ const st = StyleSheet.create({
   h2: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.text, marginBottom: 4 },
   body: { fontSize: 16, color: C.textMid, lineHeight: 23 },
   small: { fontSize: 14, color: C.textSub, lineHeight: 20 },
-  picRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  picItem: { width: '30%', flexGrow: 1, alignItems: 'center', gap: 6, backgroundColor: C.surface, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 6 },
+  picRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  whatCard: { backgroundColor: C.surface, borderRadius: 20, padding: 16 },
+  whatRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  whatLabel: { fontSize: 20, fontFamily: FONT.display, color: C.text },
+  picItem: { flex: 1, alignItems: 'center', gap: 6 },
   picCaption: { fontSize: 13, color: C.textSub },
   picIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: C.primaryTint, alignItems: 'center', justifyContent: 'center' },
   picLabel: { fontSize: 15, fontFamily: FONT.bodyBold, color: C.text, textAlign: 'center' },

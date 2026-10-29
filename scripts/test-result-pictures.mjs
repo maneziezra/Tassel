@@ -37,12 +37,24 @@ ok('step icons follow the words; plain check otherwise', () => {
   assert.equal(stepIcon('Keep a good record.'), 'check-circle-outline');
 });
 
-ok('step titles are whole first clauses, never cut mid-word or with "…"', () => {
-  assert.equal(stepTitle('Remove infected leaves, then burn them.'), 'Remove infected leaves');
+ok('step titles keep their meaning, never cut mid-word or with "…"', () => {
+  // found on the TECNO: the tomato late-blight step became just "Stake"
+  assert.equal(stepTitle('Stake, prune and space plants so leaves dry quickly.'), 'Stake, prune and space plants so leaves dry quickly');
+  assert.equal(stepTitle('Remove and destroy infected plants immediately — do not compost.'), 'Remove and destroy infected plants immediately');
+  assert.equal(stepTitle('Remove infected leaves, then burn them.'), 'Remove infected leaves, then burn them');
   assert.equal(stepTitle('Rotate crops; avoid tomato after potato.'), 'Rotate crops');
   assert.equal(stepTitle('Use certified seed.'), 'Use certified seed');
   assert.equal(stepTitle('Stake plants (60 cm) for airflow.'), 'Stake plants');
+  assert.equal(
+    stepTitle('Remove the lower infected leaves carefully, then bag them and burn them away from the field.'),
+    'Remove the lower infected leaves carefully'
+  );
   for (const s of ['Remove infected leaves, then burn them.', 'Use certified seed.']) assert.ok(!stepTitle(s).includes('…'));
+});
+
+ok('staking and spacing read as airflow, not cutting', () => {
+  assert.equal(stepIcon('Stake, prune and space plants so leaves dry quickly.'), 'weather-windy');
+  assert.equal(stepIcon('Prune old branches.'), 'content-cut');
 });
 
 console.log(`\n${n} result-picture tests passed`);
