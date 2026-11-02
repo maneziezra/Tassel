@@ -6,7 +6,7 @@
 // Float16 weights (4.9 MB). The 38-class v2.4 model is in model_backup/.
 // Runs fully offline on the phone via react-native-fast-tflite.
 //
-// Pipeline (must match training): centre-crop to a square → resize to
+// Pipeline (must match training): centre-crop to a square (camera: only the guide frame) → resize to
 // 224×224 → decode JPEG to RGB → scale pixels (see PIXEL_SCALING) → run.
 
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -72,8 +72,8 @@ export function describeLabel(label: string): Omit<Prediction, 'confidence'> {
 }
 
 /** Centre-crop and resize a photo, returning the RGB pixels as model input. */
-function cropAndResize(uri: string, width: number, height: number) {
-  const side = Math.min(width, height);
+function cropAndResize(uri: string, width: number, height: number, frame = 1) {
+  const side = Math.floor(Math.min(width, height) * Math.min(1, Math.max(0.2, frame)));
   const ctx = ImageManipulator.manipulate(uri);
   ctx
     .crop({
@@ -86,15 +86,15 @@ function cropAndResize(uri: string, width: number, height: number) {
   return ctx.renderAsync();
 }
 
-async function photoToInput(uri: string, width: number, height: number): Promise<Float32Array> {
+async function photoToInput(uri: string, width: number, height: number, frame = 1): Promise<Float32Array> {
   let image;
   try {
     if (!width || !height) throw new Error('size unknown');
-    image = await cropAndResize(uri, width, height);
+    image = await cropAndResize(uri, width, height, frame);
   } catch {
     // Some gallery photos report their size before EXIF rotation; measure the real size and retry.
     const probe = await ImageManipulator.manipulate(uri).renderAsync();
-    image = await cropAndResize(uri, probe.width, probe.height);
+    image = await cropAndResize(uri, probe.width, probe.height, frame);
   }
   const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 1, base64: true });
   if (!saved.base64) throw new Error('Could not read the photo.');
@@ -128,12 +128,13 @@ function serial<T>(job: () => Promise<T>): Promise<T> {
 /** Run the model on a photo and return the top prediction plus alternatives. */
 export async function classifyPhoto(
   model: TfliteModel,
-  photo: { uri: string; width: number; height: number },
+  // frame: share of the short side the farmer framed (lib/scanFrame.ts); 1 = whole photo (gallery)
+  photo: { uri: string; width: number; height: number; frame?: number },
   onStep?: (step: ScanStep, elapsedMs: number) => void
 ): Promise<ScanResult> {
   const t0 = Date.now();
   onStep?.('prepare', 0);
-  const input = await photoToInput(photo.uri, photo.width, photo.height);
+  const input = await photoToInput(photo.uri, photo.width, photo.height, photo.frame ?? 1);
   const prepareMs = Date.now() - t0;
   onStep?.('infer', prepareMs);
   const t1 = Date.now();

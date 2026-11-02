@@ -3,7 +3,7 @@
 // shown is real and its measured time is displayed.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDiseaseModel } from '../../lib/useDiseaseModel';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { classifyPhoto, type ScanStep } from '../../lib/classifier';
+import { FRAME_SHARE, frameFraction } from '../../lib/scanFrame';
 
 import { Icon, Text, tick } from '../../components/ui';
 import { NotoEmoji } from '../../components/NotoEmoji';
@@ -83,7 +84,7 @@ export default function ScanScreen() {
     }
   }, [focused]);
 
-  const analyze = async (photo: { uri: string; width: number; height: number }) => {
+  const analyze = async (photo: { uri: string; width: number; height: number; frame?: number }) => {
     if (tflite.state !== 'loaded' || running.current) return;
     running.current = true;
     setPhotoUri(photo.uri);
@@ -117,7 +118,8 @@ export default function ScanScreen() {
 
   // The shutter always works (Ezra, 29 Oct: "it can't even press to shoot"): if the model is
   // still loading, the photo waits on screen and is checked the moment the model is ready.
-  const [pending, setPending] = useState<{ uri: string; width: number; height: number } | null>(null);
+  const [pending, setPending] = useState<{ uri: string; width: number; height: number; frame?: number } | null>(null);
+  const win = useWindowDimensions();
   useEffect(() => {
     if (pending && tflite.state === 'loaded') {
       const photo = pending;
@@ -131,8 +133,10 @@ export default function ScanScreen() {
     if (!cameraRef.current || busy || running.current || !settled()) return;
     try {
       tick('select');
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
-      if (!photo) return;
+      const shot = await cameraRef.current.takePictureAsync({ quality: 0.85 });
+      if (!shot) return;
+      // The model sees only what was inside the gold frame, as in training.
+      const photo = { uri: shot.uri, width: shot.width, height: shot.height, frame: frameFraction(win.width, win.height, shot.width, shot.height) };
       if (tflite.state === 'loaded') await analyze(photo);
       else {
         setPhotoUri(photo.uri);
@@ -311,7 +315,7 @@ const st = StyleSheet.create({
   title: { color: '#fff', fontSize: 17, fontWeight: '900' },
   status: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 2 },
   frameWrap: { ...FILL, justifyContent: 'center', alignItems: 'center' },
-  frame: { width: '72%', aspectRatio: 1 },
+  frame: { width: `${FRAME_SHARE * 100}%`, aspectRatio: 1 },
   corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: C.gold },
   tl: { top: 0, left: 0, borderTopWidth: 4, borderTopLeftRadius: 12 },
   tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 12 },
