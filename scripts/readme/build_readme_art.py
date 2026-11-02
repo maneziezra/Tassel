@@ -234,11 +234,18 @@ def pillar_rules():
     write("pillar-rules.svg", svg(W, H, f"Follows Kenyan rules. {n} PCPB registered products. Seven actives restricted in 2025 are kept out.", css, body))
 
 
+def cover(i, ox, oy, k):
+    """Hide the farmer's real field name ("Kera Coffee", at x 54-140, y 89-106 of the 360 px shot)."""
+    if i != 1:
+        return ""
+    return f'<rect x="{ox + 54 * k:.1f}" y="{oy + 89 * k:.1f}" width="{86 * k:.1f}" height="{17 * k:.1f}" fill="#1E4D37"/>'
+
+
 # ── 3. Screens strip (real screenshots from the phone, 29 Oct build) ───────
 def screens():
     shots = [
         ("after-home-today.jpg", "Today, at a glance"),
-        ("after-field-health.jpg", "Your field from space"),
+        ("after-field-health.jpg", "Your field from space"),   # its field name is covered below
         ("after-result-dev-sick.jpg", "A scan result"),
         ("after-advisory-spacing.jpg", "Planting, shown"),
         ("after-p2-pesticide-calc.jpg", "Spray calculator"),
@@ -258,7 +265,7 @@ def screens():
 <g class="ph" style="animation-delay:{i * .12:.2f}s,{i * .6:.1f}s">
 <rect x="{x:.0f}" y="{top}" width="{pw + 2 * pad}" height="{sh + 2 * pad}" rx="30" fill="{GROUND}"/>
 <clipPath id="k{i}"><rect x="{x + pad:.0f}" y="{top + pad}" width="{pw}" height="{sh}" rx="23"/></clipPath>
-<image clip-path="url(#k{i})" x="{x + pad:.0f}" y="{top + pad - crop}" width="{pw}" height="{full_h}" href="data:image/jpeg;base64,{b64}"/>
+<image clip-path="url(#k{i})" x="{x + pad:.0f}" y="{top + pad - crop}" width="{pw}" height="{full_h}" href="data:image/jpeg;base64,{b64}"/>{cover(i, x + pad, top + pad - crop, pw / 360)}
 <text class="an" x="{x + pad + pw / 2:.0f}" y="{top + sh + 2 * pad + 40}" font-size="24" fill="{INK}" text-anchor="middle">{cap}</text>
 </g>""")
         x += pw + 2 * pad + gapx
