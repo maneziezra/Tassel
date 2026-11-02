@@ -15,7 +15,14 @@ import * as jpeg from 'jpeg-js';
 import type { TfliteModel } from 'react-native-fast-tflite';
 import rawLabels from '../assets/model/class_labels.json';
 
+// Default input side; the real one is read from the model (v5: 224, v8 candidates: 224 or 260).
 export const INPUT_SIZE = 224;
+
+/** The square input side the loaded model expects (1 x N x N x 3). */
+export function inputSizeOf(model: TfliteModel): number {
+  const n = model.inputs?.[0]?.shape?.[1];
+  return typeof n === 'number' && n >= 64 && n <= 1024 ? n : INPUT_SIZE;
+}
 
 // Pixel scaling the model was trained with (MobileNetV2 preprocess_input: x/127.5 - 1).
 // Verified with scripts/check_preprocessing.py on 40 labelled PlantVillage images:
@@ -72,7 +79,7 @@ export function describeLabel(label: string): Omit<Prediction, 'confidence'> {
 }
 
 /** Centre-crop and resize a photo, returning the RGB pixels as model input. */
-function cropAndResize(uri: string, width: number, height: number, frame = 1) {
+function cropAndResize(uri: string, width: number, height: number, frame = 1, size = INPUT_SIZE) {
   const side = Math.floor(Math.min(width, height) * Math.min(1, Math.max(0.2, frame)));
   const ctx = ImageManipulator.manipulate(uri);
   ctx
@@ -82,30 +89,30 @@ function cropAndResize(uri: string, width: number, height: number, frame = 1) {
       width: side,
       height: side,
     })
-    .resize({ width: INPUT_SIZE, height: INPUT_SIZE });
+    .resize({ width: size, height: size });
   return ctx.renderAsync();
 }
 
-async function photoToInput(uri: string, width: number, height: number, frame = 1): Promise<Float32Array> {
+async function photoToInput(uri: string, width: number, height: number, frame = 1, size = INPUT_SIZE): Promise<Float32Array> {
   let image;
   try {
     if (!width || !height) throw new Error('size unknown');
-    image = await cropAndResize(uri, width, height, frame);
+    image = await cropAndResize(uri, width, height, frame, size);
   } catch {
     // Some gallery photos report their size before EXIF rotation; measure the real size and retry.
     const probe = await ImageManipulator.manipulate(uri).renderAsync();
-    image = await cropAndResize(uri, probe.width, probe.height, frame);
+    image = await cropAndResize(uri, probe.width, probe.height, frame, size);
   }
   const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 1, base64: true });
   if (!saved.base64) throw new Error('Could not read the photo.');
 
   const decoded = jpeg.decode(toByteArray(saved.base64), { useTArray: true, formatAsRGBA: true });
   const { data, width: w, height: h } = decoded;
-  if (w !== INPUT_SIZE || h !== INPUT_SIZE) {
+  if (w !== size || h !== size) {
     throw new Error(`Unexpected image size ${w}×${h}`);
   }
 
-  const input = new Float32Array(INPUT_SIZE * INPUT_SIZE * 3);
+  const input = new Float32Array(size * size * 3);
   for (let src = 0, dst = 0; src < data.length; src += 4) {
     for (let c = 0; c < 3; c++) {
       const v = data[src + c];
@@ -134,7 +141,7 @@ export async function classifyPhoto(
 ): Promise<ScanResult> {
   const t0 = Date.now();
   onStep?.('prepare', 0);
-  const input = await photoToInput(photo.uri, photo.width, photo.height, photo.frame ?? 1);
+  const input = await photoToInput(photo.uri, photo.width, photo.height, photo.frame ?? 1, inputSizeOf(model));
   const prepareMs = Date.now() - t0;
   onStep?.('infer', prepareMs);
   const t1 = Date.now();
