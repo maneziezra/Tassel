@@ -270,7 +270,7 @@ export default function ScanScreen() {
 
       {/* AI photo check entry (pests, deficiencies, other crops) */}
       {!photoUri ? (
-        <TouchableOpacity style={[st.aiPill, { bottom: insets.bottom + 150 }]} onPress={photoCheck} accessibilityRole="button">
+        <TouchableOpacity style={[st.aiPill, { top: insets.top + 76 }]} onPress={photoCheck} accessibilityRole="button">
           <Icon name="bug-check-outline" size={18} color={C.gold} />
           <Text raw style={st.aiPillTxt}>
             {sw ? 'Wadudu au zao jingine? Kagua mtandaoni' : 'Pest or other crop? Check online'}
