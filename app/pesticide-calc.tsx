@@ -5,10 +5,11 @@
 // A dose appears only when it is quoted from the product label (lib/pcpbCore.ts).
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Btn, Chip, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
+import { StoryScene } from '../components/StoryScene';
 import { PcpbProductCard } from '../components/PcpbProductCard';
 import { listFarms, type Farm } from '../lib/data';
 import { CROP_CHOICES } from '../lib/counties';
@@ -45,6 +46,7 @@ export default function PesticideCalcScreen() {
 
   const [farms, setFarms] = useState<Farm[]>([]);
   const [cropText, setCropText] = useState<string>(prm.crop ?? '');
+  const { width } = useWindowDimensions();
   const [problem, setProblem] = useState<ProblemKey | null>(problemKey(prm.problem));
   const [regNo, setRegNo] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -301,6 +303,9 @@ export default function PesticideCalcScreen() {
             <Animated.View key={`${product?.r}:${tankL}`} entering={FadeInDown.duration(300)} style={st.mix} accessibilityLiveRegion="polite">
               {plan?.perTank ? (
                 <>
+                  <View style={{ marginBottom: 12 }}>
+                    <StoryScene text="Mix the tank" kind="mix" width={width - 64} rounded={14} />
+                  </View>
                   <Text raw style={st.mixLabel}>
                     {t('Per {n} L tank', { n: tankL })}
                   </Text>
@@ -364,7 +369,10 @@ export default function PesticideCalcScreen() {
             {today ? (
               <>
                 <Text style={st.step}>Spray today?</Text>
-                <View style={[st.panel, st.row, { gap: 12 }]}>
+                <View style={[st.panel, { paddingBottom: 4 }]}>
+                  <StoryScene text={today.window ? 'Spray' : 'Do not spray today'} kind="spray" crop={cropText} width={width - 64} rounded={14} />
+                </View>
+                <View style={[st.panel, st.row, { gap: 12, marginTop: 8 }]}>
                   <Icon
                     name={today.level === 'Poor' ? 'weather-pouring' : 'weather-partly-cloudy'}
                     size={28}

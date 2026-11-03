@@ -19,8 +19,19 @@ ok('every guide crop finds its own plan, in English and Kiswahili', () => {
   assert.equal(guideFor('Nyanya')?.crop, 'Tomato');
 });
 
-ok('coffee, tea and a blank crop get no plan (no maize rates by default)', () => {
-  assert.equal(guideFor('Coffee'), null);
+ok('coffee has its own per-tree plan from the Kenya Coffee Sustainability Manual', () => {
+  const c = guideFor('Coffee');
+  assert.equal(c?.crop, 'Coffee');
+  assert.equal(guideFor('Kahawa')?.crop, 'Coffee');
+  const [npk, can] = c.apps;
+  assert.equal(npk.perTreeG, 250);
+  assert.equal(can.perTreeG, 300);
+  assert.equal(npk.treesPerAcre, 538); // 1,330 trees per hectare
+  assert.equal(npk.refKgPerAcre, (250 * 538) / 1000);
+  assert.ok(c.source.includes('Kenya Coffee Sustainability Manual'));
+});
+
+ok('tea and a blank crop get no plan (no maize rates by default)', () => {
   assert.equal(guideFor('Tea'), null);
   assert.equal(guideFor(''), null);
   assert.equal(guideFor(null), null);

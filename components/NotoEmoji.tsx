@@ -24,6 +24,21 @@ const FILES = {
   sick: require('../assets/lottie/noto-sick.json'), // U+1F912 face with thermometer
   happy: require('../assets/lottie/noto-happy.json'), // U+1F60A smiling face with smiling eyes
   thinking: require('../assets/lottie/noto-thinking.json'), // U+1F914 thinking face
+  // 3 Nov: calendar, treatment and calculator steps
+  sun: require('../assets/lottie/noto-sun.json'), // U+1F31E
+  tractor: require('../assets/lottie/noto-tractor.json'), // U+1F69C
+  ant: require('../assets/lottie/noto-ant.json'), // U+1F41C
+  check: require('../assets/lottie/noto-check.json'), // U+2705
+  herb: require('../assets/lottie/noto-herb.json'), // U+1F33F
+  fungus: require('../assets/lottie/noto-fungus.json'), // U+1F344
+  microbe: require('../assets/lottie/noto-microbe.json'), // U+1F9A0
+  warning: require('../assets/lottie/noto-warning.json'), // U+26A0
+  eyes: require('../assets/lottie/noto-eyes.json'), // U+1F440
+  fallenleaf: require('../assets/lottie/noto-fallenleaf.json'), // U+1F342
+  beans: require('../assets/lottie/noto-beans.json'), // U+1FAD8
+  greens: require('../assets/lottie/noto-greens.json'), // U+1F96C
+  thumbsup: require('../assets/lottie/noto-thumbsup.json'), // U+1F44D
+  siren: require('../assets/lottie/noto-siren.json'), // U+1F6A8
 } as const;
 
 export type NotoName = keyof typeof FILES;

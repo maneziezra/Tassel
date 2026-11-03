@@ -248,7 +248,7 @@ export default function CalendarScreen() {
           </View>
           <View style={[st.panel, { paddingVertical: 4 }]}>
             {inWeek.length ? (
-              inWeek.map((x) => <TaskRow key={x.key} item={x} onToggle={() => toggle(farm.id, x.task.id)} />)
+              inWeek.map((x) => <TaskRow key={x.key} item={x} crop={farm.crop} onToggle={() => toggle(farm.id, x.task.id)} />)
             ) : (
               <Text style={[st.small, { paddingVertical: 14 }]}>Nothing planned this week. Walk the field and scan anything that looks wrong.</Text>
             )}
@@ -261,7 +261,7 @@ export default function CalendarScreen() {
               </View>
               <View style={[st.panel, { paddingVertical: 4 }]}>
                 {missed.map((x) => (
-                  <TaskRow key={x.key} item={x} onToggle={() => toggle(farm.id, x.task.id)} />
+                  <TaskRow key={x.key} item={x} crop={farm.crop} onToggle={() => toggle(farm.id, x.task.id)} />
                 ))}
               </View>
             </>
@@ -274,7 +274,7 @@ export default function CalendarScreen() {
               </View>
               <View style={[st.panel, { paddingVertical: 4 }]}>
                 {later.map((x) => (
-                  <TaskRow key={x.key} item={x} onToggle={() => toggle(farm.id, x.task.id)} />
+                  <TaskRow key={x.key} item={x} crop={farm.crop} onToggle={() => toggle(farm.id, x.task.id)} />
                 ))}
               </View>
             </>

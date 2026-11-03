@@ -192,7 +192,7 @@ export default function FarmScreen() {
                       </Text>
                     </TouchableOpacity>
                     {visible.map((x) => (
-                      <TaskRow key={x.key} item={x} onToggle={() => toggle(x.task.id)} />
+                      <TaskRow key={x.key} item={x} crop={farm.crop} onToggle={() => toggle(x.task.id)} />
                     ))}
                     <TouchableOpacity onPress={() => setShowAll(!showAll)} style={{ marginTop: 12, alignSelf: 'center' }}>
                       <Text style={st.link}>{showAll ? t('Show fewer') : t('Show the whole season ({n} tasks)', { n: tasks.length })}</Text>

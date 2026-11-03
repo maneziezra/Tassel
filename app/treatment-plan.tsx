@@ -3,9 +3,10 @@
 // English or Kiswahili, with read-aloud. Ticks are saved on the phone.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Badge, Btn, Card, Empty, Header, Icon, ListenButton, Text } from '../components/ui';
+import { StoryScene } from '../components/StoryScene';
 import { buildPlan, chemicalRules, getDisease, localizeDisease } from '../lib/diseases';
 import { loadPlanProgress, planKey, savePlanProgress } from '../lib/store';
 import { useLang } from '../lib/i18n';
@@ -17,6 +18,9 @@ export default function TreatmentPlanScreen() {
   const raw = getDisease(label);
   const info = raw ? localizeDisease(raw, lang) : undefined;
   const plan = useMemo(() => (raw ? buildPlan(raw, lang) : []), [raw, lang]);
+  // Scenes are picked from the English plan so both languages show the same picture.
+  const planEn = useMemo(() => (raw ? buildPlan(raw, 'en') : []), [raw]);
+  const { width } = useWindowDimensions();
   const key = planKey(label, incidentId || undefined);
   const [done, setDone] = useState<string[]>([]);
   const [open, setOpen] = useState<string | null>(plan[0]?.id ?? null);
@@ -121,6 +125,14 @@ export default function TreatmentPlanScreen() {
               </TouchableOpacity>
               {isOpen ? (
                 <View style={{ padding: 14 }}>
+                  <View style={{ marginBottom: 12 }}>
+                    <StoryScene
+                      text={planEn[idx] ? `${planEn[idx].title}. ${planEn[idx].tasks.map((x) => x.text).join(' ')}` : step.title}
+                      crop={raw?.crop}
+                      width={width - 60}
+                      rounded={14}
+                    />
+                  </View>
                   {step.tasks.map((x) => {
                     const checked = done.includes(x.id);
                     return (

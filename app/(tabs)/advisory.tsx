@@ -39,6 +39,7 @@ import { useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
 import { NotoEmoji } from '../../components/NotoEmoji';
 import { StoryDiagram } from '../../components/StoryDiagram';
+import { StoryScene } from '../../components/StoryScene';
 import { diagramFacts, type DiagramFact } from '../../lib/diagramFacts';
 import { PcpbProductCard } from '../../components/PcpbProductCard';
 import { cropKey, getRegisteredProducts, problemKey, type PcpbProduct, type ProblemKey } from '../../lib/pcpb';
@@ -46,10 +47,7 @@ import { speak } from '../../lib/speech';
 import { C, FONT } from '../../lib/theme';
 import { getWeather, type Weather } from '../../lib/weather';
 import { getPosition } from '../../lib/geo';
-import {
-  getActionIllustration,
-  WatchOutDiseaseArt,
-} from '../../components/AdvisoryStoryArt';
+import { WatchOutDiseaseArt } from '../../components/AdvisoryStoryArt';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -198,6 +196,8 @@ export default function AdvisoryScreen() {
   }, [storyStage, cropId, crop.name, t]);
 
   const activeCard = storyCards[storyIndex];
+  // Scenes are chosen from the English source step, so a Kiswahili card shows the same picture.
+  const sourceText = (i: number) => CROPS.find((c) => c.id === cropId)?.stages.find((s) => s.id === storyStage?.id)?.activities[i];
 
   const nextCard = () => {
     tick('select');
@@ -434,10 +434,9 @@ export default function AdvisoryScreen() {
                       {activeCard.facts?.length ? (
                         <StoryDiagram facts={activeCard.facts} crop={cropId} width={SCREEN_WIDTH - 72} k={`${storyStage?.id}:${storyIndex}`} />
                       ) : (
-                        getActionIllustration(activeCard.body, storyStage?.name ?? '', activeCard.index ?? 0)
+                        <StoryScene text={sourceText(activeCard.index ?? 0) ?? activeCard.body} crop={cropId} width={SCREEN_WIDTH - 72} />
                       )}
                     </View>
-                    <Text style={st.actionBadge}>{activeCard.title}</Text>
                     <Text raw style={st.actionCaption}>
                       {activeCard.caption}
                     </Text>
