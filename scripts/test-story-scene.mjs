@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { CROPS } from '../lib/advisory.ts';
 import { diagramFacts } from '../lib/diagramFacts.ts';
-import { isDont, sceneEmoji, sceneFor } from '../lib/storyScene.ts';
+import { isDont, sceneEmoji, sceneFor, threatEmojis } from '../lib/storyScene.ts';
 
 let n = 0;
 const ok = (name, fn) => {
@@ -53,6 +53,15 @@ ok('every scene has an emoji that exists in the bundled Noto set', () => {
     'sun', 'tractor', 'ant', 'check', 'herb', 'fungus', 'microbe', 'warning', 'eyes', 'fallenleaf', 'beans', 'greens', 'thumbsup', 'siren']);
   for (const k of ['weed', 'topdress', 'spray', 'water', 'harvest', 'dry', 'store', 'scout', 'remove', 'stake', 'prepare', 'earthup', 'transplant', 'net', 'seedtreat', 'sort', 'mix', 'grow'])
     for (const crop of ['Maize', 'Beans', 'Coffee', null]) assert.ok(names.has(sceneEmoji(k, crop)), `${k}/${crop}`);
+});
+
+ok('watch-out emoji match each threat named: insect, fungus or germ', () => {
+  assert.deepEqual(threatEmojis('Fall armyworm'), ['bug']);
+  assert.deepEqual(threatEmojis('Cutworms & Seedling rots'), ['bug', 'fungus']);
+  assert.deepEqual(threatEmojis('Late blight & Bacterial wilt'), ['fungus', 'microbe']);
+  assert.deepEqual(threatEmojis('Bean thrips & Bruchids'), ['ant', 'bug']);
+  assert.deepEqual(threatEmojis('Stem rust (Ug99) & Yellow rust'), ['fungus']);
+  assert.deepEqual(threatEmojis('Leaf spot & Pests'), ['fungus']);
 });
 
 console.log(`\n${n} story-scene tests passed`);

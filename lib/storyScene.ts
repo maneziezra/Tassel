@@ -81,3 +81,18 @@ export function sceneEmoji(kind: SceneKind, crop?: string | null): string {
   };
   return map[kind];
 }
+
+/** Watch-out cards: one emoji per kind of threat named (insect, fungus, germ), at most two. */
+export function threatEmojis(threat: string): ('bug' | 'ant' | 'fungus' | 'microbe' | 'warning')[] {
+  const out: ('bug' | 'ant' | 'fungus' | 'microbe' | 'warning')[] = [];
+  for (const part of threat.toLowerCase().split(/&|,| and /)) {
+    const p = part.trim();
+    const e = /mite|aphid|thrip|whitefl/.test(p) ? 'ant'
+      : /worm|fly|flies|bruchid|moth|tuta|weevil|borer|beetle|caterpillar|locust|bug/.test(p) ? 'bug'
+      : /wilt|virus|viral|necrosis|bacteri|streak|mosaic|greening/.test(p) ? 'microbe'
+      : /blight|rust|rot|mildew|spot|scab|damping|blotch|mould|mold|anthracnose|smut|aflatoxin/.test(p) ? 'fungus'
+      : null;
+    if (e && !out.includes(e)) out.push(e);
+  }
+  return out.length ? out.slice(0, 2) : ['warning'];
+}

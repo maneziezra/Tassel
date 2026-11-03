@@ -6,10 +6,10 @@ import { StoryScene } from '../components/StoryScene';
 import { Text } from '../components/ui';
 import type { SceneKind } from '../lib/storyScene';
 
-const KINDS: SceneKind[] = ['weed', 'topdress', 'spray', 'water', 'harvest', 'dry', 'store', 'scout', 'remove', 'stake', 'prepare', 'earthup', 'transplant', 'net', 'seedtreat', 'sort', 'grow'];
+const KINDS: SceneKind[] = ['weed', 'topdress', 'spray', 'water', 'harvest', 'dry', 'store', 'scout', 'remove', 'stake', 'prepare', 'earthup', 'transplant', 'net', 'seedtreat', 'sort', 'mix', 'grow'];
 
 export default function DevScenes() {
-  const { crop = 'maize', from = '0' } = useLocalSearchParams<{ crop?: string; from?: string }>();
+  const { crop = 'beans', from = '10' } = useLocalSearchParams<{ crop?: string; from?: string }>();
   const { width } = useWindowDimensions();
   if (!__DEV__) return <Redirect href="/" />;
   const w = (width - 36) / 2;

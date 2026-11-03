@@ -40,6 +40,7 @@ import { openScanner } from '../../lib/navigation';
 import { NotoEmoji } from '../../components/NotoEmoji';
 import { StoryDiagram } from '../../components/StoryDiagram';
 import { StoryScene } from '../../components/StoryScene';
+import { threatEmojis } from '../../lib/storyScene';
 import { diagramFacts, type DiagramFact } from '../../lib/diagramFacts';
 import { PcpbProductCard } from '../../components/PcpbProductCard';
 import { cropKey, getRegisteredProducts, problemKey, type PcpbProduct, type ProblemKey } from '../../lib/pcpb';
@@ -47,7 +48,6 @@ import { speak } from '../../lib/speech';
 import { C, FONT } from '../../lib/theme';
 import { getWeather, type Weather } from '../../lib/weather';
 import { getPosition } from '../../lib/geo';
-import { WatchOutDiseaseArt } from '../../components/AdvisoryStoryArt';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -389,9 +389,9 @@ export default function AdvisoryScreen() {
                 {/* 1. Watch Out Alert Card */}
                 {activeCard.type === 'watchout' ? (
                   <View style={st.watchCard}>
-                    <WatchOutDiseaseArt width={SCREEN_WIDTH - 64} height={150} />
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <NotoEmoji name="bug" size={40} />
+                    <StoryScene text="Scout for it" kind="scout" crop={cropId} width={SCREEN_WIDTH - 64} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                      {threatEmojis(activeCard.caption ?? '').map((e) => <NotoEmoji key={e} name={e} size={40} />)}
                       <View style={st.alertBadge}>
                         <Text style={st.alertBadgeTxt}>Watch out</Text>
                       </View>
