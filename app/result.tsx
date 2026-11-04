@@ -24,7 +24,7 @@ import { KIND_PICTURE, URGENCY_LEVEL, spreadPictures, stepIcon, stepTitle, type 
 import { C, FONT, URGENCY_META, confidenceBand } from '../lib/theme';
 
 export default function ResultScreen() {
-  const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string }>();
+  const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string; q?: string }>();
   const { t, lang } = useLang();
   const label = p.label ?? '';
   const confidence = Number(p.confidence ?? 0);
@@ -232,8 +232,8 @@ export default function ResultScreen() {
           {uncertain ? (
             // Rule 3: no crop or disease as fact; the guess is small.
             <>
-              <Text style={st.verdictWord}>Not sure</Text>
-              <Text raw style={st.small}>{t('Best guess: {d}', { d: `${crop} — ${disease}` })}</Text>
+              <Text style={st.verdictWord}>{p.q === 'dark' ? 'Too dark to read' : p.q === 'blurry' ? 'Too blurry to read' : 'Not sure yet'}</Text>
+              <Text raw style={st.small}>{t('Most likely: {d}', { d: `${crop} — ${disease}` })}</Text>
             </>
           ) : (
             <>
@@ -264,23 +264,37 @@ export default function ResultScreen() {
           ) : null}
         </Animated.View>
 
-        {/* ── Not sure: retake first, tips as pictures ────────────── */}
+        {/* ── Not sure: what to fix first, then the likely candidates ─ */}
         {uncertain ? (
           <View style={{ marginHorizontal: 16, marginTop: 14, gap: 12 }}>
-            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={openScanner} />
             <View style={st.tipRow}>
               {[
-                { icon: 'white-balance-sunny' as IconName, label: 'Daylight' },
-                { icon: 'leaf' as IconName, label: 'One leaf' },
-                { icon: 'hand-back-right-outline' as IconName, label: 'Close and steady' },
+                { icon: 'white-balance-sunny' as IconName, label: 'Daylight', hot: p.q === 'dark' },
+                { icon: 'leaf' as IconName, label: 'One leaf', hot: false },
+                { icon: 'hand-back-right-outline' as IconName, label: 'Close and steady', hot: p.q === 'blurry' },
               ].map((x) => (
                 <View key={x.label} style={st.tipItem}>
-                  <View style={st.tipIcon}>
-                    <Icon name={x.icon} size={28} color={C.primaryDark} />
+                  <View style={[st.tipIcon, x.hot && { backgroundColor: C.errorTint }]}>
+                    <Icon name={x.icon} size={28} color={x.hot ? C.error : C.primaryDark} />
                   </View>
-                  <Text style={st.tipLabel}>{x.label}</Text>
+                  <Text style={[st.tipLabel, x.hot && { color: C.error, fontFamily: FONT.bodyBold }]}>{x.label}</Text>
                 </View>
               ))}
+            </View>
+            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={openScanner} />
+            <View style={st.whatCard}>
+              <Text style={st.cardHead}>Could be</Text>
+              {[[label, confidence] as [string, number], ...alts].map(([l, c]) => {
+                const d = describeLabel(l);
+                return (
+                  <View key={l} style={st.candRow}>
+                    <CropIcon crop={d.crop} size={30} disc={false} />
+                    <Text raw style={st.candName} numberOfLines={2}>{`${cropName(d.crop)} · ${d.healthy ? t('Healthy leaf') : d.disease}`}</Text>
+                    <Text raw style={st.candPct}>{`${Math.round(c * 100)}%`}</Text>
+                  </View>
+                );
+              })}
+              <Text style={st.small}>These are guesses from one photo. Do not treat from this: retake, or ask the farmers or the AI.</Text>
             </View>
           </View>
         ) : null}
@@ -617,6 +631,10 @@ function Bullets({ title, items, numbered }: { title: string; items: string[]; n
 }
 
 const st = StyleSheet.create({
+  cardHead: { fontSize: 18, fontFamily: FONT.display, color: C.text, marginBottom: 6 },
+  candRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  candName: { flex: 1, fontSize: 16, fontFamily: FONT.bodyBold, color: C.text },
+  candPct: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.textSub },
   hero: { marginHorizontal: 16, marginTop: 4 },
   leaf: { height: 220, borderRadius: 20 },
   face: { position: 'absolute', right: 12, bottom: -34, width: 104, height: 104, borderRadius: 52, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },

@@ -14,6 +14,7 @@ import { toByteArray } from 'base64-js';
 import * as jpeg from 'jpeg-js';
 import type { TfliteModel } from 'react-native-fast-tflite';
 import rawLabels from '../assets/model/class_labels.json';
+import { assessQuality, type PhotoQuality } from './photoQuality';
 
 // Default input side; the real one is read from the model (v5: 224, v8 candidates: 224 or 260).
 export const INPUT_SIZE = 224;
@@ -49,6 +50,7 @@ export type ScanResult = {
   alternatives: Prediction[]; // next two most likely classes
   uncertain: boolean;
   timings: { prepareMs: number; inferMs: number }; // measured, shown to the farmer
+  quality: PhotoQuality; // too dark / blurry: used for the tip when a scan is not sure
 };
 
 export type ScanStep = 'prepare' | 'infer' | 'done';
@@ -93,7 +95,7 @@ function cropAndResize(uri: string, width: number, height: number, frame = 1, si
   return ctx.renderAsync();
 }
 
-async function photoToInput(uri: string, width: number, height: number, frame = 1, size = INPUT_SIZE): Promise<Float32Array> {
+async function photoToInput(uri: string, width: number, height: number, frame = 1, size = INPUT_SIZE): Promise<{ input: Float32Array; quality: PhotoQuality }> {
   let image;
   try {
     if (!width || !height) throw new Error('size unknown');
@@ -119,7 +121,7 @@ async function photoToInput(uri: string, width: number, height: number, frame = 
       input[dst++] = PIXEL_SCALING === 'zero_one' ? v / 255 : v / 127.5 - 1;
     }
   }
-  return input;
+  return { input, quality: assessQuality(data, size) };
 }
 
 // One TFLite interpreter must never run twice at the same time (a double tap on
@@ -141,7 +143,7 @@ export async function classifyPhoto(
 ): Promise<ScanResult> {
   const t0 = Date.now();
   onStep?.('prepare', 0);
-  const input = await photoToInput(photo.uri, photo.width, photo.height, photo.frame ?? 1, inputSizeOf(model));
+  const { input, quality } = await photoToInput(photo.uri, photo.width, photo.height, photo.frame ?? 1, inputSizeOf(model));
   const prepareMs = Date.now() - t0;
   onStep?.('infer', prepareMs);
   const t1 = Date.now();
@@ -157,5 +159,5 @@ export async function classifyPhoto(
     .map(({ p, i }) => ({ ...describeLabel(LABELS[i] ?? `class_${i}`), confidence: p }));
 
   const top = ranked[0];
-  return { top, alternatives: ranked.slice(1), uncertain: top.confidence < CONFIDENCE_THRESHOLD, timings: { prepareMs, inferMs } };
+  return { top, alternatives: ranked.slice(1), uncertain: top.confidence < CONFIDENCE_THRESHOLD, timings: { prepareMs, inferMs }, quality };
 }

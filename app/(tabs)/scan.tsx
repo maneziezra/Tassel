@@ -107,6 +107,7 @@ export default function ScanScreen() {
           alts: JSON.stringify(result.alternatives.map((a) => [a.label, a.confidence])),
           prepareMs: String(result.timings.prepareMs),
           inferMs: String(result.timings.inferMs),
+          q: result.quality.dark ? 'dark' : result.quality.blurry ? 'blurry' : '',
         },
       });
     } catch (e) {
