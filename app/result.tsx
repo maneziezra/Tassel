@@ -19,6 +19,8 @@ import { cropKey, getRegisteredProducts, PCPB_DISCLAIMER, problemKey } from '../
 import { addFarm, listFarms, saveIncident, type Farm } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
 import { openScanner, scanForField } from '../lib/navigation';
+import { getTrainingConsent, setTrainingConsent, shareFeedback } from '../lib/feedback';
+import type { Answer } from '../lib/feedbackCore';
 import { useLang } from '../lib/i18n';
 import { KIND_PICTURE, URGENCY_LEVEL, spreadPictures, stepIcon, stepTitle, type Picture } from '../lib/resultPictures';
 import { C, FONT, URGENCY_META, confidenceBand } from '../lib/theme';
@@ -64,6 +66,10 @@ export default function ResultScreen() {
   const [sprays, setSprays] = useState(false);
   const [details, setDetails] = useState(false);
   const [done, setDone] = useState<number[]>([]); // "do this now" cards ticked off
+  // "Was this right?": the answer, and the one waiting on the consent sheet.
+  const [answer, setAnswer] = useState<Answer | null>(null);
+  const [askConsent, setAskConsent] = useState<Answer | null>(null);
+  const [shared, setShared] = useState(false);
 
   // A new scan can arrive on this same screen: start fresh (the TECNO showed "3 of 2 done").
   const page = useRef<ScrollView>(null);
@@ -76,6 +82,9 @@ export default function ResultScreen() {
     setSavedId(p.incidentId ?? null);
     setAgrovets(null);
     setAgroStatus('');
+    setAnswer(null);
+    setAskConsent(null);
+    setShared(false);
     page.current?.scrollTo({ y: 0, animated: false });
   }, [scanKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -187,6 +196,39 @@ export default function ResultScreen() {
     if (info && !healthy) parts.push(t(urgency.label));
     if (steps.length) parts.push(`${t(healthy ? 'Keep it healthy' : 'Do this now')}: ${steps.map((s) => s.text).join(' ')}`);
     return parts.join(' ');
+  };
+
+  // "Was this right?" The photo leaves the phone only if the farmer has said yes to sharing.
+  const sendAnswer = async (a: Answer) => {
+    setAnswer(a);
+    tick('select');
+    if (!p.uri) return;
+    try {
+      await shareFeedback({ uri: p.uri, class_label: label, confidence, uncertain, crop: cropEn, answer: a });
+      setShared(true);
+    } catch {
+      // the answer is a hint; a failed copy is not worth an error on this screen
+    }
+  };
+  const onAnswer = async (a: Answer) => {
+    const consent = await getTrainingConsent();
+    if (consent === null) setAskConsent(a);
+    else if (consent === 'yes') sendAnswer(a);
+    else {
+      setAnswer(a);
+      tick('select');
+    }
+  };
+  const decideConsent = async (yes: boolean) => {
+    const a = askConsent;
+    setAskConsent(null);
+    await setTrainingConsent(yes ? 'yes' : 'no').catch(() => {});
+    if (!a) return;
+    if (yes) sendAnswer(a);
+    else {
+      setAnswer(a);
+      tick('select');
+    }
   };
 
   // A scan started from a field stays with that field through retakes.
@@ -414,6 +456,39 @@ export default function ResultScreen() {
           ))}
         </View>
 
+        {/* ── Was this right? (a fresh scan with a photo only) ───── */}
+        {p.uri && !p.incidentId ? (
+          <View style={[st.section, st.whatCard]}>
+            {answer ? (
+              <Animated.View entering={ZoomIn.springify().damping(12)} style={st.whatRow}>
+                <View style={[st.picIcon, { backgroundColor: C.primaryTint }]}>
+                  <Icon name="heart-outline" size={30} color={C.primaryDark} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.whatLabel}>Thank you</Text>
+                  <Text style={st.small}>{shared ? 'The photo will send on Wi-Fi. It helps Tassel learn Kenyan farms.' : 'Your answer stays on this phone.'}</Text>
+                </View>
+              </Animated.View>
+            ) : (
+              <>
+                <Text style={st.cardHead}>{uncertain ? 'Was the first guess right?' : 'Was this right?'}</Text>
+                <View style={st.grid}>
+                  {([
+                    { a: 'right', icon: 'thumb-up-outline', label: 'Yes' },
+                    { a: 'wrong', icon: 'thumb-down-outline', label: 'No' },
+                    { a: 'unsure', icon: 'help-circle-outline', label: "I don't know" },
+                  ] as { a: Answer; icon: IconName; label: string }[]).map((x) => (
+                    <TouchableOpacity key={x.a} style={[st.gridItem, { backgroundColor: C.bg, minHeight: 88 }]} onPress={() => onAnswer(x.a)} accessibilityRole="button">
+                      <Icon name={x.icon} size={28} color={C.primaryDark} />
+                      <Text style={st.gridLabel}>{x.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+          </View>
+        ) : null}
+
         {/* ── More: the other actions and the long text, folded ──── */}
         <TouchableOpacity style={st.moreBtn} onPress={() => setDetails((v) => !v)} accessibilityRole="button" accessibilityState={{ expanded: details }}>
           <Text style={st.moreTxt}>More</Text>
@@ -522,6 +597,26 @@ export default function ResultScreen() {
             <ListenButton text={steps[step].text} />
           </View>
         ) : null}
+      </Sheet>
+
+      {/* Consent, asked once: the photo is shared only after a yes */}
+      <Sheet visible={askConsent !== null} onClose={() => setAskConsent(null)} title="Help Tassel learn Kenyan farms">
+        <View style={{ gap: 12 }}>
+          {([
+            ['image-outline', 'Send this leaf photo and your answer to the Tassel team. It shows how often Tassel is right on real farms, and helps make it better.'],
+            ['map-marker-off-outline', 'Location and phone details are removed from the photo first.'],
+            ['wifi', 'It sends only on Wi-Fi, so it does not use your data bundle.'],
+            ['shield-lock-outline', 'Private: only the Tassel team and an agronomist working with us see it. Never sold, never used for ads.'],
+            ['delete-outline', 'Stop and delete your photos any time in Profile.'],
+          ] as [IconName, string][]).map(([icon, text]) => (
+            <View key={icon} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+              <Icon name={icon} size={24} color={C.primaryDark} />
+              <Text style={[st.body, { flex: 1 }]}>{text}</Text>
+            </View>
+          ))}
+          <Btn label="Yes, share my photos" icon="check" onPress={() => decideConsent(true)} style={{ marginTop: 6 }} />
+          <Btn label="No, keep them on my phone" kind="secondary" onPress={() => decideConsent(false)} />
+        </View>
       </Sheet>
 
       {/* Field picker */}

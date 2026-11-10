@@ -16,6 +16,7 @@ import { useLang } from '../../lib/i18n';
 import { ensurePermission, notificationsWanted, scheduleFieldReminders, setNotificationsWanted } from '../../lib/notify';
 import { calendarFor, fieldTasks, loadTicks } from '../../lib/calendar';
 import { hasSwahiliVoice, speak } from '../../lib/speech';
+import { deleteSharedFeedback, getTrainingConsent, queuedCount, setTrainingConsent } from '../../lib/feedback';
 import { cropName } from '../../lib/diseases';
 import { fmtArea, setPrefs, usePrefs } from '../../lib/prefs';
 import { C, FONT } from '../../lib/theme';
@@ -92,6 +93,8 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState({ fields: 0, scans: 0, days: 0, acres: 0 });
   const [notify, setNotify] = useState(true);
   const [swVoice, setSwVoice] = useState<boolean | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [waiting, setWaiting] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -129,7 +132,44 @@ export default function ProfileScreen() {
     }
   }, [session?.user.created_at]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      load();
+      getTrainingConsent().then((c) => setSharing(c === 'yes'));
+      queuedCount().then(setWaiting);
+    }, [load])
+  );
+
+  const toggleSharing = async (on: boolean) => {
+    setSharing(on);
+    tick('select');
+    await setTrainingConsent(on ? 'yes' : 'no').catch(() => {});
+    setWaiting(await queuedCount());
+  };
+
+  const deleteShared = () =>
+    Alert.alert(
+      t('Delete your shared photos?'),
+      t('Every scan photo and answer you sent to Tassel is deleted, and sharing stops. This cannot be undone.'),
+      [
+        { text: t('Cancel'), style: 'cancel' },
+        {
+          text: t('Delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteSharedFeedback();
+              setSharing(false);
+              setWaiting(0);
+              tick('success');
+              Alert.alert(t('Deleted'), t('Your shared photos and answers are deleted.'));
+            } catch {
+              Alert.alert(t('Could not delete'), t('Connect to the internet and try again.'));
+            }
+          },
+        },
+      ]
+    );
 
   useEffect(() => {
     notificationsWanted().then(setNotify);
@@ -427,16 +467,31 @@ export default function ProfileScreen() {
               <Row
                 icon="shield-lock-outline"
                 label="Privacy guarantee"
-                sub="Leaf photos stay on your phone. No ads."
+                sub="Leaf photos stay on your phone unless you share them. No ads."
                 onPress={() =>
                   Alert.alert(
                     t('Your privacy'),
                     t(
-                      'Leaf photos are analysed completely on this phone and are never uploaded unless you attach one to a community post or choose the AI check. Your fields, saved scans and price reports are securely stored in your private account. Outbreaks and market prices only share anonymous county totals. Zero advertising. We never sell your data.'
+                      'Leaf photos are analysed completely on this phone and are never uploaded unless you attach one to a community post, choose the AI check, or turn on Share scan photos. Shared photos have their location removed, send only on Wi-Fi, and are seen only by the Tassel team; you can delete them here at any time. Your fields, saved scans and price reports are securely stored in your private account. Outbreaks and market prices only share anonymous county totals. Zero advertising. We never sell your data.'
                     )
                   )
                 }
               />
+              <View style={st.rowItem}>
+                <Icon name="image-outline" size={22} color={C.text} />
+                <View style={{ flex: 1 }}>
+                  <Text style={st.rowTxt}>Share scan photos</Text>
+                  <Text raw style={st.rowSub}>
+                    {sharing
+                      ? waiting
+                        ? t('{n} waiting for Wi-Fi', { n: waiting })
+                        : t('On. Sent only on Wi-Fi, without location.')
+                      : t('Off. Photos stay on this phone.')}
+                  </Text>
+                </View>
+                <Switch value={sharing} onValueChange={toggleSharing} trackColor={{ true: C.secondary, false: C.sunken }} thumbColor={sharing ? C.primary : '#FFFFFF'} />
+              </View>
+              <Row icon="delete-outline" label="Delete photos I shared" danger onPress={deleteShared} />
               <Row icon="information-outline" label="App version" sub={`v${version} · KSEF 2027`} />
             </View>
           </>

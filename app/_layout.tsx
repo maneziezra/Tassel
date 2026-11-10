@@ -1,5 +1,7 @@
 import '../global.css';
 import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
+import * as Network from 'expo-network';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -9,6 +11,7 @@ import { ensureSession } from '../lib/session';
 import { loadLang } from '../lib/i18n';
 import { loadPrefs } from '../lib/prefs';
 import { onNotificationTap } from '../lib/notify';
+import { flushFeedback } from '../lib/feedback';
 import { C } from '../lib/theme';
 
 export default function RootLayout() {
@@ -20,9 +23,20 @@ export default function RootLayout() {
     // Language first (it decides every label), then the session in the background.
     Promise.all([loadLang(), loadPrefs()]).finally(() => setReady(true));
     // Start (or restore) this phone's session. Scanning works offline regardless.
-    ensureSession().catch(() => {});
+    ensureSession()
+      .then(() => flushFeedback())
+      .catch(() => {});
+    // Shared scan photos (only with consent) go when the app is back in front or Wi-Fi arrives.
+    const flush = () => flushFeedback().catch(() => {});
+    const app = AppState.addEventListener('change', (s) => s === 'active' && flush());
+    const net = Network.addNetworkStateListener((n) => n.type === Network.NetworkStateType.WIFI && flush());
     // Tapping a reminder or outbreak alert opens the right screen.
-    return onNotificationTap((url) => router.push(url as never));
+    const off = onNotificationTap((url) => router.push(url as never));
+    return () => {
+      app.remove();
+      net.remove();
+      off?.();
+    };
   }, []);
 
   if (!ready || (!fontsLoaded && !fontError)) return null;
