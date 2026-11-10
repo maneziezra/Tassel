@@ -2,10 +2,12 @@
 // written for farmers, teachers and KSEF judges. Each line is written in both
 // English and Kiswahili here (too long for the shared dictionary).
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { Card, Header, Icon, Text, type IconName } from '../components/ui';
 import { useLang } from '../lib/i18n';
+import { activeModel } from '../lib/modelUpdate';
+import type { Active } from '../lib/modelUpdateCore';
 import { C } from '../lib/theme';
 
 type L = { en: string; sw: string };
@@ -246,11 +248,23 @@ const SECTIONS: { icon: IconName; title: L; lines: L[] }[] = [
 ];
 
 export default function MethodologyScreen() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
+  // Rule 1: the figures below describe the built-in model. If a newer one was downloaded, say so.
+  const [scanner, setScanner] = useState<Active | null>(null);
+  useEffect(() => {
+    activeModel().then(setScanner);
+  }, []);
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Header title="How Tassel works" subtitle="Methods, limits and sources" />
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+        {scanner && scanner.version !== 'builtin' ? (
+          <Card>
+            <Text raw style={st.line}>
+              {t('This phone scans with model {v}, downloaded as an update. The model figures below are for the built-in model v5.', { v: scanner.version })}
+            </Text>
+          </Card>
+        ) : null}
         {SECTIONS.map((s) => (
           <Card key={s.title.en}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>

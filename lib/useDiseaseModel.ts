@@ -10,6 +10,8 @@
 import { useEffect, useState } from 'react';
 import { Asset } from 'expo-asset';
 import { loadTensorflowModel, type TensorflowPlugin, type TfliteModel } from 'react-native-fast-tflite';
+import { setModelLabels } from './classifier';
+import { activeLabels, activeModel } from './modelUpdate';
 
 const MODEL = require('../assets/model/cropguard.tflite');
 
@@ -17,6 +19,20 @@ const MODEL = require('../assets/model/cropguard.tflite');
 let loading: Promise<TfliteModel> | null = null;
 
 async function load(): Promise<TfliteModel> {
+  // A model downloaded over Wi-Fi (checked and test-run when it arrived) is used first;
+  // if it will not load, the built-in model takes over, so the scanner always works.
+  try {
+    const a = await activeModel();
+    const labels = await activeLabels(a);
+    if (a.tflite && labels) {
+      const model = await loadTensorflowModel({ url: a.tflite }, []);
+      setModelLabels(labels);
+      return model;
+    }
+  } catch (e) {
+    console.warn('Downloaded model failed to load; using the built-in one', e);
+  }
+  setModelLabels(null);
   const asset = Asset.fromModule(MODEL);
   await asset.downloadAsync();
   const url = asset.localUri ?? asset.uri;

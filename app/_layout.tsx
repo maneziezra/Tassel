@@ -12,6 +12,7 @@ import { loadLang } from '../lib/i18n';
 import { loadPrefs } from '../lib/prefs';
 import { onNotificationTap } from '../lib/notify';
 import { flushFeedback } from '../lib/feedback';
+import { checkForModelUpdate } from '../lib/modelUpdate';
 import { C } from '../lib/theme';
 
 export default function RootLayout() {
@@ -27,7 +28,12 @@ export default function RootLayout() {
       .then(() => flushFeedback())
       .catch(() => {});
     // Shared scan photos (only with consent) go when the app is back in front or Wi-Fi arrives.
-    const flush = () => flushFeedback().catch(() => {});
+    // The same moments check, at most once a day and on Wi-Fi only, for a newer leaf model.
+    const flush = () => {
+      flushFeedback().catch(() => {});
+      checkForModelUpdate().catch(() => {});
+    };
+    checkForModelUpdate().catch(() => {});
     const app = AppState.addEventListener('change', (s) => s === 'active' && flush());
     const net = Network.addNetworkStateListener((n) => n.type === Network.NetworkStateType.WIFI && flush());
     // Tapping a reminder or outbreak alert opens the right screen.

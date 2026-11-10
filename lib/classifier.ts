@@ -33,9 +33,15 @@ const PIXEL_SCALING: 'zero_one' | 'minus_one_one' = 'minus_one_one';
 // Below this confidence the app tells the farmer the result is uncertain.
 export const CONFIDENCE_THRESHOLD = 0.75;
 
-const LABELS: string[] = Object.keys(rawLabels as Record<string, string>)
+const BUILTIN_LABELS: string[] = Object.keys(rawLabels as Record<string, string>)
   .sort((a, b) => Number(a) - Number(b))
   .map((k) => (rawLabels as Record<string, string>)[k]);
+let LABELS: string[] = BUILTIN_LABELS;
+
+/** Labels of the model in use: a downloaded model brings its own (lib/modelUpdate.ts); null = built-in. */
+export function setModelLabels(labels: string[] | null): void {
+  LABELS = labels ?? BUILTIN_LABELS;
+}
 
 export type Prediction = {
   label: string; // raw class name, e.g. "Tomato___Late_blight"

@@ -17,6 +17,8 @@ import { ensurePermission, notificationsWanted, scheduleFieldReminders, setNotif
 import { calendarFor, fieldTasks, loadTicks } from '../../lib/calendar';
 import { hasSwahiliVoice, speak } from '../../lib/speech';
 import { deleteSharedFeedback, getTrainingConsent, queuedCount, setTrainingConsent } from '../../lib/feedback';
+import { activeModel, checkForModelUpdate, pendingAppUpdate } from '../../lib/modelUpdate';
+import type { Active, AppEntry } from '../../lib/modelUpdateCore';
 import { cropName } from '../../lib/diseases';
 import { fmtArea, setPrefs, usePrefs } from '../../lib/prefs';
 import { C, FONT } from '../../lib/theme';
@@ -95,6 +97,9 @@ export default function ProfileScreen() {
   const [swVoice, setSwVoice] = useState<boolean | null>(null);
   const [sharing, setSharing] = useState(false);
   const [waiting, setWaiting] = useState(0);
+  const [scanner, setScanner] = useState<Active>({ version: 'builtin' });
+  const [newApp, setNewApp] = useState<AppEntry | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -137,6 +142,8 @@ export default function ProfileScreen() {
       load();
       getTrainingConsent().then((c) => setSharing(c === 'yes'));
       queuedCount().then(setWaiting);
+      activeModel().then(setScanner);
+      pendingAppUpdate().then(setNewApp);
     }, [load])
   );
 
@@ -145,6 +152,23 @@ export default function ProfileScreen() {
     tick('select');
     await setTrainingConsent(on ? 'yes' : 'no').catch(() => {});
     setWaiting(await queuedCount());
+  };
+
+  // "Check for updates" by hand (still Wi-Fi only). A new model is used the next time Tassel opens.
+  const checkNow = async () => {
+    setChecking(true);
+    const r = await checkForModelUpdate(true);
+    setChecking(false);
+    setNewApp(await pendingAppUpdate());
+    const msg: Record<string, string> = {
+      skipped: 'Connect to Wi-Fi to check for updates. Updates never use your data bundle.',
+      'up-to-date': 'The leaf scanner is up to date.',
+      installed: 'A better leaf scanner was downloaded. It starts the next time you open Tassel.',
+      'rolled-back': 'The leaf scanner was set back to the built-in model. It starts the next time you open Tassel.',
+      'needs-app-update': 'A new leaf scanner needs the new version of the app first.',
+      failed: 'Could not check right now. Try again later.',
+    };
+    Alert.alert(t('Updates'), t(msg[r]));
   };
 
   const deleteShared = () =>
@@ -272,6 +296,23 @@ export default function ProfileScreen() {
                 ))}
               </View>
             </View>
+
+            {/* A newer app: say so once, plainly, with the size (it is a big download) */}
+            {newApp ? (
+              <Card style={{ marginHorizontal: 16, marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Icon name="cellphone-arrow-down" size={28} color={C.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text raw style={st.rowTxt}>{t('Tassel {v} is ready', { v: newApp.version })}</Text>
+                    <Text raw style={st.rowSub}>
+                      {(lang === 'sw' ? newApp.notes?.sw : newApp.notes?.en) ??
+                        (newApp.bytes ? t('{mb} MB. Download it on Wi-Fi.', { mb: Math.round(newApp.bytes / 1048576) }) : t('Download it on Wi-Fi.'))}
+                    </Text>
+                  </View>
+                </View>
+                <Btn label="Get the new version" icon="download" style={{ marginTop: 12 }} onPress={() => Linking.openURL(newApp.url)} />
+              </Card>
+            ) : null}
 
             {/* 2. My Fields as Small Map Tiles (P2 Requirement) */}
             <Section
@@ -493,6 +534,20 @@ export default function ProfileScreen() {
               </View>
               <Row icon="delete-outline" label="Delete photos I shared" danger onPress={deleteShared} />
               <Row icon="information-outline" label="App version" sub={`v${version} · KSEF 2027`} />
+              <Row
+                icon="leaf"
+                label={t(checking ? 'Checking…' : 'Leaf scanner')}
+                sub={
+                  scanner.version === 'builtin'
+                    ? t('Built-in model v5. Tap to check for a better one.')
+                    : t('Model {v}, updated {date}. Tap to check again.', {
+                        v: scanner.version,
+                        date: scanner.installed_at ? new Date(scanner.installed_at).toLocaleDateString() : '',
+                      })
+                }
+                raw
+                onPress={checking ? undefined : checkNow}
+              />
             </View>
           </>
         }
