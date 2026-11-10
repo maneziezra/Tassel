@@ -4,6 +4,12 @@ Written 24 Oct 2026 for Ezra ("Archlord"), Eldoret, Kenya. Put this file in the 
 
 **Your job:** redesign the Tassel app so a farmer remembers it and comes back. Plan it, design it, build it, test it. Ezra wants you to do the work end to end. Ask him only for decisions that are genuinely his (listed in section 9).
 
+**State on 10 Nov 2026 (read first)**
+- App 2.8.0 (versionCode 10): scan history per field; "Was this right?" photo sharing with consent (rule 4); leaf models over the air on Wi-Fi (`lib/modelUpdate*.ts`, `scripts/publish-model.mjs`, rules in the file header); app-update notice on Profile. New native modules: expo-network, expo-file-system, expo-crypto, so 2.8.0 must reach phones as an APK once; later models need no APK.
+- Server SQL written but NOT applied (needs Ezra in the Supabase SQL editor): `cropguard-proxy/supabase/cropguard_v28_scan_feedback.sql`, `cropguard_v29_models_bucket.sql` (and the older `cropguard_v27_pesticide_products.sql`). Until v28 is applied, opted-in photos wait on the phone; until v29, the update check finds no manifest and the built-in model stays.
+- Model v8a trained 10 Nov (EfficientNetV2-B2, 240 px, 193 classes): 0.9568 vs v5 0.9404 on v5's sources, test_phone 0.9522, 35.8 MB. Not shipped: 30 classes lack treatment guides, size and TECNO scan time unchecked, v5 never scored on test_phone. Details: KSEF project doc `Tassel_Model_v8a_Results.md`; files in `Desktop\KSEF 2027\tassel_v3\results_v8a\`.
+- Open decisions for Ezra: retrain v8 without marginal crops vs write 30 guides; agronomist for labelling shared photos; native-speaker review of `lib/sw.ts` (flagged blocks).
+
 **Decided by Ezra, 26 Oct 2026** (these replace the older rules "active ingredients only, never doses" and "no emojis" from the 19 Oct brief):
 - Brand: "how your field is doing, and what to do today". The satellite field is the Home hero; offline scan is the giant action.
 - Emoji: Google Noto Animated Emoji (Lottie), with the licence credited. No system emoji.
