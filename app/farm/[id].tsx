@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Badge, Btn, Card, Empty, ErrorNote, Header, Icon, ListenButton, Loading, SectionLabel, Text, timeAgo } from '../../components/ui';
+import { Badge, Btn, Card, Empty, ErrorNote, Header, Icon, ListenButton, Loading, SectionLabel, Text, timeAgo, type IconName } from '../../components/ui';
 import { DateField, formatDate } from '../../components/DateField';
 import { TaskRow } from '../../components/TaskRow';
 import { deleteFarm, deleteIncident, getFarm, listIncidents, updateFarm, type Farm, type Incident } from '../../lib/data';
@@ -12,7 +12,8 @@ import { calendarFor, currentStage, fieldTasks, loadTicks, saveTicks, type Field
 import { cancelFieldReminders, countFieldReminders, ensurePermission, scheduleFieldReminders } from '../../lib/notify';
 import { cropName, getDiseaseL } from '../../lib/diseases';
 import { locale, useLang } from '../../lib/i18n';
-import { openScanner } from '../../lib/navigation';
+import { scanForField } from '../../lib/navigation';
+import { groupByMonth, summarise, REPEAT_WINDOW_DAYS } from '../../lib/scanHistory';
 import { C, FONT, confidenceBand } from '../../lib/theme';
 
 export default function FarmScreen() {
@@ -110,6 +111,18 @@ export default function FarmScreen() {
     ]);
 
   const diseased = items.filter((i) => i.disease !== 'Healthy' && !i.uncertain);
+  const summary = summarise(items);
+  const summaryName = (label: string, disease: string) => getDiseaseL(label)?.disease ?? disease;
+  const summaryLine: { text: string; icon: IconName; color: string; tint: string } | null =
+    summary.kind === 'repeat'
+      ? { text: t('{d} found {n} times in {days} days', { d: summaryName(summary.label, summary.disease), n: summary.count, days: REPEAT_WINDOW_DAYS }), icon: 'alert-circle-outline', color: C.error, tint: C.errorTint }
+      : summary.kind === 'finding'
+      ? { text: t('Last sure result: {d}, {when}', { d: summaryName(summary.label, summary.disease), when: timeAgo(summary.at) }), icon: 'alert-circle-outline', color: C.error, tint: C.errorTint }
+      : summary.kind === 'healthy'
+      ? { text: t('Last sure result: healthy, {when}', { when: timeAgo(summary.at) }), icon: 'check-circle-outline', color: C.primaryDark, tint: C.primaryTint }
+      : summary.kind === 'unclear'
+      ? { text: t('No sure result yet. Retake in good light.'), icon: 'help-circle-outline', color: C.textMid, tint: C.surface }
+      : null;
   const upcoming = tasks.filter((x) => x.status !== 'done' && x.status !== 'missed');
   const visible = showAll ? tasks : tasks.filter((x) => x.status === 'now' || x.status === 'soon' || x.status === 'missed').concat(upcoming.filter((x) => x.status === 'later').slice(0, 1));
   const listenText = () => visible.map((x) => `${x.title}. ${x.detail}`).join(' ');
@@ -155,7 +168,7 @@ export default function FarmScreen() {
                 style={{ flex: 1, minHeight: 46 }}
                 onPress={() => router.push({ pathname: '/farm-map', params: { farmId: farm.id } })}
               />
-              <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={openScanner} />
+              <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={() => scanForField({ id: farm.id, name: farm.name })} />
             </View>
           </Card>
 
@@ -207,29 +220,48 @@ export default function FarmScreen() {
             {t('{n} saved scans', { n: items.length })}
             {diseased.length ? `, ${t('{n} with disease', { n: diseased.length })}` : ''}
           </Text>
-          {items.length === 0 ? <Empty icon="clipboard-check-outline" title="No scans yet" text='Scan a leaf from this field, then tap "Save to my farm".' /> : null}
-          {items.map((item) => {
-            const band = confidenceBand(item.confidence);
-            return (
-              <TouchableOpacity
-                key={item.id}
-                style={st.item}
-                onPress={() => router.push({ pathname: '/result', params: { label: item.class_label, confidence: String(item.confidence), incidentId: item.id } })}
-                onLongPress={() => removeIncident(item)}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Badge label={cropName(item.crop)} color={C.primary} tint={C.primaryTint} />
-                  <Text style={[st.conf, { color: band.color }]}>{t('{n}% confidence', { n: Math.round(item.confidence * 100) })}</Text>
-                </View>
-                <Text raw style={st.disease}>
-                  {item.uncertain ? t('Unclear (best guess: {d})', { d: diseaseName(item) }) : diseaseName(item)}
-                </Text>
-                <Text raw style={st.meta}>
-                  {new Date(item.created_at).toLocaleString(locale(lang), { dateStyle: 'medium', timeStyle: 'short' })}, {timeAgo(item.created_at)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {items.length === 0 ? <Empty icon="clipboard-check-outline" title="No scans yet" text='Scan a leaf from this field, then tap "Save".' /> : null}
+          {summaryLine ? (
+            <View style={[st.summary, { backgroundColor: summaryLine.tint }]}>
+              <Icon name={summaryLine.icon} size={22} color={summaryLine.color} />
+              <Text raw style={[st.summaryTxt, { color: summaryLine.color }]}>{summaryLine.text}</Text>
+            </View>
+          ) : null}
+          {groupByMonth(items).map((m) => (
+            <View key={m.key}>
+              <Text raw style={st.month}>{new Date(m.year, m.month, 1).toLocaleDateString(locale(lang), { month: 'long', year: 'numeric' })}</Text>
+              {m.scans.map((item, idx) => {
+                const band = confidenceBand(item.confidence);
+                const healthy = item.disease === 'Healthy' && !item.uncertain;
+                const dot = item.uncertain ? C.textLight : healthy ? C.primary : C.error;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={st.row}
+                    accessibilityRole="button"
+                    accessibilityHint={t('Hold to delete')}
+                    onPress={() => router.push({ pathname: '/result', params: { label: item.class_label, confidence: String(item.confidence), incidentId: item.id } })}
+                    onLongPress={() => removeIncident(item)}
+                  >
+                    <View style={st.rail}>
+                      <View style={[st.dot, { backgroundColor: dot }]} />
+                      {idx < m.scans.length - 1 ? <View style={st.line} /> : null}
+                    </View>
+                    <View style={st.item}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Badge label={cropName(item.crop)} color={C.primary} tint={C.primaryTint} />
+                        <Text style={[st.conf, { color: band.color }]}>{band.word}</Text>
+                      </View>
+                      <Text raw style={st.disease}>
+                        {item.uncertain ? t('Unclear (best guess: {d})', { d: diseaseName(item) }) : diseaseName(item)}
+                      </Text>
+                      <Text raw style={st.meta}>{timeAgo(item.created_at)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
         </ScrollView>
       ) : null}
     </View>
@@ -260,7 +292,14 @@ const st = StyleSheet.create({
   remind: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, padding: 10, borderRadius: 12, backgroundColor: C.bg },
   remindTxt: { flex: 1, fontSize: 13, color: C.textMid, fontWeight: '700' },
   section: { fontSize: 20, fontWeight: '700', color: C.text, marginHorizontal: 20, marginTop: 20, marginBottom: 4 },
-  item: { backgroundColor: C.surface, borderRadius: 14, padding: 16, marginHorizontal: 16, marginTop: 10 },
+  summary: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, padding: 14, marginHorizontal: 16, marginTop: 10 },
+  summaryTxt: { flex: 1, fontSize: 15, fontWeight: '800' },
+  month: { fontSize: 14, fontWeight: '800', color: C.textMid, marginHorizontal: 20, marginTop: 18 },
+  row: { flexDirection: 'row', paddingLeft: 20, paddingRight: 16 },
+  rail: { width: 22, alignItems: 'center' },
+  dot: { width: 12, height: 12, borderRadius: 6, marginTop: 26 },
+  line: { position: 'absolute', top: 38, bottom: -26, width: 2, backgroundColor: C.textLight, opacity: 0.4 },
+  item: { flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 16, marginTop: 10 },
   conf: { fontSize: 12, fontWeight: '800' },
   sat: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderRadius: 16, padding: 16, marginHorizontal: 16, marginTop: 12 },
   satIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.primaryDark, alignItems: 'center', justifyContent: 'center' },

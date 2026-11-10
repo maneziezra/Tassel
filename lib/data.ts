@@ -291,6 +291,7 @@ export async function deleteFarm(id: string): Promise<void> {
   const { error } = await supabase.from('farms').delete().eq('id', id);
   fail(error, 'delete the field');
   await rememberPlanting(id, null);
+  AsyncStorage.removeItem(`incidents:${id}`).catch(() => {});
 }
 
 // ── Incidents (saved scans) ─────────────────────────────────────────
@@ -301,14 +302,26 @@ export async function saveIncident(i: Omit<Incident, 'id' | 'created_at'>): Prom
   return data as Incident;
 }
 
+// A field's history is kept on the phone too, so it still opens with no signal (same as the field list).
+const incidentsKey = (farmId: string) => `incidents:${farmId}`;
+
 export async function listIncidents(opts: { farmId?: string; limit?: number } = {}): Promise<Incident[]> {
-  await currentUserId();
-  let q = supabase.from('incidents').select('*').order('created_at', { ascending: false });
-  if (opts.farmId) q = q.eq('farm_id', opts.farmId);
-  if (opts.limit) q = q.limit(opts.limit);
-  const { data, error } = await q;
-  fail(error, 'load scan history');
-  return (data ?? []) as Incident[];
+  const { farmId, limit } = opts;
+  try {
+    await currentUserId();
+    let q = supabase.from('incidents').select('*').order('created_at', { ascending: false });
+    if (farmId) q = q.eq('farm_id', farmId);
+    if (limit) q = q.limit(limit);
+    const { data, error } = await q;
+    fail(error, 'load scan history');
+    const list = (data ?? []) as Incident[];
+    if (farmId && !limit) AsyncStorage.setItem(incidentsKey(farmId), JSON.stringify(list)).catch(() => {});
+    return list;
+  } catch (e) {
+    const raw = farmId ? await AsyncStorage.getItem(incidentsKey(farmId)).catch(() => null) : null;
+    if (raw) return JSON.parse(raw) as Incident[];
+    throw e;
+  }
 }
 
 export async function countIncidents(): Promise<number> {

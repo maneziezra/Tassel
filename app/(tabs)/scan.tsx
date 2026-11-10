@@ -15,6 +15,7 @@ import { FRAME_SHARE, frameFraction } from '../../lib/scanFrame';
 
 import { Icon, Text, tick } from '../../components/ui';
 import { NotoEmoji } from '../../components/NotoEmoji';
+import { takeScanField, type ScanField } from '../../lib/navigation';
 import { useLang } from '../../lib/i18n';
 import { C } from '../../lib/theme';
 
@@ -49,6 +50,7 @@ export default function ScanScreen() {
     useCallback(() => {
       openedAt.current = Date.now();
       setFocused(true);
+      setField(takeScanField());
       return () => setFocused(false);
     }, [])
   );
@@ -64,6 +66,7 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const tflite = useDiseaseModel();
   const [torch, setTorch] = useState(false);
+  const [field, setField] = useState<ScanField | null>(null);
   const [tip, setTip] = useState(0);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [steps, setSteps] = useState<{ step: ScanStep; ms?: number }[]>([]);
@@ -108,6 +111,7 @@ export default function ScanScreen() {
           prepareMs: String(result.timings.prepareMs),
           inferMs: String(result.timings.inferMs),
           q: result.quality.dark ? 'dark' : result.quality.blurry ? 'blurry' : '',
+          ...(field ? { farmId: field.id, farmName: field.name } : {}),
         },
       });
     } catch (e) {
@@ -224,7 +228,7 @@ export default function ScanScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={st.title}>Scan a leaf</Text>
-          <Text raw style={st.status}>{status}</Text>
+          <Text raw style={st.status}>{field ? t('For {name}', { name: field.name }) : status}</Text>
         </View>
         <TouchableOpacity style={st.roundBtn} onPress={() => setTorch((v) => !v)} accessibilityLabel={t('Toggle torch')}>
           <Icon name={torch ? 'flashlight' : 'flashlight-off'} size={22} color="#fff" />

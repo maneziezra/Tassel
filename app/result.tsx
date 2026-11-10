@@ -18,13 +18,13 @@ import { PcpbProductCard } from '../components/PcpbProductCard';
 import { cropKey, getRegisteredProducts, PCPB_DISCLAIMER, problemKey } from '../lib/pcpb';
 import { addFarm, listFarms, saveIncident, type Farm } from '../lib/data';
 import { findAgrovets, getPosition, mapsUrl, type Agrovet } from '../lib/geo';
-import { openScanner } from '../lib/navigation';
+import { openScanner, scanForField } from '../lib/navigation';
 import { useLang } from '../lib/i18n';
 import { KIND_PICTURE, URGENCY_LEVEL, spreadPictures, stepIcon, stepTitle, type Picture } from '../lib/resultPictures';
 import { C, FONT, URGENCY_META, confidenceBand } from '../lib/theme';
 
 export default function ResultScreen() {
-  const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string; q?: string }>();
+  const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string; q?: string; farmId?: string; farmName?: string }>();
   const { t, lang } = useLang();
   const label = p.label ?? '';
   const confidence = Number(p.confidence ?? 0);
@@ -116,7 +116,7 @@ export default function ResultScreen() {
       const rec = await saveIncident({ farm_id: farmId, class_label: label, crop: cropEn, disease: diseaseEn, confidence, uncertain, notes: null });
       setSavedId(rec.id);
       tick('success');
-      Alert.alert(t('Saved'), farmId ? t("Added to the field's disease history.") : t('Saved to your scan history.'));
+      Alert.alert(t('Saved'), farmId && p.farmName ? t('Added to the history of {name}.', { name: p.farmName }) : farmId ? t("Added to the field's disease history.") : t('Saved to your scan history.'));
     } catch (e) {
       Alert.alert(t('Save failed'), e instanceof Error ? e.message : t('Please try again.'));
     } finally {
@@ -189,16 +189,19 @@ export default function ResultScreen() {
     return parts.join(' ');
   };
 
+  // A scan started from a field stays with that field through retakes.
+  const scanAgain = () => (p.farmId && p.farmName ? scanForField({ id: p.farmId, name: p.farmName }) : openScanner());
+
   // Three buttons on the screen; the rest live under "More".
   type Action = { icon: IconName; label: string; onPress: () => void; on?: boolean };
-  const save3: Action = { icon: savedId ? 'check-circle' : 'content-save-outline', label: savedId ? 'Saved' : 'Save', onPress: () => !savedId && openSave(), on: Boolean(savedId) };
+  const save3: Action = { icon: savedId ? 'check-circle' : 'content-save-outline', label: savedId ? 'Saved' : 'Save', onPress: () => { if (savedId) return; if (p.farmId) save(p.farmId); else openSave(); }, on: Boolean(savedId) };
   const mainActions: Action[] = uncertain
     ? [
         ...(p.uri ? [{ icon: 'image-search-outline' as IconName, label: 'Check online', onPress: openPhotoCheck }] : []),
         { icon: 'account-group-outline', label: 'Ask farmers', onPress: askCommunity },
         save3,
       ]
-    : [save3, { icon: 'account-group-outline', label: 'Ask farmers', onPress: askCommunity }, { icon: 'camera-retake-outline', label: 'Scan again', onPress: openScanner }];
+    : [save3, { icon: 'account-group-outline', label: 'Ask farmers', onPress: askCommunity }, { icon: 'camera-retake-outline', label: 'Scan again', onPress: scanAgain }];
   const moreActions: Action[] = [
     ...(info && !healthy && !uncertain
       ? [{ icon: 'calendar-clock' as IconName, label: 'Day-by-day plan', onPress: () => router.push({ pathname: '/treatment-plan', params: { label, incidentId: savedId ?? '' } }) }]
@@ -281,7 +284,7 @@ export default function ResultScreen() {
                 </View>
               ))}
             </View>
-            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={openScanner} />
+            <Btn label="Retake the photo" icon="camera-retake-outline" kind="signature" onPress={scanAgain} />
             <View style={st.whatCard}>
               <Text style={st.cardHead}>Could be</Text>
               {[[label, confidence] as [string, number], ...alts].map(([l, c]) => {

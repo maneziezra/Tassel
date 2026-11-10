@@ -1489,4 +1489,13 @@ export const SW: Record<string, string> = {
   // v2.7 not-sure actions (flagged for native-speaker review)
   "Retake the photo": "Piga picha tena",
   "Watch out": "Tahadhari",
+  // v2.8 field scan timeline (flagged for native-speaker review)
+  "For {name}": "Kwa {name}",
+  "Added to the history of {name}.": "Imeongezwa kwenye historia ya {name}.",
+  "{d} found {n} times in {days} days": "{d} imepatikana mara {n} ndani ya siku {days}",
+  "Last sure result: {d}, {when}": "Tokeo la mwisho lenye uhakika: {d}, {when}",
+  "Last sure result: healthy, {when}": "Tokeo la mwisho lenye uhakika: salama, {when}",
+  "No sure result yet. Retake in good light.": "Bado hakuna tokeo lenye uhakika. Piga picha tena kwenye mwanga mzuri.",
+  "Hold to delete": "Shikilia ili kufuta",
+  'Scan a leaf from this field, then tap "Save".': 'Skani jani la shamba hili, kisha gusa "Hifadhi".',
 };

@@ -4,6 +4,22 @@
 
 import { router } from 'expo-router';
 
+/** The field the farmer pressed Scan on. The scan screen picks it up once when it opens. */
+export type ScanField = { id: string; name: string };
+let pendingField: ScanField | null = null;
+
+export function takeScanField(): ScanField | null {
+  const f = pendingField;
+  pendingField = null;
+  return f;
+}
+
+/** Scan from a field's own page: the result saves to that field without asking which one. */
+export function scanForField(field: ScanField): void {
+  pendingField = field;
+  openScanner();
+}
+
 /**
  * Universally opens the live camera scanner from ANY screen:
  * - Dismisses open stack screens/modals (e.g. /result, /farm/[id], /calendar)
