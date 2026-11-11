@@ -13,6 +13,8 @@ import { loadPrefs } from '../lib/prefs';
 import { onNotificationTap } from '../lib/notify';
 import { flushFeedback } from '../lib/feedback';
 import { checkForModelUpdate } from '../lib/modelUpdate';
+import { checkFieldsForChanges } from '../lib/satelliteAlerts';
+import { registerFieldTask } from '../lib/backgroundTasks';
 import { C } from '../lib/theme';
 
 export default function RootLayout() {
@@ -26,7 +28,9 @@ export default function RootLayout() {
     // Start (or restore) this phone's session. Scanning works offline regardless.
     ensureSession()
       .then(() => flushFeedback())
+      .then(() => checkFieldsForChanges()) // new satellite images of the fields, about once a day
       .catch(() => {});
+    registerFieldTask();
     // Shared scan photos (only with consent) go when the app is back in front or Wi-Fi arrives.
     // The same moments check, at most once a day and on Wi-Fi only, for a newer leaf model.
     const flush = () => {
@@ -34,7 +38,11 @@ export default function RootLayout() {
       checkForModelUpdate().catch(() => {});
     };
     checkForModelUpdate().catch(() => {});
-    const app = AppState.addEventListener('change', (s) => s === 'active' && flush());
+    const app = AppState.addEventListener('change', (s) => {
+      if (s !== 'active') return;
+      flush();
+      checkFieldsForChanges().catch(() => {});
+    });
     const net = Network.addNetworkStateListener((n) => n.type === Network.NetworkStateType.WIFI && flush());
     // Tapping a reminder or outbreak alert opens the right screen.
     const off = onNotificationTap((url) => router.push(url as never));

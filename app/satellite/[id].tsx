@@ -4,13 +4,18 @@
 // 10 m satellite squares, how it changed over time, which part to inspect, and
 // a quick "what did you find?" check that becomes the ground truth that
 // calibrates the thresholds. Technical view adds the numbers behind it.
+// v2.9: a real aerial photo under the squares (lib/aerial.ts) so the farmer recognises the
+// field, and "then and now": two dates side by side with one plain line each for green cover
+// and leaf water (lib/satelliteCompare.ts).
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Share, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Btn, Card, Chip, Dot, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Segmented, Sheet, StatusShade, Text, tick } from '../../components/ui';
+import { Btn, Card, Chip, Dot, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Segmented, Sheet, StatusShade, Text, tick, type IconName } from '../../components/ui';
+import { AERIAL, aerialTiles } from '../../lib/aerial';
+import { compareDates, earlierClear, pickEarlier, type Change } from '../../lib/satelliteCompare';
 import { getFarm, type Farm } from '../../lib/data';
 import { locale, useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
@@ -18,7 +23,7 @@ import { mix, ndviColor } from '../../lib/fieldArt';
 import { C, FONT, RADIUS } from '../../lib/theme';
 import {
   CLASSES, QUALITY_META, RESOLUTION, STRESS, classMeta, getGrid, interpret, listObservations, listValidations, listZones, refreshSatellite,
-  saveValidation, satelliteReady, setOutcome, toCsv, toGeoJson, toUtm, zoneName,
+  saveValidation, satelliteReady, setOutcome, toCsv, toGeoJson, toUtm, fromUtm, zoneName,
   type Condition, type Grid, type Observation, type ProductId, type ResolutionMeta, type Validation, type ZoneStat,
 } from '../../lib/satellite';
 
@@ -32,6 +37,8 @@ const LAYER: Record<Layer, { product: ProductId; grid: 10 | 20 }> = {
   ndwi_water: { product: 'NDWI_WATER', grid: 10 },
 };
 type View_ = 'farmer' | 'technical';
+/** What is drawn in the field frame: the aerial photo, the satellite squares, or the squares over the photo. */
+type Backdrop = 'photo' | 'both' | 'colours';
 
 /** Farmer-view layer names. The resolution is always shown next to them (resolution rule). */
 const PLAIN: Record<Layer, string> = { mask: 'Where to look', ndvi: 'Green cover', ndwi_crop: 'Leaf water', ndwi_water: 'Open water' };
@@ -101,6 +108,15 @@ export default function SatelliteScreen() {
   const [warning, setWarning] = useState<string | null>(null);
   const [inspect, setInspect] = useState<{ zone: string | null; cls: number | null } | null>(null);
   const [cell, setCell] = useState<number | null>(null);
+  const { width } = useWindowDimensions();
+  const [backdrop, setBackdrop] = useState<Backdrop>('both');
+  const [photoOk, setPhotoOk] = useState(false); // an aerial tile has loaded
+  const [photoErr, setPhotoErr] = useState(false); // a tile failed (usually: no internet)
+  const onPhoto = useCallback((loaded: boolean) => (loaded ? setPhotoOk(true) : setPhotoErr(true)), []);
+  // then and now
+  const [cmpOn, setCmpOn] = useState(false);
+  const [cmp, setCmp] = useState<Observation | null>(null);
+  const [cmpGrid, setCmpGrid] = useState<Grid | null | undefined>(undefined); // undefined while loading
 
   const usable = useMemo(() => obs.filter((o) => o.quality !== 'unusable'), [obs]);
 
@@ -170,6 +186,21 @@ export default function SatelliteScreen() {
       alive = false;
     };
   }, [sel?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // then and now: keep the earlier date if it is still earlier and clear, otherwise offer one about 3 weeks back
+  useEffect(() => {
+    if (!cmpOn || !sel) return;
+    setCmp((cur) => (cur && earlierClear(obs, sel).some((o) => o.id === cur.id) ? cur : pickEarlier(obs, sel)));
+  }, [cmpOn, sel?.id, obs]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let alive = true;
+    setCmpGrid(undefined);
+    if (!cmpOn || !cmp) return;
+    getGrid(cmp.id).then((g) => alive && setCmpGrid(g));
+    return () => {
+      alive = false;
+    };
+  }, [cmpOn, cmp?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reading = useMemo(() => interpret(obs, latestZones, farm?.crop ?? null, farm?.planting_date), [obs, latestZones, farm]);
   const due = checks.filter((c) => c.follow_up_due && !c.outcome && c.follow_up_due <= new Date().toISOString().slice(0, 10));
@@ -293,12 +324,58 @@ export default function SatelliteScreen() {
               </SectionLabel>
               <LayerPicker plain={view === 'farmer'} layer={layer} meta={grid.resolution} onChange={(l) => { setLayer(l); setCell(null); }} />
               <LayerCaption plain={view === 'farmer'} layer={layer} meta={grid.resolution} />
-              <Animated.View key={`${sel.id}:${layer}`} entering={FadeIn.duration(320)}>
-                <FieldMask grid={grid} farm={farm} layer={layer} selected={cell} onCell={setCell} />
-              </Animated.View>
-              <CellInfo grid={grid} layer={layer} cell={cell} />
-              <Legend grid={grid} layer={layer} />
+              <Segmented<Backdrop> value={backdrop} onChange={(b) => { setBackdrop(b); setCell(null); }} style={{ marginTop: 12 }}
+                options={[{ value: 'photo', label: 'Photo' }, { value: 'both', label: 'Photo + colours' }, { value: 'colours', label: 'Colours' }]} />
+              {cmpOn && cmp ? (
+                // then and now: the earlier date on the left, the chosen date on the right, same layer
+                <View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {([[cmp, cmpGrid], [sel, grid]] as [Observation, Grid | null | undefined][]).map(([o, g]) => (
+                      <View key={o.id} style={{ flex: 1, alignItems: 'center' }}>
+                        {g ? (
+                          <FieldMask compact grid={g} farm={farm} layer={layer} selected={null} backdrop={backdrop} photoOk={photoOk} onPhoto={onPhoto} maxW={(width - 72) / 2 - 8} maxH={190} />
+                        ) : (
+                          <View style={{ height: 120, justifyContent: 'center' }}>
+                            <Text style={st.note}>{g === undefined ? 'Loading…' : 'The map for this date is not available.'}</Text>
+                          </View>
+                        )}
+                        <Text raw style={st.cmpDate}>{dateLabel(o.observed_at)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <CompareNote earlier={cmp} later={sel} label={dateLabel} />
+                </View>
+              ) : (
+                <>
+                  <Animated.View key={`${sel.id}:${layer}`} entering={FadeIn.duration(320)}>
+                    <FieldMask grid={grid} farm={farm} layer={layer} selected={cell} onCell={setCell} backdrop={backdrop} photoOk={photoOk} onPhoto={onPhoto} />
+                  </Animated.View>
+                  {backdrop === 'photo' && photoOk ? null : <CellInfo grid={grid} layer={layer} cell={cell} />}
+                </>
+              )}
+              {backdrop === 'photo' && photoOk ? null : <Legend grid={grid} layer={layer} />}
+              {backdrop !== 'colours' ? (
+                <Text style={st.note}>
+                  {photoOk
+                    ? 'The photo is an aerial picture and can be a few years old. The coloured squares are the satellite reading for the date you chose.'
+                    : photoErr
+                    ? 'The aerial photo needs internet. Showing the satellite squares only.'
+                    : 'Loading the aerial photo…'}
+                </Text>
+              ) : null}
               <DateStrip obs={obs} sel={sel} onSel={(o) => { tick('select'); setSel(o); }} label={dateLabel} />
+              {cmpOn ? (
+                earlierClear(obs, sel).length && cmp ? (
+                  <>
+                    <Text style={st.formLabel}>Compare with</Text>
+                    <DateStrip obs={earlierClear(obs, sel)} sel={cmp} onSel={(o) => { tick('select'); setCmp(o); }} label={dateLabel} />
+                  </>
+                ) : (
+                  <Text style={st.note}>There is no earlier clear date to compare with yet.</Text>
+                )
+              ) : null}
+              <Btn label={cmpOn ? 'Show one date' : 'Compare two dates'} icon={cmpOn ? 'close' : 'compare'} kind="secondary" style={{ marginTop: 12, minHeight: 46 }}
+                onPress={() => { setCmpOn((v) => !v); setCell(null); }} />
               {sel.quality === 'unusable' ? <Text style={st.note}>Clouds covered the field on this date. Grey squares are not readings.</Text> : null}
               {sel.suspect ? <Text style={st.note}>This date was probably hazy: it disagrees with the clear images either side of it.</Text> : null}
               {latestZones.length <= 1 ? <Text style={[st.note, { marginTop: 10 }]}>Small field: Tassel reads it as one zone.</Text> : null}
@@ -396,6 +473,7 @@ export default function SatelliteScreen() {
             Satellite readings show where to look. They do not diagnose a problem. Always confirm in the field, and ask your extension officer before acting on a large area.
           </Text>
           <Text style={[st.note, { marginHorizontal: 20, marginTop: 6, color: C.textLight }]}>Contains modified Copernicus Sentinel-2 data, processed by Tassel.</Text>
+          <Text raw style={[st.note, { marginHorizontal: 20, marginTop: 2, color: C.textLight }]}>{`${t('Aerial photo')}: ${AERIAL.credit}`}</Text>
         </ScrollView>
       )}
       <InspectSheet
@@ -459,18 +537,64 @@ function LayerCaption({ layer, meta, plain }: { layer: Layer; meta: ResolutionMe
   );
 }
 
-/** One layer, drawn on its own grid: 10 m pixels or 20 m cells, never resampled. */
-function FieldMask({ grid, farm, layer, selected, onCell }: { grid: Grid; farm: Farm; layer: Layer; selected: number | null; onCell: (i: number | null) => void }) {
+/** Green cover and leaf water between two dates, one plain line each (thresholds: lib/satelliteCompare.ts). */
+function CompareNote({ earlier, later, label }: { earlier: Observation; later: Observation; label: (iso: string) => string }) {
+  const { t } = useLang();
+  const c = compareDates(earlier, later);
+  const date = label(earlier.observed_at);
+  const look: Record<Exclude<Change, 'unknown'>, { icon: IconName; color: string }> = {
+    up: { icon: 'arrow-up-bold', color: C.primary },
+    down: { icon: 'arrow-down-bold', color: C.warn },
+    same: { icon: 'equal', color: C.textSub },
+  };
+  const GREEN: Record<Exclude<Change, 'unknown'>, string> = {
+    up: 'Green cover is higher than on {date}.', down: 'Green cover is lower than on {date}.', same: 'Green cover is about the same as on {date}.',
+  };
+  const WATER: Record<Exclude<Change, 'unknown'>, string> = {
+    up: 'Leaf water is higher than on {date}.', down: 'Leaf water is lower than on {date}.', same: 'Leaf water is about the same as on {date}.',
+  };
+  const rows = ([[c.green, GREEN], [c.water, WATER]] as [Change, typeof GREEN][]).filter(([ch]) => ch !== 'unknown') as [Exclude<Change, 'unknown'>, typeof GREEN][];
+  return (
+    <View style={{ marginTop: 10, gap: 6 }}>
+      {rows.map(([ch, words]) => (
+        <View key={words.up} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Icon name={look[ch].icon} size={20} color={look[ch].color} />
+          <Text raw style={st.cmpTxt}>{t(words[ch], { date })}</Text>
+        </View>
+      ))}
+      {rows.length === 0 ? <Text style={st.note}>These two dates cannot be compared: one of them has no clear reading.</Text> : null}
+      <Text style={st.note}>Crops change as they grow, and they dry before harvest. A drop is a reason to walk the field, not a diagnosis.</Text>
+    </View>
+  );
+}
+
+/**
+ * One layer, drawn on its own grid: 10 m pixels or 20 m cells, never resampled.
+ * Under the squares: the aerial photo of the same frame (when it has loaded), so the field is recognisable.
+ */
+function FieldMask({ grid, farm, layer, selected, onCell, backdrop = 'colours', photoOk = false, onPhoto, maxW, maxH = 260, compact }: {
+  grid: Grid; farm: Farm; layer: Layer; selected: number | null; onCell?: (i: number | null) => void;
+  backdrop?: Backdrop; photoOk?: boolean; onPhoto?: (loaded: boolean) => void; maxW?: number; maxH?: number; compact?: boolean;
+}) {
   const { width } = useWindowDimensions();
   const { t } = useLang();
+  // Without a loaded photo the squares are drawn exactly as before.
+  const mode: Backdrop = photoOk ? backdrop : 'colours';
+  const fade = mode === 'both' ? 0.55 : 1;
+  const ink = mode === 'colours' ? C.text : '#FFFFFF';
+  const pad = compact ? 8 : 28; // room for the north arrow
   const is20 = LAYER[layer].grid === 20;
   const g = is20 ? grid.grid20 : grid.grid10;
   // frame: the field's extent plus 15 m, in UTM metres
   const ring = (farm.polygon ?? []).map(([la, lo]) => toUtm(la, lo, grid.epsg));
   const xs = ring.map((p) => p[0]), ys = ring.map((p) => p[1]);
   const fx0 = Math.min(...xs) - 15, fx1 = Math.max(...xs) + 15, fy0 = Math.max(...ys) + 15, fy1 = Math.min(...ys) - 15;
-  const k = Math.max(0.3, Math.min((width - 92) / (fx1 - fx0), 260 / (fy0 - fy1), 4)); // screen px per metre
+  const k = Math.max(0.3, Math.min((maxW ?? width - 92) / (fx1 - fx0), maxH / (fy0 - fy1), 4)); // screen px per metre
   const W = (fx1 - fx0) * k, H = (fy0 - fy1) * k;
+  // the same frame in latitude and longitude, for the aerial tiles
+  const [nwLat, nwLng] = fromUtm(fx0, fy0, grid.epsg);
+  const [seLat, seLng] = fromUtm(fx1, fy1, grid.epsg);
+  const aerial = backdrop === 'colours' || !ring.length ? null : aerialTiles({ lat: nwLat, lng: nwLng }, { lat: seLat, lng: seLng }, W, H);
   const px = (x: number) => (x - fx0) * k, py = (y: number) => (fy0 - y) * k;
   const outline = ring.map(([x, y]) => `${px(x)},${py(y)}`).join(' ');
   const inField = (i: number) => (is20 ? grid.grid20.cls[i] !== 255 : grid.grid10.inside[i] === 1);
@@ -483,23 +607,25 @@ function FieldMask({ grid, farm, layer, selected, onCell }: { grid: Grid; farm: 
   const noData = (i: number) => (layer === 'mask' ? grid.grid20.cls[i] === 0
     : (layer === 'ndvi' ? grid.grid10.ndvi[i] : layer === 'ndwi_water' ? grid.grid10.ndwi_water[i] : grid.grid20.ndwi_crop[i]) === null);
   const rects = [];
-  for (let r = 0; r < g.h; r++) {
+  for (let r = 0; r < (mode === 'photo' ? 0 : g.h); r++) {
     for (let c = 0; c < g.w; c++) {
       const i = r * g.w + c;
       if (!inField(i)) continue;
       const x = px(g.x0 + c * g.res), y = py(g.y0 - r * g.res), s = g.res * k;
       rects.push(
         <Rect key={i} x={x + 0.5} y={y + 0.5} width={s - 1} height={s - 1} rx={1.5}
-          fill={color(i)} opacity={noData(i) ? 0.45 : 1} stroke={selected === i ? C.text : 'none'} strokeWidth={selected === i ? 2.5 : 0} />,
+          fill={color(i)} opacity={(noData(i) ? 0.45 : 1) * fade} stroke={selected === i ? ink : 'none'} strokeWidth={selected === i ? 2.5 : 0} />,
       );
     }
   }
   return (
     <View style={{ alignItems: 'center', marginTop: 12 }}>
       <Pressable
-        style={{ width: W + 28, height: H + 8 }}
+        style={{ width: W + pad, height: H + 8 }}
+        disabled={!onCell || mode === 'photo'}
         accessibilityLabel={t('Tap a square to see its reading.')}
         onPress={(e) => {
+          if (!onCell) return;
           const x = fx0 + (e.nativeEvent.locationX - 4) / k, y = fy0 - (e.nativeEvent.locationY - 4) / k;
           const col = Math.floor((x - g.x0) / g.res), row = Math.floor((g.y0 - y) / g.res);
           if (col < 0 || row < 0 || col >= g.w || row >= g.h) return;
@@ -509,19 +635,31 @@ function FieldMask({ grid, farm, layer, selected, onCell }: { grid: Grid; farm: 
           onCell(selected === i ? null : i);
         }}
       >
-        <View pointerEvents="none" style={{ width: W + 28, height: H + 8 }}>
-          <Svg width={W + 28} height={H + 8} viewBox={`-4 -4 ${W + 28} ${H + 8}`}>
-            <Rect x={-4} y={-4} width={W + 28} height={H + 8} fill={C.sunken} rx={10} />
+        <View pointerEvents="none" style={{ width: W + pad, height: H + 8, backgroundColor: C.sunken, borderRadius: 10 }}>
+          {aerial ? (
+            // the aerial photo, in the same frame as the squares (the SVG's 0,0 is 4 px in)
+            <View style={{ position: 'absolute', left: 4, top: 4, width: W, height: H, overflow: 'hidden', borderRadius: 6 }}>
+              {aerial.tiles.map((tile) => (
+                <Image key={tile.key} source={{ uri: tile.uri }} fadeDuration={0} accessibilityIgnoresInvertColors
+                  style={{ position: 'absolute', left: Math.floor(tile.left), top: Math.floor(tile.top), width: Math.ceil(tile.width) + 1, height: Math.ceil(tile.height) + 1 }}
+                  onLoad={() => onPhoto?.(true)} onError={() => onPhoto?.(false)} />
+              ))}
+            </View>
+          ) : null}
+          <Svg width={W + pad} height={H + 8} viewBox={`-4 -4 ${W + pad} ${H + 8}`}>
             <G>{rects}</G>
-            {outline ? <Polygon points={outline} fill="none" stroke={C.text} strokeWidth={1.5} strokeDasharray="4,3" /> : null}
-            <G x={W + 12} y={6}>
-              <Path d="M0,-2 L5,10 L0,7 L-5,10 Z" fill={C.text} />
-              <SvgText x={0} y={22} fontSize={10} fill={C.text} textAnchor="middle" fontFamily={FONT.bodyBold}>N</SvgText>
-            </G>
+            {outline && mode !== 'colours' ? <Polygon points={outline} fill="none" stroke="#000000" strokeOpacity={0.45} strokeWidth={3.5} /> : null}
+            {outline ? <Polygon points={outline} fill="none" stroke={ink} strokeWidth={1.5} strokeDasharray="4,3" /> : null}
+            {compact ? null : (
+              <G x={W + 12} y={6}>
+                <Path d="M0,-2 L5,10 L0,7 L-5,10 Z" fill={C.text} />
+                <SvgText x={0} y={22} fontSize={10} fill={C.text} textAnchor="middle" fontFamily={FONT.bodyBold}>N</SvgText>
+              </G>
+            )}
             {/* scale bar: one square of this layer */}
-            <G x={0} y={H - 2}>
-              <Rect x={0} y={-4} width={g.res * k} height={3} fill={C.text} />
-              <SvgText x={g.res * k + 4} y={0} fontSize={10} fill={C.text} fontFamily={FONT.bodyBold}>{`${g.res} m`}</SvgText>
+            <G x={mode === 'colours' ? 0 : 6} y={H - (mode === 'colours' ? 2 : 6)}>
+              <Rect x={0} y={-4} width={g.res * k} height={3} fill={ink} />
+              <SvgText x={g.res * k + 4} y={0} fontSize={10} fill={ink} fontFamily={FONT.bodyBold}>{`${g.res} m`}</SvgText>
             </G>
           </Svg>
         </View>
@@ -790,6 +928,8 @@ const st = StyleSheet.create({
   date: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.sm, backgroundColor: C.bg },
   dateOn: { backgroundColor: C.primaryDark },
   dateTxt: { fontSize: 13, color: C.textMid, fontFamily: FONT.bodyBold },
+  cmpDate: { fontSize: 14, color: C.text, fontFamily: FONT.bodyBold, marginTop: 6 },
+  cmpTxt: { fontSize: 15, color: C.text, flex: 1, lineHeight: 21 },
   cellInfo: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 8 },
   cellTxt: { fontSize: 14, color: C.text },
   zone: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },

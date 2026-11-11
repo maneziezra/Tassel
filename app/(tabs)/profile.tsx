@@ -475,7 +475,7 @@ export default function ProfileScreen() {
                 <Icon name="bell-outline" size={22} color={C.text} />
                 <View style={{ flex: 1 }}>
                   <Text style={st.rowTxt}>Notifications</Text>
-                  <Text style={st.rowSub}>Calendar tasks and county outbreak warnings</Text>
+                  <Text style={st.rowSub}>Calendar tasks, field changes from space and outbreak warnings</Text>
                 </View>
                 <Switch value={notify} onValueChange={toggleNotify} trackColor={{ true: C.secondary, false: C.sunken }} thumbColor={notify ? C.primary : '#FFFFFF'} />
               </View>

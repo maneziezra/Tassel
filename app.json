@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tassel",
     "slug": "tassel",
-    "version": "2.8.0",
+    "version": "2.9.0",
     "scheme": "tassel",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "ke.tassel.app",
-      "versionCode": 10,
+      "versionCode": 11,
       "permissions": [
         "CAMERA",
         "ACCESS_COARSE_LOCATION",
@@ -71,7 +71,8 @@
         }
       ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "expo-background-task"
     ]
   }
 }

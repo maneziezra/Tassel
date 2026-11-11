@@ -1,8 +1,4 @@
-import { registerRootComponent } from 'expo';
-
-import App from './App';
-
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// App entry. Background tasks must be defined before the router starts (lib/backgroundTasks.ts),
+// so that Android can run them without opening a screen.
+import './lib/backgroundTasks';
+import 'expo-router/entry';
