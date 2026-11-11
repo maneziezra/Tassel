@@ -15,6 +15,8 @@ import * as jpeg from 'jpeg-js';
 import type { TfliteModel } from 'react-native-fast-tflite';
 import rawLabels from '../assets/model/class_labels.json';
 import { assessQuality, type PhotoQuality } from './photoQuality';
+import { describeLabel } from './labels';
+import { judge } from './scanCrop';
 
 // Default input side; the real one is read from the model (v5: 224, v8 candidates: 224 or 260).
 export const INPUT_SIZE = 224;
@@ -43,6 +45,11 @@ export function setModelLabels(labels: string[] | null): void {
   LABELS = labels ?? BUILTIN_LABELS;
 }
 
+/** The classes of the model in use (built-in or downloaded). */
+export function modelLabels(): string[] {
+  return LABELS;
+}
+
 export type Prediction = {
   label: string; // raw class name, e.g. "Tomato___Late_blight"
   crop: string; // "Tomato"
@@ -57,34 +64,13 @@ export type ScanResult = {
   uncertain: boolean;
   timings: { prepareMs: number; inferMs: number }; // measured, shown to the farmer
   quality: PhotoQuality; // too dark / blurry: used for the tip when a scan is not sure
+  // 'offcrop': the farmer said the crop, and the photo does not look like the leaves the model learned for it
+  cropNote: 'offcrop' | null;
 };
 
 export type ScanStep = 'prepare' | 'infer' | 'done';
 
-/** "Corn_(maize)___Common_rust_" → { crop: "Maize", disease: "Common rust" } */
-export function describeLabel(label: string): Omit<Prediction, 'confidence'> {
-  const [rawCrop = label, rawDisease = ''] = label.split('___');
-  const crop = rawCrop
-    .replace('Corn_(maize)', 'Maize')
-    .replace('Pepper,_bell', 'Pepper (capsicum)')
-    .replace('Cherry_(including_sour)', 'Cherry')
-    .replace(/_/g, ' ')
-    .trim()
-    .replace(/^Bean$/, 'Beans');
-  const healthy = rawDisease.toLowerCase() === 'healthy';
-  let disease = rawDisease
-    .replace(/_/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  // Tidy a few PlantVillage names
-  disease = disease
-    .replace('Cercospora leaf spot Gray leaf spot', 'Grey leaf spot (Cercospora)')
-    .replace('Spider mites Two-spotted spider mite', 'Spider mites')
-    .replace('Haunglongbing (Citrus greening)', 'Citrus greening (HLB)');
-  if (healthy) disease = 'Healthy';
-  else disease = disease.charAt(0).toUpperCase() + disease.slice(1).toLowerCase();
-  return { label, crop, disease, healthy };
-}
+export { describeLabel } from './labels';
 
 /** Centre-crop and resize a photo, returning the RGB pixels as model input. */
 function cropAndResize(uri: string, width: number, height: number, frame = 1, size = INPUT_SIZE) {
@@ -145,7 +131,9 @@ export async function classifyPhoto(
   model: TfliteModel,
   // frame: share of the short side the farmer framed (lib/scanFrame.ts); 1 = whole photo (gallery)
   photo: { uri: string; width: number; height: number; frame?: number },
-  onStep?: (step: ScanStep, elapsedMs: number) => void
+  onStep?: (step: ScanStep, elapsedMs: number) => void,
+  // the crop the farmer said this leaf is from; null or 'any' lets every class compete
+  crop?: string | null
 ): Promise<ScanResult> {
   const t0 = Date.now();
   onStep?.('prepare', 0);
@@ -158,12 +146,10 @@ export async function classifyPhoto(
   onStep?.('done', inferMs);
   const probs = new Float32Array(output);
 
-  const ranked = Array.from(probs)
-    .map((p, i) => ({ p, i }))
-    .sort((a, b) => b.p - a.p)
-    .slice(0, 3)
-    .map(({ p, i }) => ({ ...describeLabel(LABELS[i] ?? `class_${i}`), confidence: p }));
+  // Only the said crop's classes can be named (rules and thresholds: lib/scanCrop.ts).
+  const j = judge(probs, LABELS, crop);
+  const ranked = j.top.map(({ index, confidence }) => ({ ...describeLabel(LABELS[index] ?? `class_${index}`), confidence }));
 
   const top = ranked[0];
-  return { top, alternatives: ranked.slice(1), uncertain: top.confidence < CONFIDENCE_THRESHOLD, timings: { prepareMs, inferMs }, quality };
+  return { top, alternatives: ranked.slice(1), uncertain: top.confidence < CONFIDENCE_THRESHOLD, timings: { prepareMs, inferMs }, quality, cropNote: j.kind === 'offcrop' ? 'offcrop' : null };
 }

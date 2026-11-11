@@ -168,7 +168,7 @@ export default function FarmScreen() {
                 style={{ flex: 1, minHeight: 46 }}
                 onPress={() => router.push({ pathname: '/farm-map', params: { farmId: farm.id } })}
               />
-              <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={() => scanForField({ id: farm.id, name: farm.name })} />
+              <Btn label="Scan" icon="line-scan" style={{ flex: 1, minHeight: 46 }} onPress={() => scanForField({ id: farm.id, name: farm.name, crop: farm.crop })} />
             </View>
           </Card>
 

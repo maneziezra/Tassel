@@ -26,7 +26,7 @@ import { KIND_PICTURE, URGENCY_LEVEL, spreadPictures, stepIcon, stepTitle, type 
 import { C, FONT, URGENCY_META, confidenceBand } from '../lib/theme';
 
 export default function ResultScreen() {
-  const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string; q?: string; farmId?: string; farmName?: string }>();
+  const p = useLocalSearchParams<{ label: string; confidence: string; uri?: string; alts?: string; prepareMs?: string; inferMs?: string; incidentId?: string; q?: string; farmId?: string; farmName?: string; forCrop?: string; note?: string }>();
   const { t, lang } = useLang();
   const label = p.label ?? '';
   const confidence = Number(p.confidence ?? 0);
@@ -232,7 +232,7 @@ export default function ResultScreen() {
   };
 
   // A scan started from a field stays with that field through retakes.
-  const scanAgain = () => (p.farmId && p.farmName ? scanForField({ id: p.farmId, name: p.farmName }) : openScanner());
+  const scanAgain = () => (p.farmId && p.farmName ? scanForField({ id: p.farmId, name: p.farmName, crop: p.forCrop }) : openScanner());
 
   // Three buttons on the screen; the rest live under "More".
   type Action = { icon: IconName; label: string; onPress: () => void; on?: boolean };
@@ -279,6 +279,12 @@ export default function ResultScreen() {
             <>
               <Text style={st.verdictWord}>{p.q === 'dark' ? 'Too dark to read' : p.q === 'blurry' ? 'Too blurry to read' : 'Not sure yet'}</Text>
               <Text raw style={st.small}>{t('Most likely: {d}', { d: `${crop} — ${disease}` })}</Text>
+              {p.note === 'offcrop' && p.forCrop ? (
+                // the farmer said the crop, and the model sees almost nothing of that crop in the photo (lib/scanCrop.ts)
+                <Text raw style={[st.small, { color: C.error, fontFamily: FONT.bodyBold }]}>
+                  {t('This photo does not look like the {crop} leaves Tassel learned from. Retake it, or check it online.', { crop: cropName(p.forCrop, lang).toLowerCase() })}
+                </Text>
+              ) : null}
             </>
           ) : (
             <>

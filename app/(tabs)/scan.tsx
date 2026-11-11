@@ -1,19 +1,26 @@
 // Scan screen — dark full-screen camera from v1.0, now running the real model.
 // v1.0's "Processing" screen showed 4 fake timed steps (3.8 s). Here every step
 // shown is real and its measured time is displayed.
+// v2.9.1: the farmer says the crop first (one tap, remembered). A crop the offline model has
+// not learned is never guessed: it goes to the online photo check (rules: lib/scanCrop.ts).
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDiseaseModel } from '../../lib/useDiseaseModel';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import { classifyPhoto, type ScanStep } from '../../lib/classifier';
+import { classifyPhoto, modelLabels, type ScanStep } from '../../lib/classifier';
+import { ANY_CROP, cropOptions, scannerKnows } from '../../lib/scanCrop';
+import { CROP_CHOICES } from '../../lib/counties';
+import { getLocalProfile, listFarms } from '../../lib/data';
+import { cropName } from '../../lib/diseases';
 import { FRAME_SHARE, frameFraction } from '../../lib/scanFrame';
 
-import { Icon, Text, tick } from '../../components/ui';
+import { CropIcon, Icon, Sheet, Text, tick } from '../../components/ui';
 import { NotoEmoji } from '../../components/NotoEmoji';
 import { takeScanField, type ScanField } from '../../lib/navigation';
 import { useLang } from '../../lib/i18n';
@@ -27,6 +34,9 @@ const TIPS = [
   'Hold the phone steady and close',
   'Photograph the upper side of the leaf',
 ];
+
+const CROP_KEY = 'scan:crop'; // the crop last chosen, so the farmer is asked once
+let askedThisRun = false; // the crop sheet opens by itself only once per app run
 
 const STEP_TEXT: Record<ScanStep, string> = {
   prepare: 'Preparing photo (crop & resize to 224×224)',
@@ -50,7 +60,28 @@ export default function ScanScreen() {
     useCallback(() => {
       openedAt.current = Date.now();
       setFocused(true);
-      setField(takeScanField());
+      const f = takeScanField();
+      setField(f);
+      (async () => {
+        // The field's crop if the scan started from a field, otherwise the crop chosen last time.
+        const saved = await AsyncStorage.getItem(CROP_KEY).catch(() => null);
+        const start = f?.crop || saved || undefined;
+        setCrop(start);
+        if (!start && !askedThisRun) {
+          askedThisRun = true;
+          setCropSheet(true);
+        }
+        // the farmer's own crops come first in the list
+        const own: (string | null | undefined)[] = [];
+        try {
+          for (const farm of await listFarms()) own.push(farm.crop);
+        } catch {
+          // offline with no saved fields
+        }
+        const p = await getLocalProfile();
+        own.push(...(p?.crops ?? '').split(','));
+        setMine(own.map((c) => (c ?? '').trim()).filter(Boolean));
+      })();
       return () => setFocused(false);
     }, [])
   );
@@ -67,6 +98,22 @@ export default function ScanScreen() {
   const tflite = useDiseaseModel();
   const [torch, setTorch] = useState(false);
   const [field, setField] = useState<ScanField | null>(null);
+  // The crop the farmer says this leaf is from. undefined: not said; ANY_CROP: "I don't know".
+  const [crop, setCrop] = useState<string | undefined>(undefined);
+  const [cropSheet, setCropSheet] = useState(false);
+  const [mine, setMine] = useState<string[]>([]);
+  const said = crop && crop !== ANY_CROP ? crop : null;
+  // A crop the offline model has not learned is checked online, never guessed.
+  const online = said !== null && !scannerKnows(modelLabels(), said);
+  const chooseCrop = (c: string) => {
+    tick('select');
+    setCrop(c);
+    setCropSheet(false);
+    AsyncStorage.setItem(CROP_KEY, c).catch(() => {});
+  };
+  // Kenyan farmers say "sukuma wiki" in English too.
+  const shown = (c: string) => (lang === 'en' && c.trim().toLowerCase() === 'kale' ? 'Sukuma wiki (kale)' : cropName(c, lang));
+  const goOnline = (uri: string) => router.push({ pathname: '/photo-check', params: { uri, crop: said ?? '' } });
   const [tip, setTip] = useState(0);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [steps, setSteps] = useState<{ step: ScanStep; ms?: number }[]>([]);
@@ -99,7 +146,7 @@ export default function ScanScreen() {
           const next = prev.map((p, i) => (i === prev.length - 1 && p.ms === undefined ? { ...p, ms } : p));
           return step === 'done' ? next : [...next, { step }];
         });
-      });
+      }, said);
       setSteps((prev) => [...prev, { step: 'done', ms: 0 }]);
       router.push({
         pathname: '/result',
@@ -112,6 +159,8 @@ export default function ScanScreen() {
           inferMs: String(result.timings.inferMs),
           q: result.quality.dark ? 'dark' : result.quality.blurry ? 'blurry' : '',
           ...(field ? { farmId: field.id, farmName: field.name } : {}),
+          ...(said ? { forCrop: said } : {}),
+          ...(result.cropNote ? { note: result.cropNote } : {}),
         },
       });
     } catch (e) {
@@ -142,7 +191,8 @@ export default function ScanScreen() {
       if (!shot) return;
       // The model sees only what was inside the gold frame, as in training.
       const photo = { uri: shot.uri, width: shot.width, height: shot.height, frame: frameFraction(win.width, win.height, shot.width, shot.height) };
-      if (tflite.state === 'loaded') await analyze(photo);
+      if (online) goOnline(photo.uri);
+      else if (tflite.state === 'loaded') await analyze(photo);
       else {
         setPhotoUri(photo.uri);
         setPending(photo);
@@ -158,7 +208,8 @@ export default function ScanScreen() {
     if (!picked.canceled && picked.assets?.[0]) {
       const a = picked.assets[0];
       const photo = { uri: a.uri, width: a.width, height: a.height };
-      if (tflite.state === 'loaded') await analyze(photo);
+      if (online) goOnline(photo.uri);
+      else if (tflite.state === 'loaded') await analyze(photo);
       else {
         setPhotoUri(photo.uri);
         setPending(photo);
@@ -228,7 +279,7 @@ export default function ScanScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={st.title}>Scan a leaf</Text>
-          <Text raw style={st.status}>{field ? t('For {name}', { name: field.name }) : status}</Text>
+          <Text raw style={st.status}>{online ? t('Checked online. Needs internet.') : field ? t('For {name}', { name: field.name }) : status}</Text>
         </View>
         <TouchableOpacity style={st.roundBtn} onPress={() => setTorch((v) => !v)} accessibilityLabel={t('Toggle torch')}>
           <Icon name={torch ? 'flashlight' : 'flashlight-off'} size={22} color="#fff" />
@@ -273,9 +324,18 @@ export default function ScanScreen() {
         </View>
       ) : null}
 
+      {/* The crop: said once, remembered, one tap to change */}
+      {!photoUri ? (
+        <TouchableOpacity style={[st.aiPill, st.cropPill, { top: insets.top + 76 }]} onPress={() => settled() && setCropSheet(true)} accessibilityRole="button">
+          {said ? <CropIcon crop={said} size={26} disc={false} /> : <Icon name="sprout-outline" size={20} color={C.dark} />}
+          <Text raw style={[st.aiPillTxt, { color: C.dark }]}>{said ? t('Crop: {crop}', { crop: shown(said) }) : t('Which crop? Tap to choose')}</Text>
+          <Icon name="chevron-down" size={20} color={C.dark} />
+        </TouchableOpacity>
+      ) : null}
+
       {/* AI photo check entry (pests, deficiencies, other crops) */}
       {!photoUri ? (
-        <TouchableOpacity style={[st.aiPill, { top: insets.top + 76 }]} onPress={photoCheck} accessibilityRole="button">
+        <TouchableOpacity style={[st.aiPill, { top: insets.top + 130 }]} onPress={photoCheck} accessibilityRole="button">
           <Icon name="bug-check-outline" size={18} color={C.gold} />
           <Text raw style={st.aiPillTxt}>
             {sw ? 'Wadudu au zao jingine? Kagua mtandaoni' : 'Pest or other crop? Check online'}
@@ -306,6 +366,31 @@ export default function ScanScreen() {
           <Text style={st.sideTxt}>Library</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Which crop? The farmer's own crops first; crops the offline model has not learned are marked Online. */}
+      <Sheet visible={cropSheet} onClose={() => setCropSheet(false)} title="Which crop is this leaf from?">
+        <ScrollView style={{ maxHeight: 400 }}>
+          <View style={st.cropGrid}>
+            {cropOptions(modelLabels(), mine, CROP_CHOICES).map((o) => (
+              <TouchableOpacity key={o.crop} style={[st.cropOpt, said === o.crop && st.cropOptOn]} onPress={() => chooseCrop(o.crop)} accessibilityRole="button" accessibilityState={{ selected: said === o.crop }}>
+                <CropIcon crop={o.crop} size={42} />
+                <Text raw style={st.cropOptTxt} numberOfLines={2}>{shown(o.crop)}</Text>
+                {o.offline ? null : (
+                  <View style={st.cropOnline}>
+                    <Icon name="web" size={13} color={C.textSub} />
+                    <Text style={st.cropOnlineTxt}>Online</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+        <TouchableOpacity style={st.cropAny} onPress={() => chooseCrop(ANY_CROP)} accessibilityRole="button">
+          <Icon name="help-circle-outline" size={22} color={C.textMid} />
+          <Text style={st.cropAnyTxt}>I don't know the crop</Text>
+        </TouchableOpacity>
+        <Text style={st.cropNote}>Saying the crop makes the answer more accurate. Crops marked Online are not in the offline scanner yet, so Tassel checks them on the internet.</Text>
+      </Sheet>
     </View>
   );
 }
@@ -344,4 +429,14 @@ const st = StyleSheet.create({
   permBtn: { backgroundColor: C.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
   aiPill: { position: 'absolute', alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.darkRaised, borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, maxWidth: '92%' },
   aiPillTxt: { color: '#fff', fontSize: 14, fontWeight: '700', flexShrink: 1 },
+  cropPill: { backgroundColor: C.gold, borderColor: C.gold, minHeight: 46 },
+  cropGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  cropOpt: { width: '31.5%', alignItems: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 4, borderRadius: 14, backgroundColor: C.bg, borderWidth: 2, borderColor: 'transparent', minHeight: 104 },
+  cropOptOn: { borderColor: C.primary, backgroundColor: C.primaryTint },
+  cropOptTxt: { fontSize: 14, fontWeight: '700', color: C.text, textAlign: 'center' },
+  cropOnline: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  cropOnlineTxt: { fontSize: 12, color: C.textSub },
+  cropAny: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, marginTop: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.bg },
+  cropAnyTxt: { fontSize: 15, fontWeight: '700', color: C.textMid },
+  cropNote: { fontSize: 13, color: C.textSub, lineHeight: 18, marginTop: 10 },
 });

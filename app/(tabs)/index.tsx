@@ -6,6 +6,9 @@
 // and fast access to agricultural tools.
 // Zero invented numbers: real Sentinel-2 satellite data, Open-Meteo weather,
 // Hutton blight criteria, and PCPB registered crop guidance.
+// v2.9.1 (Ezra, 11 Nov: "people can't find the planting calendar"): a smaller hero, then the
+// order a farmer needs: Scan, Planting calendar (its own large card, showing the next job),
+// then every other tool as a labelled tile that says what it does. Today and scans follow.
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
@@ -64,7 +67,7 @@ import { fmtArea, usePrefs } from '../../lib/prefs';
 import { openScanner } from '../../lib/navigation';
 import { C, FONT, RADIUS } from '../../lib/theme';
 
-const HERO_ART_H = 230;
+const HERO_ART_H = 170;
 const NAIROBI = { lat: -1.2864, lng: 36.8172 };
 const FALLBACK_PLACE = 'Nairobi (location off)';
 
@@ -73,13 +76,14 @@ function greeting() {
   return h >= 5 && h < 12 ? 'Good morning' : h >= 12 && h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-const TOOLS: { label: string; icon: IconName; href: string }[] = [
-  { label: 'Calendar', icon: 'calendar-check-outline', href: '/calendar' },
-  { label: 'Fertiliser', icon: 'sack', href: '/fertiliser' },
-  { label: 'Prices', icon: 'chart-line', href: '/market' },
-  { label: 'Outbreaks', icon: 'map-marker-radius-outline', href: '/outbreaks' },
-  { label: 'Library', icon: 'book-open-variant', href: '/encyclopedia' },
-  { label: 'AI advisor', icon: 'chat-processing-outline', href: '/chat' },
+// Each tool says what it does, in the farmer's words. The planting calendar has its own card above these.
+const TOOLS: { label: string; sub: string; icon: IconName; href: string }[] = [
+  { label: 'Spray mix', sub: 'How much to mix in your pump', icon: 'spray', href: '/pesticide-calc' },
+  { label: 'Fertiliser', sub: 'How many bags your field needs', icon: 'sack', href: '/fertiliser' },
+  { label: 'Market prices', sub: 'Check prices before you sell', icon: 'chart-line', href: '/market' },
+  { label: 'Ask the advisor', sub: 'Type any farming question', icon: 'chat-processing-outline', href: '/chat' },
+  { label: 'Outbreaks', sub: 'Diseases reported near you', icon: 'map-marker-radius-outline', href: '/outbreaks' },
+  { label: 'Disease library', sub: 'Signs and treatment guides', icon: 'book-open-variant', href: '/encyclopedia' },
 ];
 
 export default function HomeScreen() {
@@ -497,6 +501,44 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        {/* ── PLANTING CALENDAR: its own card, right under Scan ────────────── */}
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          <Press style={st.calendarCard} onPress={() => router.push('/calendar')} haptic accessibilityRole="button" accessibilityLabel={t('Planting calendar')}>
+            <View style={st.calendarIcon}>
+              <Icon name="calendar-check-outline" size={30} color={C.brandGold} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={st.calendarTitle}>Planting calendar</Text>
+              <Text raw style={st.calendarSub} numberOfLines={2}>
+                {primaryTask && !primaryTask.ticked
+                  ? t('Next: {task} · {field}', { task: primaryTask.title, field: primaryTask.farmName })
+                  : farms.some((f) => f.planting_date)
+                  ? t('Your season, week by week')
+                  : t('Enter the day you planted. Tassel plans the season.')}
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={C.brandCream} />
+          </Press>
+        </View>
+
+        {/* ── TOOLS: every tool says what it does ─────────────────────────── */}
+        <View style={st.sectionHeader}>
+          <SectionLabel>What do you need?</SectionLabel>
+        </View>
+        <View style={st.toolsGrid}>
+          {TOOLS.map((item) => (
+            <Press key={item.label} style={st.toolItem} onPress={() => router.push(item.href as never)} accessibilityRole="button" accessibilityLabel={`${t(item.label)}. ${t(item.sub)}`}>
+              <View style={st.toolItemIcon}>
+                <Icon name={item.icon} size={24} color={C.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={st.toolItemText} numberOfLines={1}>{item.label}</Text>
+                <Text style={st.toolItemSub} numberOfLines={2}>{item.sub}</Text>
+              </View>
+            </Press>
+          ))}
+        </View>
+
         {/* ── "TODAY" ACTION CARDS (MAX 3) ────────────────────────────────── */}
         <View style={st.sectionHeader}>
           <SectionLabel>Today</SectionLabel>
@@ -622,29 +664,6 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : null}
-        </View>
-
-        {/* ── QUICK TOOLS GRID ────────────────────────────────────────────── */}
-        <View style={st.sectionHeader}>
-          <SectionLabel>Tools</SectionLabel>
-        </View>
-
-        <View style={st.toolsGrid}>
-          {TOOLS.map((item) => (
-            <Press
-              key={item.label}
-              style={st.toolItem}
-              onPress={() => router.push(item.href as never)}
-              accessibilityLabel={t(item.label)}
-            >
-              <View style={st.toolItemIcon}>
-                <Icon name={item.icon} size={26} color={C.brandDark} />
-              </View>
-              <Text style={st.toolItemText} numberOfLines={1}>
-                {item.label}
-              </Text>
-            </Press>
-          ))}
         </View>
 
         {/* ── RECENT SCANS (IF ANY) ───────────────────────────────────────── */}
@@ -810,7 +829,7 @@ const st = StyleSheet.create({
   heroGreeting: { fontSize: 28, fontFamily: FONT.display, color: C.brandCream },
   heroSub: { fontSize: 15, color: C.secondary, marginTop: 2 },
   heroArt: { minHeight: HERO_ART_H, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
-  heroVerdict: { fontSize: 32, lineHeight: 36, fontFamily: FONT.display, color: C.brandCream, marginTop: 14 },
+  heroVerdict: { fontSize: 26, lineHeight: 30, fontFamily: FONT.display, color: C.brandCream, marginTop: 10 },
   heroMeta: { fontSize: 15, color: C.secondary, marginTop: 6 },
   fieldPillsContainer: { gap: 8, paddingTop: 14 },
   fieldPill: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 14, borderRadius: RADIUS.full, backgroundColor: 'rgba(255,255,255,0.08)' },
@@ -931,32 +950,53 @@ const st = StyleSheet.create({
   },
 
   // Tools Grid
+  calendarCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 84,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: RADIUS.xl,
+    backgroundColor: C.brandDark,
+  },
+  calendarIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' },
+  calendarTitle: { fontSize: 22, fontFamily: FONT.display, color: C.brandCream },
+  calendarSub: { fontSize: 14, lineHeight: 19, color: C.secondary },
   toolsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: 12,
-    rowGap: 14,
+    paddingHorizontal: 16,
+    gap: 10,
   },
   toolItem: {
-    width: '33.33%',
+    width: '47%',
+    flexGrow: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 4,
-  },
-  toolItemIcon: {
-    width: 54,
-    height: 54,
+    gap: 10,
+    minHeight: 76,
+    padding: 12,
     borderRadius: 16,
     backgroundColor: C.surface,
+  },
+  toolItemIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: C.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: C.border,
   },
   toolItemText: {
-    fontSize: 13,
+    fontSize: 15,
     color: C.text,
-    fontFamily: FONT.body,
+    fontFamily: FONT.bodyBold,
+  },
+  toolItemSub: {
+    fontSize: 12.5,
+    lineHeight: 16,
+    color: C.textSub,
   },
 
   // Recent Scans

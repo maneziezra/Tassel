@@ -5,7 +5,7 @@
 import { router } from 'expo-router';
 
 /** The field the farmer pressed Scan on. The scan screen picks it up once when it opens. */
-export type ScanField = { id: string; name: string };
+export type ScanField = { id: string; name: string; crop?: string | null };
 let pendingField: ScanField | null = null;
 
 export function takeScanField(): ScanField | null {
