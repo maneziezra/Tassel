@@ -18,10 +18,13 @@
 
 import { CHEMICAL_RULES_SW, CROP_SW, PEST_HINTS_SW, SW_DISEASES } from './diseases.sw';
 import { V5_LIST } from './diseases.v5';
+import { V8_LIST } from './diseases.v8';
+import { activeLabels } from './labels';
 import { getLang, tr, type Lang } from './i18n';
 import modelLabels from '../assets/model/class_labels.json';
 
-export type Kind = 'Fungal' | 'Oomycete' | 'Bacterial' | 'Viral' | 'Pest' | 'Algal' | 'Healthy';
+// 'Disorder': a nutrient shortage, not an infection (v8 models: tomato N, K and Mg deficiency).
+export type Kind = 'Fungal' | 'Oomycete' | 'Bacterial' | 'Viral' | 'Pest' | 'Algal' | 'Disorder' | 'Healthy';
 export type Urgency = 'low' | 'medium' | 'high' | 'critical';
 
 export type Chemical = { active: string; note?: string };
@@ -540,6 +543,10 @@ const LIST: DiseaseInfo[] = [
 
   // ───────────── Added with model v5 (generated, see diseases.v5.ts) ─────────────
   ...V5_LIST,
+
+  // Classes only the newer models know (generated, see diseases.v8.ts). The built-in model
+  // cannot name them; they are here so those models can be published over the air.
+  ...V8_LIST,
 ];
 
 export const DISEASES: Record<string, DiseaseInfo> = Object.fromEntries(LIST.map((d) => [d.label, d]));
@@ -553,6 +560,12 @@ export const DETECTABLE_CROPS = Array.from(
 );
 // Diseases, pests and disorders the scanner can name (healthy classes excluded).
 export const SCANNABLE_DISEASES = MODEL_LABELS.filter((l) => !/___healthy$/i.test(l)).length;
+
+/** Can the model in use (built-in, or a downloaded one) name this class? The guides cover
+ * more classes than the built-in model knows (V8_LIST), so the library asks this. */
+export function scannerCanName(label: string): boolean {
+  return (activeLabels() ?? MODEL_LABELS).includes(label);
+}
 
 export function getDisease(label: string): DiseaseInfo | undefined {
   return DISEASES[label];
@@ -626,6 +639,28 @@ export function buildPlan(base: DiseaseInfo, lang: Lang = getLang()): PlanStep[]
   if (info.kind === 'Healthy') {
     return [
       { id: 'w', when: L('Every week'), title: L('Keep the crop healthy'), urgency: 'low', tasks: t('w', [...info.cultural, 'Scan a few leaves from different parts of the field.']) },
+    ];
+  }
+
+  if (info.kind === 'Disorder') {
+    // A nutrient shortage: feed the crop and check the new leaves. No spray steps.
+    return [
+      {
+        id: 'd0', when: L('Today'), title: L('Check the pattern'), urgency: info.urgency,
+        tasks: t('d0', ['Walk the field. A nutrient shortage usually shows on many plants at once, often the older leaves first, not as spots that spread from plant to plant.', info.cultural[0]]),
+      },
+      {
+        id: 'd1', when: L('This week'), title: L('Feed the crop'), urgency: info.urgency,
+        tasks: t('d1', [...info.cultural.slice(1), 'Read the fertiliser bag for the rate. Do not guess the amount.']),
+      },
+      {
+        id: 'd14', when: L('Day 14'), title: L('Check the new leaves'), urgency: 'medium',
+        tasks: t('d14', ['New leaves should come out green. Old yellow leaves will not turn green again.', 'If the new leaves are still yellow, show the plant to an extension officer and ask about a soil test.']),
+      },
+      {
+        id: 'ns', when: L('Next season'), title: L('Prevent it coming back'), urgency: 'low',
+        tasks: t('ns', ['Test the soil before planting and fertilise to the result.', 'Add well-rotted manure or compost every season.']),
+      },
     ];
   }
 

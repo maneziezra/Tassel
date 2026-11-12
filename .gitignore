@@ -53,3 +53,5 @@ scripts/refs/
 model_backup/
 docs/*.docx
 scripts/kb/backup_pre_*/
+
+__pycache__/

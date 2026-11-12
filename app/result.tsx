@@ -1,6 +1,8 @@
 // Scan result — v2.7: alive, not a page to read (Ezra, 29 Oct: "items not information",
-// "diagrams, emotions, like just life").
-// The leaf with a feeling (Noto: sick / happy / thinking), the disease name and one urgency chip;
+// "diagrams, emotions, like just life"). v2.9.2 (Ezra, 12 Nov: "seriousness", like xFarm): the
+// big emoji faces are gone; the photo carries one plain status badge instead (green Healthy,
+// ochre Not sure, the urgency colour and words for a problem).
+// The leaf with its status badge, the disease name and the confidence chip;
 // how it spreads as moving pictures; "do this now" as swipeable cards the farmer ticks off
 // (a buzz each, a party when all are done); one spray tile (PCPB-registered only); three
 // buttons. Everything else is folded under "More". Rule 3: below 75 % nothing names a
@@ -252,13 +254,19 @@ export default function ResultScreen() {
     ...(!uncertain ? [{ icon: 'chat-processing-outline' as IconName, label: 'Ask the AI advisor', onPress: () => router.push({ pathname: '/chat', params: { crop: cropEn, disease: diseaseEn, confidence: String(confidence) } }) }] : []),
     { icon: 'whatsapp', label: 'Share', onPress: shareWhatsApp },
   ];
-  const feeling = uncertain ? 'thinking' : healthy ? 'happy' : 'sick';
+  // One plain status: what the farmer must know before reading anything else.
+  const status: { label: string; icon: IconName; bg: string } = uncertain
+    ? { label: 'Not sure', icon: 'help-circle-outline', bg: C.warn }
+    : healthy
+      ? { label: 'Healthy', icon: 'check-circle-outline', bg: C.primary }
+      : // a problem is never shown in the healthy green, even at low urgency
+        { label: urgency.label, icon: urgencyLevel >= 3 ? 'alarm-light-outline' : 'clock-outline', bg: info?.urgency === 'low' ? C.accentDark : urgency.color };
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Header title="Scan result" right={<ListenButton compact text={listenText} />} />
       <ScrollView ref={page} contentContainerStyle={{ paddingBottom: 48 }}>
-        {/* ── The leaf, with a feeling ────────────────────────────── */}
+        {/* ── The leaf, with its status ──────────────────────────── */}
         <View style={st.hero}>
           {p.uri ? (
             <Image source={{ uri: p.uri }} style={st.leaf} resizeMode="cover" accessibilityLabel={t('Your photo')} />
@@ -267,9 +275,10 @@ export default function ResultScreen() {
               <CropIcon crop={cropEn} size={96} disc={false} />
             </View>
           )}
-          <Animated.View entering={ZoomIn.delay(200).springify().damping(10)} style={st.face}>
-            <NotoEmoji name={feeling} size={84} />
-          </Animated.View>
+          <View style={[st.status, { backgroundColor: status.bg }]} accessibilityRole="text">
+            <Icon name={status.icon} size={20} color="#fff" />
+            <Text style={st.statusTxt}>{status.label}</Text>
+          </View>
         </View>
 
         {/* ── Name and one chip ───────────────────────────────────── */}
@@ -296,12 +305,7 @@ export default function ResultScreen() {
             </>
           )}
           <View style={st.chipRow}>
-            {info && !healthy && !uncertain ? (
-              <View style={[st.chip, { backgroundColor: urgency.tint }]}>
-                <Icon name={urgencyLevel >= 3 ? 'alarm-light-outline' : 'clock-outline'} size={18} color={urgency.color} />
-                <Text style={[st.chipTxt, { color: urgency.color }]}>{urgency.label}</Text>
-              </View>
-            ) : null}
+            {/* the urgency is on the status badge over the photo */}
             <View style={[st.chip, { backgroundColor: band.tint }]}>
               <Text raw style={[st.chipTxt, { color: band.color }]}>{`${t(band.word)} · ${pct}`}</Text>
             </View>
@@ -411,7 +415,7 @@ export default function ResultScreen() {
             </ScrollView>
             {done.length === steps.length ? (
               <Animated.View entering={ZoomIn.springify().damping(11)} style={st.allDone}>
-                <NotoEmoji name="party" size={44} />
+                <Icon name="check-decagram-outline" size={32} color={C.primaryDark} />
                 <Text style={st.allDoneTxt}>Well done! Scan again in a few days.</Text>
               </Animated.View>
             ) : null}
@@ -741,8 +745,9 @@ const st = StyleSheet.create({
   candPct: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.textSub },
   hero: { marginHorizontal: 16, marginTop: 4 },
   leaf: { height: 220, borderRadius: 20 },
-  face: { position: 'absolute', right: 12, bottom: -34, width: 104, height: 104, borderRadius: 52, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
-  verdict: { marginHorizontal: 16, marginTop: 8, paddingRight: 112, gap: 8 },
+  status: { position: 'absolute', left: 12, bottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, paddingHorizontal: 12, minHeight: 38 },
+  statusTxt: { fontSize: 16, fontFamily: FONT.bodyBold, color: '#fff' },
+  verdict: { marginHorizontal: 16, marginTop: 12, gap: 8 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, minHeight: 36 },
   chipTxt: { fontSize: 15, fontFamily: FONT.bodyBold },

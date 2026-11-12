@@ -15,7 +15,7 @@ import * as jpeg from 'jpeg-js';
 import type { TfliteModel } from 'react-native-fast-tflite';
 import rawLabels from '../assets/model/class_labels.json';
 import { assessQuality, type PhotoQuality } from './photoQuality';
-import { describeLabel } from './labels';
+import { describeLabel, setActiveLabels } from './labels';
 import { judge } from './scanCrop';
 
 // Default input side; the real one is read from the model (v5: 224, v8 candidates: 224 or 260).
@@ -43,6 +43,7 @@ let LABELS: string[] = BUILTIN_LABELS;
 /** Labels of the model in use: a downloaded model brings its own (lib/modelUpdate.ts); null = built-in. */
 export function setModelLabels(labels: string[] | null): void {
   LABELS = labels ?? BUILTIN_LABELS;
+  setActiveLabels(labels);
 }
 
 /** The classes of the model in use (built-in or downloaded). */

@@ -7,6 +7,17 @@ export type LabelInfo = {
   healthy: boolean;
 };
 
+// The classes of a downloaded model in use (lib/modelUpdate.ts via classifier.setModelLabels);
+// null = the built-in model. Kept here, away from the phone-only classifier, so the library
+// (lib/encyclopedia.ts) can ask "can the scanner name this?" and be tested in Node.
+let ACTIVE: string[] | null = null;
+export function setActiveLabels(labels: string[] | null): void {
+  ACTIVE = labels;
+}
+export function activeLabels(): string[] | null {
+  return ACTIVE;
+}
+
 /** "Corn_(maize)___Common_rust_" → { crop: "Maize", disease: "Common rust" } */
 export function describeLabel(label: string): LabelInfo {
   const [rawCrop = label, rawDisease = ''] = label.split('___');

@@ -5,6 +5,7 @@
 
 import type { Chemical } from './diseases';
 import { SW_DISEASES_V5 } from './diseases.v5.sw';
+import { SW_DISEASES_V8 } from './diseases.v8.sw';
 
 export type DiseaseSw = {
   disease: string;
@@ -56,6 +57,11 @@ export const CROP_SW: Record<string, string> = {
   Olive: 'Mzeituni',
   'Black gram': 'Dengu nyeusi',
   Capsicum: 'Pilipili hoho',
+  // v8 models (native-speaker review)
+  Groundnut: 'Karanga',
+  Pea: 'Njegere',
+  Okra: 'Bamia',
+  Cauliflower: 'Koliflawa',
 };
 
 export const MANCOZEB_NOTE_SW = 'Mancozeb ilikuwa ikikaguliwa na PCPB mwaka 2025 — hakikisha bidhaa bado imesajiliwa.';
@@ -425,6 +431,8 @@ export const SW_DISEASES: Record<string, DiseaseSw> = {
 
   // Added with model v5 (generated, see diseases.v5.sw.ts)
   ...SW_DISEASES_V5,
+  // Classes only the newer models know (generated, see diseases.v8.sw.ts)
+  ...SW_DISEASES_V8,
 };
 
 export const PEST_HINTS_SW: Record<string, string> = {

@@ -3,12 +3,13 @@
 // v1.0 listed "44 diseases" with a "detection %" next to each, but the scanner
 // model was never trained on most of them (e.g. fall armyworm, maize lethal
 // necrosis). v2.0 splits the library honestly:
-//  - SCANNABLE: every disease and pest class the on-device model knows
-//    (123 in model v5, built from lib/diseases.ts), and
+//  - SCANNABLE: every disease and pest guide in lib/diseases.ts; "scanner can detect"
+//    (scanLabel) only when the model in use can name the class (123 in model v5;
+//    the v8 guides wait for a v8 model), and
 //  - REFERENCE: important Kenyan problems the scanner cannot detect yet.
 // No invented accuracy figures; no doses; PCPB-restricted products removed.
 
-import { ALL_DISEASES, localizeDisease, type Kind } from './diseases';
+import { ALL_DISEASES, localizeDisease, scannerCanName, type Kind } from './diseases';
 import { getLang, type Lang } from './i18n';
 
 export type Severity = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -16,7 +17,7 @@ export type LibraryEntry = {
   id: string;
   name: string;
   sci: string;
-  kind: Kind | 'Disorder';
+  kind: Kind;
   crops: string[];
   severity: Severity;
   desc: string;
@@ -41,7 +42,7 @@ function scannable(lang: Lang): LibraryEntry[] {
       desc: d.kenya ?? d.spread ?? '',
       symptoms: [d.symptoms],
       management: [...d.cultural.slice(0, 2), ...d.chemical.slice(0, 2).map((c) => c.active)].join(' • '),
-      scanLabel: base.label,
+      scanLabel: scannerCanName(base.label) ? base.label : undefined,
       notifiable: base.notifiable,
     };
   });

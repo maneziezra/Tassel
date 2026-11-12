@@ -373,6 +373,20 @@ export const SW: Record<string, string> = {
   'Day 7': 'Siku ya 7',
   'Check if it is working': 'Angalia kama inafanya kazi',
   'After harvest / next season': 'Baada ya mavuno / msimu ujao',
+  // Nutrient-disorder plan (v2.9.2, native-speaker review)
+  'Check the pattern': 'Angalia mtindo wa dalili',
+  'Feed the crop': 'Lisha zao',
+  'Day 14': 'Siku ya 14',
+  'Check the new leaves': 'Angalia majani mapya',
+  'Walk the field. A nutrient shortage usually shows on many plants at once, often the older leaves first, not as spots that spread from plant to plant.':
+    'Tembea shambani. Upungufu wa virutubisho kwa kawaida huonekana kwenye mimea mingi kwa wakati mmoja, mara nyingi kwenye majani ya zamani kwanza, si kama madoa yanayoenea kutoka mmea mmoja hadi mwingine.',
+  'Read the fertiliser bag for the rate. Do not guess the amount.': 'Soma kiasi kwenye mfuko wa mbolea. Usikisie kiasi.',
+  'New leaves should come out green. Old yellow leaves will not turn green again.':
+    'Majani mapya yanapaswa kutoka yakiwa kijani. Majani ya zamani ya manjano hayatarudi kuwa kijani.',
+  'If the new leaves are still yellow, show the plant to an extension officer and ask about a soil test.':
+    'Kama majani mapya bado ni ya manjano, mwonyeshe afisa wa ugani mmea huo na uulize kuhusu kipimo cha udongo.',
+  'Test the soil before planting and fertilise to the result.': 'Pima udongo kabla ya kupanda na weka mbolea kulingana na matokeo.',
+  'Add well-rotted manure or compost every season.': 'Ongeza samadi au mboji iliyooza vizuri kila msimu.',
   'Ask for tolerant or resistant varieties.': 'Uliza aina za mbegu zinazostahimili ugonjwa.',
   'Check the underside of 10 leaves across the field and note how many are infested.':
     'Kagua upande wa chini wa majani 10 kote shambani na uandike mangapi yameshambuliwa.',
