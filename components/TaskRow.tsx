@@ -4,9 +4,8 @@ import React, { useState } from 'react';
 import { LayoutAnimation, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Btn, Dot, Icon, ListenButton, Text, tick } from './ui';
 import { openScanner } from '../lib/navigation';
-import { NotoEmoji, type NotoName } from './NotoEmoji';
 import { StoryScene } from './StoryScene';
-import { sceneEmoji, sceneFor } from '../lib/storyScene';
+import { sceneFor, sceneIcon } from '../lib/storyScene';
 import { locale, useLang } from '../lib/i18n';
 import type { FieldTask, TaskStatus } from '../lib/calendar';
 import { C, FONT } from '../lib/theme';
@@ -25,7 +24,7 @@ export function TaskRow({ item, onToggle, showField, crop }: { item: FieldTask; 
   const { width } = useWindowDimensions();
   // The picture comes from the English task text, so both languages show the same scene.
   const sceneText = `${item.task.title.en}. ${item.task.detail.en}`;
-  const emoji = sceneEmoji(sceneFor(sceneText), crop) as NotoName;
+  const icon = sceneIcon(sceneFor(sceneText));
   const s = STATUS[item.status];
   const fmt = (d: Date) => d.toLocaleDateString(locale(lang), { day: 'numeric', month: 'short' });
   const when = item.task.start === item.task.end ? fmt(item.startDate) : `${fmt(item.startDate)} – ${fmt(item.endDate)}`;
@@ -54,7 +53,7 @@ export function TaskRow({ item, onToggle, showField, crop }: { item: FieldTask; 
         accessibilityHint={t('Shows how to do it')}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <NotoEmoji name={emoji} size={28} />
+          <Icon name={icon} size={22} color={C.textMid} />
           <Text raw style={[st.title, { flex: 1 }, item.ticked && st.doneTxt]}>
             {item.title}
           </Text>

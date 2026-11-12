@@ -6,9 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Btn, Chip, CropIcon, Dot, Empty, ErrorNote, Header, Icon, Loading, ProgressBar, SectionLabel, Sheet, Text, tick } from '../components/ui';
-import Animated, { ZoomIn } from 'react-native-reanimated';
 import { TaskRow } from '../components/TaskRow';
-import { NotoEmoji } from '../components/NotoEmoji';
 import { DateField } from '../components/DateField';
 import { listFarms, updateFarm, type Farm } from '../lib/data';
 import { calendarFor, daysSince, fieldTasks, loadTicks, parseDate, saveTicks, toIsoDate, type FieldTask } from '../lib/calendar';
@@ -433,15 +431,14 @@ export default function CalendarScreen() {
           </View>
         ) : (
           <View style={{ alignItems: 'center', gap: 14, paddingVertical: 12 }}>
-            {/* the season starts: the crop pops in and a seedling sprouts beside it */}
-            <Animated.View entering={ZoomIn.springify().damping(12)} style={{ width: 96, height: 80, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 96, height: 80, alignItems: 'center', justifyContent: 'center' }}>
               <CropIcon crop={selectedCrop} size={64} />
-              <View style={{ position: 'absolute', right: 0, bottom: 0 }}>
-                <NotoEmoji name="plant" size={40} />
+              <View style={{ position: 'absolute', right: 4, bottom: 0, backgroundColor: C.surface, borderRadius: 14 }}>
+                <Icon name="check-circle" size={28} color={C.primary} />
               </View>
-            </Animated.View>
+            </View>
             <Text style={{ fontSize: 22, fontFamily: FONT.display, color: C.text, textAlign: 'center' }}>
-              {t('Planting calendar ready!')}
+              {t('Planting calendar created')}
             </Text>
             <Text raw style={[st.small, { textAlign: 'center' }]}>
               {`${selectedField?.name} · ${cropName(selectedCrop, lang)} · ${fmt(parseDate(selectedDate), { day: 'numeric', month: 'long' })}`}

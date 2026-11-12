@@ -82,6 +82,24 @@ export function sceneEmoji(kind: SceneKind, crop?: string | null): string {
   return map[kind];
 }
 
+/** The plain line icon (MaterialCommunityIcons) for a step of this kind. Since 12 Nov the screens
+ * use these, not the emoji: the app is a work tool (lib/motion.ts). */
+export function sceneIcon(kind: SceneKind) {
+  const map = {
+    weed: 'grass', topdress: 'sprout-outline', spray: 'spray', water: 'water-outline', harvest: 'basket-outline',
+    dry: 'white-balance-sunny', store: 'warehouse', scout: 'magnify', remove: 'delete-outline', stake: 'sprout-outline',
+    prepare: 'tractor', earthup: 'sprout-outline', transplant: 'sprout-outline', net: 'bug-outline', seedtreat: 'seed-outline',
+    sort: 'sort-variant', mix: 'cup-water', grow: 'sprout-outline',
+  } as const satisfies Record<SceneKind, string>;
+  return map[kind];
+}
+
+/** Watch-out cards: one line icon per kind of threat named (see threatEmojis). */
+export function threatIcons(threat: string) {
+  const map = { bug: 'bug-outline', ant: 'bug-outline', fungus: 'mushroom-outline', microbe: 'virus-outline', warning: 'alert-outline' } as const;
+  return Array.from(new Set(threatEmojis(threat).map((e) => map[e])));
+}
+
 /** Watch-out cards: one emoji per kind of threat named (insect, fungus, germ), at most two. */
 export function threatEmojis(threat: string): ('bug' | 'ant' | 'fungus' | 'microbe' | 'warning')[] {
   const out: ('bug' | 'ant' | 'fungus' | 'microbe' | 'warning')[] = [];

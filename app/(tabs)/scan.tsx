@@ -12,7 +12,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDiseaseModel } from '../../lib/useDiseaseModel';
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { useStill } from '../../lib/motion';
 import { classifyPhoto, modelLabels, type ScanStep } from '../../lib/classifier';
 import { ANY_CROP, cropOptions, scannerKnows } from '../../lib/scanCrop';
 import { CROP_CHOICES } from '../../lib/counties';
@@ -21,7 +22,6 @@ import { cropName } from '../../lib/diseases';
 import { FRAME_SHARE, frameFraction } from '../../lib/scanFrame';
 
 import { CropIcon, Icon, Sheet, Text, tick } from '../../components/ui';
-import { NotoEmoji } from '../../components/NotoEmoji';
 import { takeScanField, type ScanField } from '../../lib/navigation';
 import { useLang } from '../../lib/i18n';
 import { C } from '../../lib/theme';
@@ -86,8 +86,8 @@ export default function ScanScreen() {
     }, [])
   );
   const cameraRef = useRef<CameraView>(null);
-  // The guide frame breathes gently so the eye finds it; still when reduce-motion is on.
-  const reduceMotion = useReducedMotion();
+  // The guide frame stands still (lib/motion.ts, 12 Nov); it breathed before.
+  const reduceMotion = useStill();
   const breathe = useSharedValue(1);
   useEffect(() => {
     if (reduceMotion) return;
@@ -315,7 +315,7 @@ export default function ScanScreen() {
               </>
             ) : (
               <>
-                <NotoEmoji name="leaves" size={72} />
+                <Icon name="leaf" size={44} color={C.gold} />
                 <Text style={st.overlayTitle}>Checking your leaf…</Text>
                 <ActivityIndicator color={C.gold} />
               </>

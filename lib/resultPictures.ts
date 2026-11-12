@@ -3,17 +3,17 @@
 //
 // Rule 5 (every claim backed): a picture is shown only when the guide's own text says it.
 // Matching runs on the English source text, so the same pictures show in Kiswahili.
+// 12 Nov: plain line icons only (no animated emoji): the app is a work tool (lib/motion.ts).
 
-export type Picture = { key: string; label: string; icon?: string; noto?: 'rain' | 'droplet' | 'bug' | 'leaves' };
+export type Picture = { key: string; label: string; icon: string; noto?: never };
 
 const SPREAD: Array<[RegExp, Picture]> = [
-  [/rain|splash/i, { key: 'rain', label: 'Rain splash', noto: 'rain' }],
+  [/rain|splash/i, { key: 'rain', label: 'Rain splash', icon: 'weather-pouring' }],
   [/wind|air(borne)?\b|spores? (blow|carried)/i, { key: 'wind', label: 'Wind', icon: 'weather-windy' }],
-  [/insect|aphid|whitefl|thrips|leafhopper|beetle|vector|mite|psyllid|mealybug/i, { key: 'insects', label: 'Insects', noto: 'bug' }],
+  [/insect|aphid|whitefl|thrips|leafhopper|beetle|vector|mite|psyllid|mealybug/i, { key: 'insects', label: 'Insects', icon: 'bug-outline' }],
   [/seed|tuber|transplant|seedling|cutting|planting material|sett/i, { key: 'seed', label: 'Infected seed', icon: 'seed-outline' }],
   [/soil|debris|residue|crop remains|stubble/i, { key: 'soil', label: 'Soil and old crop', icon: 'shovel' }],
   [/tool|hand|knife|prun|worker|touch|machinery/i, { key: 'hands', label: 'Hands and tools', icon: 'hand-back-left-outline' }],
-  // a still icon: the Noto droplet loops through blank frames (an empty circle on the TECNO)
   [/irrigation|dew|wet|humid|moist|water/i, { key: 'wet', label: 'Damp weather', icon: 'water-percent' }],
 ];
 
@@ -71,9 +71,9 @@ export const KIND_PICTURE: Record<string, Picture> = {
   Oomycete: { key: 'Oomycete', label: 'Water mould', icon: 'water-outline' },
   Bacterial: { key: 'Bacterial', label: 'Bacteria', icon: 'bacteria-outline' },
   Viral: { key: 'Viral', label: 'Virus', icon: 'virus-outline' },
-  Pest: { key: 'Pest', label: 'Pest', noto: 'bug' },
+  Pest: { key: 'Pest', label: 'Pest', icon: 'bug-outline' },
   Algal: { key: 'Algal', label: 'Alga', icon: 'leaf-circle-outline' },
-  Disorder: { key: 'Disorder', label: 'Disorder', icon: 'flask-outline' },
+  Disorder: { key: 'Disorder', label: 'Nutrient shortage', icon: 'flask-outline' },
 };
 
 /** Danger meter: how many of 4 segments are filled. */

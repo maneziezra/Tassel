@@ -88,7 +88,7 @@ export default function ChatScreen() {
           id: newId(),
           role: 'assistant',
           local: true,
-          content: t('Habari! I am the Tassel farm advisor. Ask me about crop diseases, pests, fertiliser or planting — in English or Kiswahili.'),
+          content: t('Ask about crop diseases, pests, fertiliser or planting, in English or Kiswahili.'),
         },
       ]);
     }

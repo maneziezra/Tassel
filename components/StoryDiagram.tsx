@@ -12,13 +12,12 @@ import Animated, {
   Easing,
   interpolate,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withDelay,
-  withSpring,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { useStill } from '../lib/motion';
 import { CropIcon, Icon, Text } from './ui';
 import { mid, rangeLabel, type DiagramFact } from '../lib/diagramFacts';
 import { useLang } from '../lib/i18n';
@@ -31,7 +30,7 @@ const SOIL_TOP = '#B89466';
 
 /** One shared 0→1 clock per diagram; items read their own slice of it. */
 function useClock(key: string, duration: number) {
-  const reduce = useReducedMotion();
+  const reduce = useStill(); // 12 Nov: diagrams show the finished drawing (lib/motion.ts)
   const p = useSharedValue(reduce ? 1 : 0);
   useEffect(() => {
     if (reduce) {
@@ -256,12 +255,12 @@ function Rotation({ fact, width, k }: { fact: Extract<DiagramFact, { kind: 'rota
 
 function Certified({ width, k }: { width: number; k: string }) {
   const { t } = useLang();
-  const reduce = useReducedMotion();
+  const reduce = useStill();
   const stamp = useSharedValue(reduce ? 1 : 0);
   useEffect(() => {
     if (reduce) return;
     stamp.value = 0;
-    stamp.value = withDelay(500, withSpring(1, { damping: 9, stiffness: 140 }));
+    stamp.value = withDelay(500, withTiming(1, { duration: 350, easing: Easing.out(Easing.cubic) }));
   }, [k, reduce, stamp]);
   const a = useAnimatedStyle(() => ({ opacity: Math.min(1, stamp.value * 1.5), transform: [{ scale: 1.6 - stamp.value * 0.6 }, { rotate: '-10deg' }] }));
   return (

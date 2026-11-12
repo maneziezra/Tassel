@@ -1,4 +1,6 @@
-// Tassel — the Home hero: the farmer's own field from space, animated.
+// Tassel — the Home hero: the farmer's own field from space.
+// 12 Nov: shown still (lib/motion.ts): the final picture at once, no sweep, no pulsing squares.
+// The animated version below runs only if DECORATIVE_MOTION is turned back on.
 //
 // The signature moment: a gold satellite line sweeps across and reveals the
 // field's real Sentinel-2 squares, then the boundary draws itself. Cells the
@@ -12,13 +14,13 @@ import { Canvas, Group, LinearGradient, Path, Rect, Skia, vec } from '@shopify/r
 import {
   Easing,
   useDerivedValue,
-  useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useStill } from '../lib/motion';
 import type { Grid } from '../lib/satelliteCore';
 import { layoutField, ndviColor } from '../lib/fieldArt';
 import { C, FONT } from '../lib/theme';
@@ -50,7 +52,7 @@ export function FieldHero({
   /** Show the colour key under the field (Home hero). */
   showKey?: boolean;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useStill();
   const { t } = useLang();
   const art = useMemo(() => layoutField(polygon, grid, width, height), [polygon, grid, width, height]);
 
@@ -70,7 +72,7 @@ export function FieldHero({
     if (reduce) {
       reveal.value = 1;
       draw.value = 1;
-      sweep.value = checking ? 0.5 : 1;
+      sweep.value = 1; // no satellite line resting over the field
       return;
     }
     reveal.value = 0;
@@ -90,7 +92,7 @@ export function FieldHero({
 
   const clip = useDerivedValue(() => Skia.XYWHRect(0, 0, width * reveal.value, height));
   const sweepX = useDerivedValue(() => [{ translateX: width * sweep.value - 44 }]);
-  const sweepOpacity = useDerivedValue(() => (checking ? 1 : 1 - Math.max(0, (sweep.value - 0.85) / 0.15)));
+  const sweepOpacity = useDerivedValue(() => (reduce ? 0 : checking ? 1 : 1 - Math.max(0, (sweep.value - 0.85) / 0.15)));
 
   if (!art) return null;
   const hasCloud = art.cells.some((c) => c.noData);

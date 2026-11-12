@@ -1,0 +1,19 @@
+2.9.3: serious, like xFarm - no emoji faces, no bouncing, plain wording
+
+Ezra, 12 Nov: "just make my app serious". Replaces the 26 Oct "alive" direction.
+- lib/motion.ts: DECORATIVE_MOTION = false; useStill() freezes story scenes
+  and diagrams on their finished frame, the satellite hero appears at once
+  (no sweep, no pulsing squares), the scan frame no longer breathes.
+- Plain line icons instead of animated emoji on Home, scan, result,
+  advisory, calendar, add field and task rows (sceneIcon, threatIcons;
+  resultPictures is icon-only).
+- Result: "Do this now" is a checklist instead of bobbing swipe cards;
+  no zoom-ins; "Answer recorded" instead of a heart.
+- Home: Today (spray window, due task, outbreak) before the tools grid;
+  "No action needed today", "Tools".
+- Exclamation marks and chatty lines removed from UI text (EN + SW).
+- Guard test (test-rules "decision 12 Nov") keeps it that way.
+- Version 2.9.3, versionCode 14.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01T7YYHBHC8stwHK9VsqzqqS

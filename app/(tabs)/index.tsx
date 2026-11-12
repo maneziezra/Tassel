@@ -16,7 +16,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { FieldHero } from '../../components/FieldHero';
-import { NotoEmoji } from '../../components/NotoEmoji';
 import {
   Btn,
   CropIcon,
@@ -521,24 +520,6 @@ export default function HomeScreen() {
           </Press>
         </View>
 
-        {/* ── TOOLS: every tool says what it does ─────────────────────────── */}
-        <View style={st.sectionHeader}>
-          <SectionLabel>What do you need?</SectionLabel>
-        </View>
-        <View style={st.toolsGrid}>
-          {TOOLS.map((item) => (
-            <Press key={item.label} style={st.toolItem} onPress={() => router.push(item.href as never)} accessibilityRole="button" accessibilityLabel={`${t(item.label)}. ${t(item.sub)}`}>
-              <View style={st.toolItemIcon}>
-                <Icon name={item.icon} size={24} color={C.primaryDark} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={st.toolItemText} numberOfLines={1}>{item.label}</Text>
-                <Text style={st.toolItemSub} numberOfLines={2}>{item.sub}</Text>
-              </View>
-            </Press>
-          ))}
-        </View>
-
         {/* ── "TODAY" ACTION CARDS (MAX 3) ────────────────────────────────── */}
         <View style={st.sectionHeader}>
           <SectionLabel>Today</SectionLabel>
@@ -552,9 +533,12 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('Spray hours & forecast')}
           >
-            {/* a sky disc: the white Noto cloud vanished on the paper-grey one */}
-            <View style={[st.actionCardIconWrap, { backgroundColor: '#CFE0EA' }]}>
-              {todaySpray ? <NotoEmoji name={todaySpray.window ? 'droplet' : 'rain'} size={34} /> : <Icon name="weather-cloudy-alert" size={28} color={C.textMid} />}
+            <View style={st.actionCardIconWrap}>
+              <Icon
+                name={!todaySpray ? 'weather-cloudy-alert' : todaySpray.window ? 'spray' : 'weather-pouring'}
+                size={26}
+                color={!todaySpray ? C.textMid : todaySpray.window ? C.primaryDark : C.warn}
+              />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -606,7 +590,6 @@ export default function HomeScreen() {
                 onPress={() => router.push('/calendar')}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <NotoEmoji name="plant" size={26} />
                   <Text raw style={[st.actionCardTitle, { flex: 1 }, primaryTask.ticked && st.taskDone]}>
                     {primaryTask.title}
                   </Text>
@@ -630,7 +613,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
             >
               <View style={st.actionCardIconWrap}>
-                <NotoEmoji name="bug" size={34} />
+                <Icon name="alert-outline" size={26} color={C.error} />
               </View>
               <View style={{ flex: 1, gap: 3 }}>
                 <Text style={[st.actionCardTitle, { color: C.error }]}>
@@ -657,13 +640,31 @@ export default function HomeScreen() {
                 <Icon name="shield-check-outline" size={26} color={C.primary} />
               </View>
               <View style={{ flex: 1, gap: 3 }}>
-                <Text style={st.actionCardTitle}>All quiet on your farm today</Text>
+                <Text style={st.actionCardTitle}>No action needed today</Text>
                 <Text style={st.actionCardDesc}>
-                  No overdue tasks or nearby disease outbreaks. Check your fields or scan any suspicious leaves.
+                  No overdue tasks and no outbreaks reported nearby.
                 </Text>
               </View>
             </View>
           ) : null}
+        </View>
+
+        {/* ── TOOLS: every tool says what it does ─────────────────────────── */}
+        <View style={st.sectionHeader}>
+          <SectionLabel>Tools</SectionLabel>
+        </View>
+        <View style={st.toolsGrid}>
+          {TOOLS.map((item) => (
+            <Press key={item.label} style={st.toolItem} onPress={() => router.push(item.href as never)} accessibilityRole="button" accessibilityLabel={`${t(item.label)}. ${t(item.sub)}`}>
+              <View style={st.toolItemIcon}>
+                <Icon name={item.icon} size={24} color={C.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={st.toolItemText} numberOfLines={1}>{item.label}</Text>
+                <Text style={st.toolItemSub} numberOfLines={2}>{item.sub}</Text>
+              </View>
+            </Press>
+          ))}
         </View>
 
         {/* ── RECENT SCANS (IF ANY) ───────────────────────────────────────── */}

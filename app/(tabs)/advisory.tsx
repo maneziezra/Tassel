@@ -37,10 +37,9 @@ import { localizeGuide } from '../../lib/advisory.sw';
 import { FERTS, type FertId } from '../../lib/fertiliser';
 import { useLang } from '../../lib/i18n';
 import { openScanner } from '../../lib/navigation';
-import { NotoEmoji } from '../../components/NotoEmoji';
 import { StoryDiagram } from '../../components/StoryDiagram';
 import { StoryScene } from '../../components/StoryScene';
-import { threatEmojis } from '../../lib/storyScene';
+import { threatIcons } from '../../lib/storyScene';
 import { diagramFacts, type DiagramFact } from '../../lib/diagramFacts';
 import { PcpbProductCard } from '../../components/PcpbProductCard';
 import { cropKey, getRegisteredProducts, problemKey, type PcpbProduct, type ProblemKey } from '../../lib/pcpb';
@@ -391,7 +390,7 @@ export default function AdvisoryScreen() {
                   <View style={st.watchCard}>
                     <StoryScene text="Scout for it" kind="scout" crop={cropId} width={SCREEN_WIDTH - 64} />
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
-                      {threatEmojis(activeCard.caption ?? '').map((e) => <NotoEmoji key={e} name={e} size={40} />)}
+                      {threatIcons(activeCard.caption ?? '').map((e) => <Icon key={e} name={e} size={26} color={C.error} />)}
                       <View style={st.alertBadge}>
                         <Text style={st.alertBadgeTxt}>Watch out</Text>
                       </View>
