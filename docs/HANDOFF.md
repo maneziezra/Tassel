@@ -17,6 +17,13 @@ Written 24 Oct 2026 for Ezra ("Archlord"), Eldoret, Kenya. Put this file in the 
   - The library marks a guide "scanner can detect" only when the model in use can name it (`scannerCanName`, `lib/labels.ts` holds the active labels), so the built-in v5 does not claim the v8 classes.
   - Result screen: the big emoji faces are gone (Ezra: "seriousness"); the photo carries one plain status badge (green Healthy, ochre Not sure, urgency colour for a problem).
   - Tests: `scripts/test-guides-v8.mjs`; the test loader now imports JSON like Metro.
+- 2.9.3 (12 Nov, "make my app serious": every animation removed) was rolled back on 13 Nov: Ezra said it "looked lifeless". Commit 1643495 returns the code exactly to 2.9.2.
+- App 2.9.4 (versionCode 15, 13 Nov), Ezra: "the previous one with animations, but serious animations, and real images not cartoons". He chose: plain icons (no cartoon emoji), the swipe cards back, licensed photos now with his own later.
+  - Motion rules in `lib/motion.ts`: timing curves only, no springs or bounce; loops only while work is in progress; phone reduce-motion stills everything. Guard: `scripts/test-rules.mjs` "decision 13 Nov".
+  - Home blocks fade and rise in order once; the satellite hero keeps its sweep and outline draw, and stress squares pulse three times, then hold. Scan: the frame no longer breathes; a gold scan line glides through it while the camera is live, and over the photo while the leaf is checked (`components/ScanLine.tsx`).
+  - Result: the 2.9.2 swipe cards slide in one after another (no bobbing), ticks fade in, sections fade and rise; icons, not emoji.
+  - Real photos replace the cartoon scenes everywhere (`components/StoryPhoto.tsx`): 18 openly licensed Wikimedia Commons photos (CC BY / CC BY-SA, many from Kenya, incl. CIAT's Mount Kenya set) in `assets/story/`, credits in `lib/storyPhotos.ts`, on each photo and on How Tassel works. To swap in Ezra's own photo: replace `assets/story/<kind>.jpg` (960 x 640) and its entry; `scripts/photos/` holds the search and crop scripts (`picks.json` -> `finalize_photos.py`). Test: `scripts/test-story-photos.mjs`.
+  - Wording is as in 2.9.2 (the rollback restored it).
 - Next in the plan (not started): real reference photos per disease ("Does your leaf look like this?"), from Ezra's own photos or openly licensed ones with credit. Never AI-generated or stock presented as real Tassel farms; farmers' shared scan photos are not for display (their consent covers accuracy and training only).
 - Server SQL written but NOT applied (needs Ezra in the Supabase SQL editor): `cropguard-proxy/supabase/cropguard_v28_scan_feedback.sql`, `cropguard_v29_models_bucket.sql` (and the older `cropguard_v27_pesticide_products.sql`). Until v28 is applied, opted-in photos wait on the phone; until v29, the update check finds no manifest and the built-in model stays.
 - Model v8a trained 10 Nov (EfficientNetV2-B2, 240 px, 193 classes): 0.9568 vs v5 0.9404 on v5's sources, test_phone 0.9522, 35.8 MB. Not shipped: 30 classes lack treatment guides, size and TECNO scan time unchecked, v5 never scored on test_phone. Details: KSEF project doc `Tassel_Model_v8a_Results.md`; files in `Desktop\KSEF 2027\tassel_v3\results_v8a\`.
@@ -24,7 +31,7 @@ Written 24 Oct 2026 for Ezra ("Archlord"), Eldoret, Kenya. Put this file in the 
 
 **Decided by Ezra, 26 Oct 2026** (these replace the older rules "active ingredients only, never doses" and "no emojis" from the 19 Oct brief):
 - Brand: "how your field is doing, and what to do today". The satellite field is the Home hero; offline scan is the giant action.
-- Emoji: Google Noto Animated Emoji (Lottie), with the licence credited. No system emoji.
+- Emoji: ~~Google Noto Animated Emoji~~ replaced 13 Nov by plain line icons and real photos (see 2.9.4). No system emoji.
 - Named PCPB products: allowed with registration number and "Not sponsored", but **only when checked against the PCPB register**. A label rate is shown only when it is cited from the label; otherwise show "See the label".
 - Model v8 retraining: after the redesign.
 - Still open: the Home visual direction (pick from two Figma directions).

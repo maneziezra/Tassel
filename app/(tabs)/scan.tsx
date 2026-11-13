@@ -12,7 +12,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDiseaseModel } from '../../lib/useDiseaseModel';
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { enterFade } from '../../lib/motion';
+import { ScanLine } from '../../components/ScanLine';
 import { classifyPhoto, modelLabels, type ScanStep } from '../../lib/classifier';
 import { ANY_CROP, cropOptions, scannerKnows } from '../../lib/scanCrop';
 import { CROP_CHOICES } from '../../lib/counties';
@@ -21,7 +23,6 @@ import { cropName } from '../../lib/diseases';
 import { FRAME_SHARE, frameFraction } from '../../lib/scanFrame';
 
 import { CropIcon, Icon, Sheet, Text, tick } from '../../components/ui';
-import { NotoEmoji } from '../../components/NotoEmoji';
 import { takeScanField, type ScanField } from '../../lib/navigation';
 import { useLang } from '../../lib/i18n';
 import { C } from '../../lib/theme';
@@ -86,14 +87,8 @@ export default function ScanScreen() {
     }, [])
   );
   const cameraRef = useRef<CameraView>(null);
-  // The guide frame breathes gently so the eye finds it; still when reduce-motion is on.
-  const reduceMotion = useReducedMotion();
-  const breathe = useSharedValue(1);
-  useEffect(() => {
-    if (reduceMotion) return;
-    breathe.value = withRepeat(withTiming(1.035, { duration: 1300, easing: Easing.inOut(Easing.quad) }), -1, true);
-  }, [reduceMotion, breathe]);
-  const frameStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathe.value }] }));
+  // 13 Nov: the guide frame stands still; a scan line glides through it while the camera is live
+  // (components/ScanLine.tsx, lib/motion.ts rule 3). It breathed before.
   const [permission, requestPermission] = useCameraPermissions();
   const tflite = useDiseaseModel();
   const [torch, setTorch] = useState(false);
@@ -289,11 +284,12 @@ export default function ScanScreen() {
       {/* Frame + tip */}
       {!photoUri && permission?.granted ? (
         <View pointerEvents="none" style={st.frameWrap}>
-          <Animated.View style={[st.frame, frameStyle]}>
+          <View style={st.frame}>
+            <ScanLine active={focused} duration={2600} />
             {['tl', 'tr', 'bl', 'br'].map((k) => (
               <View key={k} style={[st.corner, st[k as 'tl']]} />
             ))}
-          </Animated.View>
+          </View>
           <View style={st.tipPill}>
             <Icon name="lightbulb-on-outline" size={14} color={C.gold} />
             <Text style={st.tipTxt}>{TIPS[tip]}</Text>
@@ -301,10 +297,10 @@ export default function ScanScreen() {
         </View>
       ) : null}
 
-      {/* Checking: a moving leaf and three words (the timed technical steps live in More details) */}
+      {/* Checking: the photo with a scan line over it, and three words (the timed technical steps live in More details) */}
       {photoUri ? (
         <View style={st.overlay}>
-          <View style={st.overlayCard}>
+          <Animated.View entering={enterFade()} style={st.overlayCard}>
             {error ? (
               <>
                 <Icon name="alert-circle-outline" size={48} color="#F2B8A6" />
@@ -315,12 +311,14 @@ export default function ScanScreen() {
               </>
             ) : (
               <>
-                <NotoEmoji name="leaves" size={72} />
+                <View style={st.checkThumb}>
+                  <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                  <ScanLine duration={1400} />
+                </View>
                 <Text style={st.overlayTitle}>Checking your leaf…</Text>
-                <ActivityIndicator color={C.gold} />
               </>
             )}
-          </View>
+          </Animated.View>
         </View>
       ) : null}
 
@@ -415,6 +413,7 @@ const st = StyleSheet.create({
   tipTxt: { color: '#fff', fontSize: 14, fontWeight: '600' },
   overlay: { ...FILL, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
   overlayCard: { backgroundColor: C.dark, borderRadius: 24, padding: 28, gap: 16, alignItems: 'center' },
+  checkThumb: { width: 140, height: 140, borderRadius: 16, overflow: 'hidden', borderWidth: 2, borderColor: C.gold, backgroundColor: '#000' },
   overlayTitle: { color: '#fff', fontSize: 20, fontWeight: '900', textAlign: 'center' },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepTxt: { flex: 1, color: '#E8ECE9', fontSize: 14 },

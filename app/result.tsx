@@ -3,17 +3,20 @@
 // big emoji faces are gone; the photo carries one plain status badge instead (green Healthy,
 // ochre Not sure, the urgency colour and words for a problem).
 // The leaf with its status badge, the disease name and the confidence chip;
-// how it spreads as moving pictures; "do this now" as swipeable cards the farmer ticks off
-// (a buzz each, a party when all are done); one spray tile (PCPB-registered only); three
+// how it spreads as pictures; "do this now" as swipeable cards the farmer ticks off
+// (a buzz each, a tick when all are done); one spray tile (PCPB-registered only); three
 // buttons. Everything else is folded under "More". Rule 3: below 75 % nothing names a
 // disease or offers a spray.
+// v2.9.4 (13 Nov, Ezra: alive but serious): calm motion only (lib/motion.ts): sections fade and
+// rise in order, the cards slide in one after another, ticks fade in. No bobbing, no springs,
+// plain icons instead of cartoon emoji.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Dimensions, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import Animated, { Easing, FadeInDown, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { enterFade, enterRight, enterUp } from '../lib/motion';
 import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, tick, type IconName } from '../components/ui';
-import { NotoEmoji } from '../components/NotoEmoji';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
 import { PcpbProductCard } from '../components/PcpbProductCard';
@@ -275,14 +278,14 @@ export default function ResultScreen() {
               <CropIcon crop={cropEn} size={96} disc={false} />
             </View>
           )}
-          <View style={[st.status, { backgroundColor: status.bg }]} accessibilityRole="text">
+          <Animated.View key={scanKey} entering={enterFade(250)} style={[st.status, { backgroundColor: status.bg }]} accessibilityRole="text">
             <Icon name={status.icon} size={20} color="#fff" />
             <Text style={st.statusTxt}>{status.label}</Text>
-          </View>
+          </Animated.View>
         </View>
 
         {/* ── Name and one chip ───────────────────────────────────── */}
-        <Animated.View entering={FadeInDown.delay(150).springify().damping(16)} style={st.verdict}>
+        <Animated.View entering={enterUp(0, 100)} style={st.verdict}>
           {uncertain ? (
             // Rule 3: no crop or disease as fact; the guess is small.
             <>
@@ -357,11 +360,11 @@ export default function ResultScreen() {
         {/* ── What it is · how it spreads ─────────────────────────── */}
         {!uncertain && (kindPic || spreadPics.length) ? (
           // One card: what it is on top, then the spread pictures in one row ("Spreads by" once).
-          <View style={[st.section, st.whatCard]}>
+          <Animated.View entering={enterUp(1, 100)} style={[st.section, st.whatCard]}>
             {kindPic ? (
               <View style={st.whatRow}>
                 <View style={[st.picIcon, { backgroundColor: C.errorTint }]}>
-                  {kindPic.noto ? <NotoEmoji name={kindPic.noto} size={40} /> : <Icon name={kindPic.icon as IconName} size={32} color={C.error} />}
+                  <Icon name={kindPic.icon as IconName} size={30} color={C.error} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={st.picCaption}>What it is</Text>
@@ -373,13 +376,13 @@ export default function ResultScreen() {
               <>
                 <Text style={[st.picCaption, { marginTop: kindPic ? 14 : 0 }]}>Spreads by</Text>
                 <View style={st.picRow}>
-                  {spreadPics.map((pic) => (
-                    <PictureItem key={pic.key} pic={pic} />
+                  {spreadPics.map((pic, i) => (
+                    <PictureItem key={pic.key} pic={pic} i={i} />
                   ))}
                 </View>
               </>
             ) : null}
-          </View>
+          </Animated.View>
         ) : null}
 
         {/* ── Do this now: swipe the cards, tick each one off ──────── */}
@@ -414,7 +417,7 @@ export default function ResultScreen() {
               ))}
             </ScrollView>
             {done.length === steps.length ? (
-              <Animated.View entering={ZoomIn.springify().damping(11)} style={st.allDone}>
+              <Animated.View entering={enterUp(0)} style={st.allDone}>
                 <Icon name="check-decagram-outline" size={32} color={C.primaryDark} />
                 <Text style={st.allDoneTxt}>Well done! Scan again in a few days.</Text>
               </Animated.View>
@@ -470,7 +473,7 @@ export default function ResultScreen() {
         {p.uri && !p.incidentId ? (
           <View style={[st.section, st.whatCard]}>
             {answer ? (
-              <Animated.View entering={ZoomIn.springify().damping(12)} style={st.whatRow}>
+              <Animated.View entering={enterFade()} style={st.whatRow}>
                 <View style={[st.picIcon, { backgroundColor: C.primaryTint }]}>
                   <Icon name="heart-outline" size={30} color={C.primaryDark} />
                 </View>
@@ -661,34 +664,27 @@ export default function ResultScreen() {
 
 const CARD_W = Math.min(300, Dimensions.get('window').width * 0.74);
 
-/** One "do this now" card: a moving picture, a short title, Done. Tap the picture for the full step. */
+/** One "do this now" card: the step's icon, a short title, Done. Tap the icon for the full step.
+ * The cards slide in one after another; a tick fades in when done (no bobbing, no springs). */
 function ActionCard({ n, icon, title, done, onOpen, onDone }: { n: number; icon: IconName; title: string; done: boolean; onOpen: () => void; onDone: () => void }) {
   const { t } = useLang();
-  const reduce = useReducedMotion();
-  const bob = useSharedValue(0);
-  useEffect(() => {
-    if (reduce || done) {
-      bob.value = 0;
-      return;
-    }
-    bob.value = withDelay(n * 250, withRepeat(withTiming(-6, { duration: 900, easing: Easing.inOut(Easing.quad) }), -1, true));
-  }, [reduce, done, n, bob]);
-  const bobStyle = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }] }));
   return (
-    <Animated.View entering={FadeInDown.delay(100 + n * 80)} style={[st.card, done && { backgroundColor: C.primaryTint }]}>
+    <Animated.View entering={enterRight(n - 1, 250)} style={[st.card, done && { backgroundColor: C.primaryTint }]}>
       <TouchableOpacity onPress={onOpen} style={{ alignItems: 'center', gap: 12 }} accessibilityRole="button" accessibilityHint={t('Opens the full step')}>
         <View style={st.cardNum}>
           <Text raw style={st.stepNumTxt}>{String(n)}</Text>
         </View>
-        <Animated.View style={[st.cardIcon, bobStyle, done && { backgroundColor: C.primary }]}>
+        <View style={[st.cardIcon, done && { backgroundColor: C.primary }]}>
           {done ? (
-            <Animated.View entering={ZoomIn.springify().damping(10)}>
+            <Animated.View key="done" entering={enterFade()}>
               <Icon name="check-bold" size={44} color="#fff" />
             </Animated.View>
           ) : (
-            <Icon name={icon} size={44} color={C.primaryDark} />
+            <Animated.View key="todo" entering={enterFade()}>
+              <Icon name={icon} size={44} color={C.primaryDark} />
+            </Animated.View>
           )}
-        </Animated.View>
+        </View>
         <Text raw style={st.cardTitle}>{title}</Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -704,17 +700,15 @@ function ActionCard({ n, icon, title, done, onOpen, onDone }: { n: number; icon:
   );
 }
 
-/** One picture with a word under it: an icon, or a Noto emoji where it carries the meaning. */
-function PictureItem({ pic }: { pic: Picture }) {
-  // A sky disc behind rain and water: the white Noto cloud vanished on the pale green one (TECNO).
-  const sky = pic.noto === 'rain' || pic.noto === 'droplet';
+/** One picture with a word under it: a plain line icon, fading in after the one before. */
+function PictureItem({ pic, i }: { pic: Picture; i: number }) {
   return (
-    <View style={st.picItem}>
-      <View style={[st.picIcon, sky && { backgroundColor: '#CFE0EA' }]}>
-        {pic.noto ? <NotoEmoji name={pic.noto} size={40} /> : <Icon name={pic.icon as IconName} size={32} color={C.primaryDark} />}
+    <Animated.View entering={enterFade(350 + i * 80)} style={st.picItem}>
+      <View style={st.picIcon}>
+        <Icon name={pic.icon as IconName} size={30} color={C.primaryDark} />
       </View>
       <Text style={st.picLabel}>{pic.label}</Text>
-    </View>
+    </Animated.View>
   );
 }
 

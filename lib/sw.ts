@@ -373,6 +373,8 @@ export const SW: Record<string, string> = {
   'Day 7': 'Siku ya 7',
   'Check if it is working': 'Angalia kama inafanya kazi',
   'After harvest / next season': 'Baada ya mavuno / msimu ujao',
+  // Step photos (v2.9.4, native-speaker review)
+  'Do not': 'Usifanye',
   // Nutrient-disorder plan (v2.9.2, native-speaker review)
   'Check the pattern': 'Angalia mtindo wa dalili',
   'Feed the crop': 'Lisha zao',

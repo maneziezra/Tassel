@@ -100,4 +100,18 @@ test('decision 26 Oct: no system emoji in app code (Noto Animated Emoji only)', 
   for (const f of files) assert.ok(!emoji.test(read(f)), `${path.relative(root, f)} contains a system emoji`);
 });
 
+test('decision 13 Nov: alive but serious: calm motion, plain icons, real photos (lib/motion.ts)', () => {
+  // Loops are allowed only while work is in progress: the satellite check, the camera scan line.
+  const LOOPS_OK = /FieldHero\.tsx$|ScanLine\.tsx$|StoryScene\.tsx$|NotoEmoji\.tsx$/;
+  const screens = files.filter((f) => /[\\/](app|components)[\\/]/.test(f) && !/NotoEmoji\.tsx$|StoryScene\.tsx$/.test(f));
+  for (const f of screens) {
+    const s = read(f);
+    const rel = path.relative(root, f);
+    assert.doesNotMatch(s, /<NotoEmoji\b/, `${rel} shows a cartoon emoji`);
+    assert.doesNotMatch(s, /<StoryScene\b/, `${rel} shows a cartoon scene instead of a photo`);
+    assert.doesNotMatch(s, /springify\(|withSpring\(|ZoomIn\b|BounceIn\b/, `${rel} bounces`);
+    if (/withRepeat\([^;]*,\s*-1/.test(s)) assert.match(rel, LOOPS_OK, `${rel} loops forever outside work in progress`);
+  }
+});
+
 console.log(`\n${passed} rule guards passed`);

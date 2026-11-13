@@ -3,8 +3,9 @@
 // The signature moment: a gold satellite line sweeps across and reveals the
 // field's real Sentinel-2 squares, then the boundary draws itself. Cells the
 // 20 m joint mask flags as possible stress pulse in clay. While the first
-// satellite check is still running the sweep keeps passing over the outline.
-// Reduce-motion shows the final picture at once.
+// satellite check is still running the sweep keeps passing over the outline
+// (work in progress, lib/motion.ts rule 3). Stress squares pulse three times,
+// then hold (13 Nov: no endless pulsing). Reduce-motion shows the final picture at once.
 
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -12,13 +13,13 @@ import { Canvas, Group, LinearGradient, Path, Rect, Skia, vec } from '@shopify/r
 import {
   Easing,
   useDerivedValue,
-  useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useStill } from '../lib/motion';
 import type { Grid } from '../lib/satelliteCore';
 import { layoutField, ndviColor } from '../lib/fieldArt';
 import { C, FONT } from '../lib/theme';
@@ -50,7 +51,7 @@ export function FieldHero({
   /** Show the colour key under the field (Home hero). */
   showKey?: boolean;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useStill();
   const { t } = useLang();
   const art = useMemo(() => layoutField(polygon, grid, width, height), [polygon, grid, width, height]);
 
@@ -84,7 +85,7 @@ export function FieldHero({
       reveal.value = withTiming(1, { duration: 1500, easing: ease });
       sweep.value = withTiming(1, { duration: 1500, easing: ease });
       draw.value = withDelay(700, withTiming(1, { duration: 1100, easing: ease }));
-      pulse.value = withDelay(1800, withRepeat(withSequence(withTiming(0.35, { duration: 700 }), withTiming(1, { duration: 700 })), -1, false));
+      pulse.value = withDelay(1800, withRepeat(withSequence(withTiming(0.35, { duration: 700 }), withTiming(1, { duration: 700 })), 3, false));
     }
   }, [reduce, checking, playKey, reveal, draw, sweep, pulse]);
 

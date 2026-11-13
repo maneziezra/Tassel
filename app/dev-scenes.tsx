@@ -1,8 +1,8 @@
-// Dev only: every story scene on one screen, for checking them on a phone. Not linked from the app.
+// Dev only: every story photo on one screen, for checking them on a phone. Not linked from the app.
 import React from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { StoryScene } from '../components/StoryScene';
+import { StoryPhoto } from '../components/StoryPhoto';
 import { Text } from '../components/ui';
 import type { SceneKind } from '../lib/storyScene';
 
@@ -17,7 +17,7 @@ export default function DevScenes() {
     <ScrollView contentContainerStyle={{ padding: 12, paddingTop: 40, flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
       {KINDS.slice(Number(from), Number(from) + 8).map((k) => (
         <View key={k} style={{ width: w }}>
-          <StoryScene text={k === 'weed' ? 'Do not weed during flowering' : k} kind={k} crop={crop} width={w} rounded={10} />
+          <StoryPhoto text={k === 'weed' ? 'Do not weed during flowering' : k} kind={k} crop={crop} width={w} rounded={10} />
           <Text raw style={{ fontSize: 12 }}>{k}</Text>
         </View>
       ))}

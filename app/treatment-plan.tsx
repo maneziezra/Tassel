@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Share, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Badge, Btn, Card, Empty, Header, Icon, ListenButton, Text } from '../components/ui';
-import { StoryScene } from '../components/StoryScene';
+import { StoryPhoto } from '../components/StoryPhoto';
 import { buildPlan, chemicalRules, getDisease, localizeDisease } from '../lib/diseases';
 import { loadPlanProgress, planKey, savePlanProgress } from '../lib/store';
 import { useLang } from '../lib/i18n';
@@ -126,7 +126,7 @@ export default function TreatmentPlanScreen() {
               {isOpen ? (
                 <View style={{ padding: 14 }}>
                   <View style={{ marginBottom: 12 }}>
-                    <StoryScene
+                    <StoryPhoto
                       text={planEn[idx] ? `${planEn[idx].title}. ${planEn[idx].tasks.map((x) => x.text).join(' ')}` : step.title}
                       crop={raw?.crop}
                       width={width - 60}

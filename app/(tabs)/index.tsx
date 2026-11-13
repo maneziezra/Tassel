@@ -9,6 +9,8 @@
 // v2.9.1 (Ezra, 11 Nov: "people can't find the planting calendar"): a smaller hero, then the
 // order a farmer needs: Scan, Planting calendar (its own large card, showing the next job),
 // then every other tool as a labelled tile that says what it does. Today and scans follow.
+// v2.9.4 (13 Nov): plain icons, no cartoon emoji; the blocks arrive one after another with a
+// short fade and rise (lib/motion.ts), once, when the app opens.
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
@@ -16,7 +18,8 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { FieldHero } from '../../components/FieldHero';
-import { NotoEmoji } from '../../components/NotoEmoji';
+import Animated from 'react-native-reanimated';
+import { enterUp } from '../../lib/motion';
 import {
   Btn,
   CropIcon,
@@ -459,7 +462,7 @@ export default function HomeScreen() {
         </View>
 
         {/* ── THE ONE BIG ACTION ─────────────────────────────────────────── */}
-        <View style={st.actionWrap}>
+        <Animated.View entering={enterUp(0, 120)} style={st.actionWrap}>
           {activeFarm || !loaded ? (
             <Press style={st.bigAction} onPress={openScanner} haptic accessibilityRole="button" accessibilityLabel={t('Scan a leaf')}>
               <Icon name="line-scan" size={36} color={C.brandGround} />
@@ -477,7 +480,7 @@ export default function HomeScreen() {
               </View>
             </Press>
           )}
-        </View>
+        </Animated.View>
 
         {offline ? (
           <View style={st.offlineNotice}>
@@ -502,7 +505,7 @@ export default function HomeScreen() {
         ) : null}
 
         {/* ── PLANTING CALENDAR: its own card, right under Scan ────────────── */}
-        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+        <Animated.View entering={enterUp(1, 120)} style={{ paddingHorizontal: 16, marginTop: 12 }}>
           <Press style={st.calendarCard} onPress={() => router.push('/calendar')} haptic accessibilityRole="button" accessibilityLabel={t('Planting calendar')}>
             <View style={st.calendarIcon}>
               <Icon name="calendar-check-outline" size={30} color={C.brandGold} />
@@ -519,13 +522,13 @@ export default function HomeScreen() {
             </View>
             <Icon name="chevron-right" size={24} color={C.brandCream} />
           </Press>
-        </View>
+        </Animated.View>
 
         {/* ── TOOLS: every tool says what it does ─────────────────────────── */}
         <View style={st.sectionHeader}>
           <SectionLabel>What do you need?</SectionLabel>
         </View>
-        <View style={st.toolsGrid}>
+        <Animated.View entering={enterUp(2, 120)} style={st.toolsGrid}>
           {TOOLS.map((item) => (
             <Press key={item.label} style={st.toolItem} onPress={() => router.push(item.href as never)} accessibilityRole="button" accessibilityLabel={`${t(item.label)}. ${t(item.sub)}`}>
               <View style={st.toolItemIcon}>
@@ -537,14 +540,14 @@ export default function HomeScreen() {
               </View>
             </Press>
           ))}
-        </View>
+        </Animated.View>
 
         {/* ── "TODAY" ACTION CARDS (MAX 3) ────────────────────────────────── */}
         <View style={st.sectionHeader}>
           <SectionLabel>Today</SectionLabel>
         </View>
 
-        <View style={st.todayCardsContainer}>
+        <Animated.View entering={enterUp(3, 120)} style={st.todayCardsContainer}>
           {/* Action Card 1: Spray Suitability / Weather Advice */}
           <Press
             style={st.actionCard}
@@ -552,9 +555,12 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('Spray hours & forecast')}
           >
-            {/* a sky disc: the white Noto cloud vanished on the paper-grey one */}
-            <View style={[st.actionCardIconWrap, { backgroundColor: '#CFE0EA' }]}>
-              {todaySpray ? <NotoEmoji name={todaySpray.window ? 'droplet' : 'rain'} size={34} /> : <Icon name="weather-cloudy-alert" size={28} color={C.textMid} />}
+            <View style={st.actionCardIconWrap}>
+              <Icon
+                name={!todaySpray ? 'weather-cloudy-alert' : todaySpray.window ? 'spray' : 'weather-pouring'}
+                size={26}
+                color={!todaySpray ? C.textMid : todaySpray.window ? C.primaryDark : C.warn}
+              />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -606,7 +612,6 @@ export default function HomeScreen() {
                 onPress={() => router.push('/calendar')}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <NotoEmoji name="plant" size={26} />
                   <Text raw style={[st.actionCardTitle, { flex: 1 }, primaryTask.ticked && st.taskDone]}>
                     {primaryTask.title}
                   </Text>
@@ -630,7 +635,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
             >
               <View style={st.actionCardIconWrap}>
-                <NotoEmoji name="bug" size={34} />
+                <Icon name="alert-outline" size={26} color={C.error} />
               </View>
               <View style={{ flex: 1, gap: 3 }}>
                 <Text style={[st.actionCardTitle, { color: C.error }]}>
@@ -664,7 +669,7 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : null}
-        </View>
+        </Animated.View>
 
         {/* ── RECENT SCANS (IF ANY) ───────────────────────────────────────── */}
         {incidents.length > 0 ? (

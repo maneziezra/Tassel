@@ -14,7 +14,7 @@ import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { Btn, Chip, CropIcon, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
-import { StoryScene } from '../components/StoryScene';
+import { StoryPhoto } from '../components/StoryPhoto';
 import { listFarms, type Farm } from '../lib/data';
 import { cropName } from '../lib/diseases';
 import { BAG_KG, FERTS, PLANS, equivalentRate, guideFor, toBags, type Application, type CropPlan, type FertId } from '../lib/fertiliser';
@@ -211,7 +211,7 @@ export default function FertiliserScreen() {
                   </View>
 
                   <View style={{ marginTop: 10 }}>
-                    <StoryScene text={`Top-dress. ${a.how}`} kind="topdress" crop={g.plan.crop} width={sceneW} rounded={14} />
+                    <StoryPhoto text={`Top-dress. ${a.how}`} kind="topdress" crop={g.plan.crop} width={sceneW} rounded={14} />
                   </View>
                   <Text raw style={st.how}>{t(a.how)}</Text>
 

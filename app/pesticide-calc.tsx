@@ -9,7 +9,7 @@ import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Btn, Chip, Header, Icon, Press, Segmented, Stepper, Text, tick } from '../components/ui';
-import { StoryScene } from '../components/StoryScene';
+import { StoryPhoto } from '../components/StoryPhoto';
 import { PcpbProductCard } from '../components/PcpbProductCard';
 import { listFarms, type Farm } from '../lib/data';
 import { CROP_CHOICES } from '../lib/counties';
@@ -304,7 +304,7 @@ export default function PesticideCalcScreen() {
               {plan?.perTank ? (
                 <>
                   <View style={{ marginBottom: 12 }}>
-                    <StoryScene text="Mix the tank" kind="mix" width={width - 64} rounded={14} />
+                    <StoryPhoto text="Mix the tank" kind="mix" width={width - 64} rounded={14} />
                   </View>
                   <Text raw style={st.mixLabel}>
                     {t('Per {n} L tank', { n: tankL })}
@@ -370,7 +370,7 @@ export default function PesticideCalcScreen() {
               <>
                 <Text style={st.step}>Spray today?</Text>
                 <View style={[st.panel, { paddingBottom: 4 }]}>
-                  <StoryScene text={today.window ? 'Spray' : 'Do not spray today'} kind="spray" crop={cropText} width={width - 64} rounded={14} />
+                  <StoryPhoto text={today.window ? 'Spray' : 'Do not spray today'} kind="spray" crop={cropText} width={width - 64} rounded={14} />
                 </View>
                 <View style={[st.panel, st.row, { gap: 12, marginTop: 8 }]}>
                   <Icon
