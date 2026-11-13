@@ -3,15 +3,17 @@
 // big emoji faces are gone; the photo carries one plain status badge instead (green Healthy,
 // ochre Not sure, the urgency colour and words for a problem).
 // The leaf with its status badge, the disease name and the confidence chip;
-// how it spreads as plain icons; "do this now" as a checklist the farmer ticks off
-// (no bobbing cards, no party: lib/motion.ts); one spray tile (PCPB-registered only); three
+// how it spreads as moving pictures; "do this now" as swipeable cards the farmer ticks off
+// (a buzz each, a party when all are done); one spray tile (PCPB-registered only); three
 // buttons. Everything else is folded under "More". Rule 3: below 75 % nothing names a
 // disease or offers a spray.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Image, Linking, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import Animated, { Easing, FadeInDown, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
 import { Btn, CropIcon, Dot, Header, Icon, ListenButton, ProgressBar, Sheet, Text, tick, type IconName } from '../components/ui';
+import { NotoEmoji } from '../components/NotoEmoji';
 import { describeLabel, CONFIDENCE_THRESHOLD } from '../lib/classifier';
 import { chemicalRules, cropName, getDisease, localizeDisease, pestHints } from '../lib/diseases';
 import { PcpbProductCard } from '../components/PcpbProductCard';
@@ -280,7 +282,7 @@ export default function ResultScreen() {
         </View>
 
         {/* ── Name and one chip ───────────────────────────────────── */}
-        <View style={st.verdict}>
+        <Animated.View entering={FadeInDown.delay(150).springify().damping(16)} style={st.verdict}>
           {uncertain ? (
             // Rule 3: no crop or disease as fact; the guess is small.
             <>
@@ -315,7 +317,7 @@ export default function ResultScreen() {
               <Text style={[st.small, { color: C.error, fontFamily: FONT.bodyBold, flex: 1 }]}>Report to your county agricultural officer</Text>
             </View>
           ) : null}
-        </View>
+        </Animated.View>
 
         {/* ── Not sure: what to fix first, then the likely candidates ─ */}
         {uncertain ? (
@@ -359,7 +361,7 @@ export default function ResultScreen() {
             {kindPic ? (
               <View style={st.whatRow}>
                 <View style={[st.picIcon, { backgroundColor: C.errorTint }]}>
-                  <Icon name={kindPic.icon as IconName} size={28} color={C.error} />
+                  {kindPic.noto ? <NotoEmoji name={kindPic.noto} size={40} /> : <Icon name={kindPic.icon as IconName} size={32} color={C.error} />}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={st.picCaption}>What it is</Text>
@@ -380,33 +382,42 @@ export default function ResultScreen() {
           </View>
         ) : null}
 
-        {/* ── Do this now: a checklist, tick each step off ──────────── */}
+        {/* ── Do this now: swipe the cards, tick each one off ──────── */}
         {!uncertain && steps.length ? (
-          <View key={scanKey} style={[st.section, st.whatCard]}>
-            <View style={st.sectionHead}>
-              <Text style={[st.h, { marginBottom: 2 }]}>{healthy ? 'Keep it healthy' : 'Do this now'}</Text>
+          <View style={{ marginTop: 18 }}>
+            <View style={[st.sectionHead, { marginHorizontal: 16 }]}>
+              <Text style={st.h}>{healthy ? 'Keep it healthy' : 'Do this now'}</Text>
               <Text raw style={st.small}>{t('{done} of {n} done', { done: done.length, n: steps.length })}</Text>
             </View>
-            {steps.map((s, i) => (
-              <StepRow
-                key={i}
-                icon={s.icon}
-                title={s.title}
-                done={done.includes(i)}
-                last={i === steps.length - 1}
-                onOpen={() => setStep(i)}
-                onDone={() => {
-                  const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i];
-                  setDone(next);
-                  tick(next.length === steps.length && !done.includes(i) ? 'success' : 'select');
-                }}
-              />
-            ))}
+            <ScrollView
+              key={scanKey}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CARD_W + 12}
+              decelerationRate="fast"
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+            >
+              {steps.map((s, i) => (
+                <ActionCard
+                  key={i}
+                  n={i + 1}
+                  icon={s.icon}
+                  title={s.title}
+                  done={done.includes(i)}
+                  onOpen={() => setStep(i)}
+                  onDone={() => {
+                    const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i];
+                    setDone(next);
+                    tick(next.length === steps.length && !done.includes(i) ? 'success' : 'select');
+                  }}
+                />
+              ))}
+            </ScrollView>
             {done.length === steps.length ? (
-              <View style={st.allDone}>
-                <Icon name="check-circle-outline" size={22} color={C.primaryDark} />
-                <Text style={st.allDoneTxt}>All steps done. Scan again in a few days to check.</Text>
-              </View>
+              <Animated.View entering={ZoomIn.springify().damping(11)} style={st.allDone}>
+                <Icon name="check-decagram-outline" size={32} color={C.primaryDark} />
+                <Text style={st.allDoneTxt}>Well done! Scan again in a few days.</Text>
+              </Animated.View>
             ) : null}
           </View>
         ) : null}
@@ -459,15 +470,15 @@ export default function ResultScreen() {
         {p.uri && !p.incidentId ? (
           <View style={[st.section, st.whatCard]}>
             {answer ? (
-              <View style={st.whatRow}>
+              <Animated.View entering={ZoomIn.springify().damping(12)} style={st.whatRow}>
                 <View style={[st.picIcon, { backgroundColor: C.primaryTint }]}>
-                  <Icon name="check" size={28} color={C.primaryDark} />
+                  <Icon name="heart-outline" size={30} color={C.primaryDark} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={st.whatLabel}>Answer recorded</Text>
+                  <Text style={st.whatLabel}>Thank you</Text>
                   <Text style={st.small}>{shared ? 'The photo will send on Wi-Fi. It helps Tassel learn Kenyan farms.' : 'Your answer stays on this phone.'}</Text>
                 </View>
-              </View>
+              </Animated.View>
             ) : (
               <>
                 <Text style={st.cardHead}>{uncertain ? 'Was the first guess right?' : 'Was this right?'}</Text>
@@ -648,29 +659,59 @@ export default function ResultScreen() {
   );
 }
 
-/** One "do this now" step: tick circle, the step's icon and short title. Tap the title for the full step. */
-function StepRow({ icon, title, done, last, onOpen, onDone }: { icon: IconName; title: string; done: boolean; last: boolean; onOpen: () => void; onDone: () => void }) {
+const CARD_W = Math.min(300, Dimensions.get('window').width * 0.74);
+
+/** One "do this now" card: a moving picture, a short title, Done. Tap the picture for the full step. */
+function ActionCard({ n, icon, title, done, onOpen, onDone }: { n: number; icon: IconName; title: string; done: boolean; onOpen: () => void; onDone: () => void }) {
   const { t } = useLang();
+  const reduce = useReducedMotion();
+  const bob = useSharedValue(0);
+  useEffect(() => {
+    if (reduce || done) {
+      bob.value = 0;
+      return;
+    }
+    bob.value = withDelay(n * 250, withRepeat(withTiming(-6, { duration: 900, easing: Easing.inOut(Easing.quad) }), -1, true));
+  }, [reduce, done, n, bob]);
+  const bobStyle = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }] }));
   return (
-    <View style={[st.stepRow, !last && st.stepDivider]}>
-      <TouchableOpacity onPress={onDone} hitSlop={10} accessibilityRole="checkbox" accessibilityState={{ checked: done }} accessibilityLabel={title}>
-        <Icon name={done ? 'check-circle' : 'circle-outline'} size={28} color={done ? C.primary : C.textLight} />
+    <Animated.View entering={FadeInDown.delay(100 + n * 80)} style={[st.card, done && { backgroundColor: C.primaryTint }]}>
+      <TouchableOpacity onPress={onOpen} style={{ alignItems: 'center', gap: 12 }} accessibilityRole="button" accessibilityHint={t('Opens the full step')}>
+        <View style={st.cardNum}>
+          <Text raw style={st.stepNumTxt}>{String(n)}</Text>
+        </View>
+        <Animated.View style={[st.cardIcon, bobStyle, done && { backgroundColor: C.primary }]}>
+          {done ? (
+            <Animated.View entering={ZoomIn.springify().damping(10)}>
+              <Icon name="check-bold" size={44} color="#fff" />
+            </Animated.View>
+          ) : (
+            <Icon name={icon} size={44} color={C.primaryDark} />
+          )}
+        </Animated.View>
+        <Text raw style={st.cardTitle}>{title}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={st.stepBody} onPress={onOpen} accessibilityRole="button" accessibilityHint={t('Opens the full step')}>
-        <Icon name={icon} size={20} color={done ? C.textLight : C.textMid} />
-        <Text raw style={[st.stepRowTitle, done && st.stepRowDone]}>{title}</Text>
-        <Icon name="chevron-right" size={20} color={C.textLight} />
+      <TouchableOpacity
+        style={[st.doneBtn, done && { backgroundColor: C.primary }]}
+        onPress={onDone}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: done }}
+      >
+        <Icon name={done ? 'check-circle' : 'checkbox-blank-circle-outline'} size={22} color={done ? '#fff' : C.primaryDark} />
+        <Text style={[st.doneTxt, done && { color: '#fff' }]}>{done ? 'Done' : 'Mark done'}</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 }
 
-/** One picture with a word under it: a plain line icon. */
+/** One picture with a word under it: an icon, or a Noto emoji where it carries the meaning. */
 function PictureItem({ pic }: { pic: Picture }) {
+  // A sky disc behind rain and water: the white Noto cloud vanished on the pale green one (TECNO).
+  const sky = pic.noto === 'rain' || pic.noto === 'droplet';
   return (
     <View style={st.picItem}>
-      <View style={st.picIcon}>
-        <Icon name={pic.icon as IconName} size={28} color={C.primaryDark} />
+      <View style={[st.picIcon, sky && { backgroundColor: '#CFE0EA' }]}>
+        {pic.noto ? <NotoEmoji name={pic.noto} size={40} /> : <Icon name={pic.icon as IconName} size={32} color={C.primaryDark} />}
       </View>
       <Text style={st.picLabel}>{pic.label}</Text>
     </View>
@@ -711,13 +752,14 @@ const st = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, minHeight: 36 },
   chipTxt: { fontSize: 15, fontFamily: FONT.bodyBold },
   sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 10 },
-  allDone: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, padding: 12, borderRadius: 12, backgroundColor: C.primaryTint },
-  allDoneTxt: { flex: 1, fontSize: 15, fontFamily: FONT.bodyBold, color: C.primaryDark },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 6 },
-  stepDivider: { marginBottom: 2 }, // theme rule: no divider lines, spacing only
-  stepBody: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
-  stepRowTitle: { flex: 1, fontSize: 16, lineHeight: 22, fontFamily: FONT.bodyBold, color: C.text },
-  stepRowDone: { color: C.textLight, textDecorationLine: 'line-through' },
+  card: { width: CARD_W, backgroundColor: C.surface, borderRadius: 22, padding: 16, gap: 14, justifyContent: 'space-between' },
+  cardNum: { alignSelf: 'flex-start', width: 26, height: 26, borderRadius: 13, backgroundColor: C.primaryDark, alignItems: 'center', justifyContent: 'center' },
+  cardIcon: { width: 92, height: 92, borderRadius: 46, backgroundColor: C.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { fontSize: 19, lineHeight: 25, fontFamily: FONT.bodyBold, color: C.text, textAlign: 'center', minHeight: 50 },
+  doneBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 52, borderRadius: 14, backgroundColor: C.primaryTint },
+  doneTxt: { fontSize: 16, fontFamily: FONT.bodyBold, color: C.primaryDark },
+  allDone: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: C.primaryTint },
+  allDoneTxt: { flex: 1, fontSize: 16, fontFamily: FONT.bodyBold, color: C.primaryDark },
   moreRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 },
   bigBadge: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
   verdictWord: { fontSize: 30, lineHeight: 36, fontFamily: FONT.display, color: C.text },

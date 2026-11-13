@@ -10,8 +10,7 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
-import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
-import { useStill } from '../lib/motion';
+import Animated, { Easing, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
 import { isDont, sceneCrop, sceneFor, type SceneCrop, type SceneKind } from '../lib/storyScene';
 
 const P = {
@@ -42,7 +41,7 @@ type Track = { at: number[]; x?: number[]; y?: number[]; o?: number[]; r?: numbe
 
 /** A looping 0→1 clock. Under reduce-motion it rests on `still`, a frame where the work is shown done. */
 function useLoop(duration: number, still: number, key: string) {
-  const reduce = useStill(); // 12 Nov: scenes stand still (lib/motion.ts)
+  const reduce = useReducedMotion();
   const p = useSharedValue(reduce ? still : 0);
   useEffect(() => {
     if (reduce) {

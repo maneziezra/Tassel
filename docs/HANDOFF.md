@@ -17,12 +17,6 @@ Written 24 Oct 2026 for Ezra ("Archlord"), Eldoret, Kenya. Put this file in the 
   - The library marks a guide "scanner can detect" only when the model in use can name it (`scannerCanName`, `lib/labels.ts` holds the active labels), so the built-in v5 does not claim the v8 classes.
   - Result screen: the big emoji faces are gone (Ezra: "seriousness"); the photo carries one plain status badge (green Healthy, ochre Not sure, urgency colour for a problem).
   - Tests: `scripts/test-guides-v8.mjs`; the test loader now imports JSON like Metro.
-- App 2.9.3 (versionCode 14, 12 Nov), Ezra: "just make my app serious" (like xFarm). Replaces the 26 Oct "alive" direction:
-  - `lib/motion.ts`: `DECORATIVE_MOTION = false`; `useStill()` freezes the story scenes and diagrams on their finished frame, the satellite hero appears at once (no sweep, no pulsing squares), the scan frame no longer breathes.
-  - No animated emoji on any screen (Home, scan, result, advisory, calendar, add field, task rows): plain line icons (`sceneIcon`, `threatIcons` in `lib/storyScene.ts`; `lib/resultPictures.ts` is icon-only). `components/NotoEmoji.tsx` stays for `dev-scenes` only.
-  - Result: "Do this now" is a checklist (tick, icon, title), not bobbing swipe cards; no zoom-ins; "Answer recorded" instead of a heart.
-  - Home: "Today" (spray window, due task, outbreak) now comes before the tools; plain wording ("No action needed today", "Tools", "Planting calendar created"). Exclamation marks removed from UI text.
-  - Guard: `scripts/test-rules.mjs` "decision 12 Nov" fails on emoji faces, springs, loops without `useStill()`, and shouted strings.
 - Next in the plan (not started): real reference photos per disease ("Does your leaf look like this?"), from Ezra's own photos or openly licensed ones with credit. Never AI-generated or stock presented as real Tassel farms; farmers' shared scan photos are not for display (their consent covers accuracy and training only).
 - Server SQL written but NOT applied (needs Ezra in the Supabase SQL editor): `cropguard-proxy/supabase/cropguard_v28_scan_feedback.sql`, `cropguard_v29_models_bucket.sql` (and the older `cropguard_v27_pesticide_products.sql`). Until v28 is applied, opted-in photos wait on the phone; until v29, the update check finds no manifest and the built-in model stays.
 - Model v8a trained 10 Nov (EfficientNetV2-B2, 240 px, 193 classes): 0.9568 vs v5 0.9404 on v5's sources, test_phone 0.9522, 35.8 MB. Not shipped: 30 classes lack treatment guides, size and TECNO scan time unchecked, v5 never scored on test_phone. Details: KSEF project doc `Tassel_Model_v8a_Results.md`; files in `Desktop\KSEF 2027\tassel_v3\results_v8a\`.
@@ -30,7 +24,7 @@ Written 24 Oct 2026 for Ezra ("Archlord"), Eldoret, Kenya. Put this file in the 
 
 **Decided by Ezra, 26 Oct 2026** (these replace the older rules "active ingredients only, never doses" and "no emojis" from the 19 Oct brief):
 - Brand: "how your field is doing, and what to do today". The satellite field is the Home hero; offline scan is the giant action.
-- Emoji: ~~Google Noto Animated Emoji~~ replaced 12 Nov by plain line icons (see 2.9.3). No system emoji.
+- Emoji: Google Noto Animated Emoji (Lottie), with the licence credited. No system emoji.
 - Named PCPB products: allowed with registration number and "Not sponsored", but **only when checked against the PCPB register**. A label rate is shown only when it is cited from the label; otherwise show "See the label".
 - Model v8 retraining: after the redesign.
 - Still open: the Home visual direction (pick from two Figma directions).

@@ -22,7 +22,7 @@ import {
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import Animated, { FadeInRight, FadeOutLeft, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInRight, FadeOutLeft, useAnimatedStyle, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 import {
@@ -38,6 +38,7 @@ import {
 } from '../components/ui';
 import { DateField } from '../components/DateField';
 import { FieldHero } from '../components/FieldHero';
+import { NotoEmoji } from '../components/NotoEmoji';
 import { addFarm, listFarms, type LatLng } from '../lib/data';
 import { CROP_CHOICES } from '../lib/counties';
 import { centroid } from '../lib/geo';
@@ -188,7 +189,7 @@ export default function AddFarmScreen() {
               {t('Step {a} of {b}', { a: step + 1, b: totalSteps })}
             </Text>
           ) : (
-            <Text style={st.stepCounter}>{t('Planting calendar created')}</Text>
+            <Text style={st.stepCounter}>{t('Planting calendar ready!')}</Text>
           )}
         </View>
 
@@ -507,9 +508,9 @@ export default function AddFarmScreen() {
                 <FieldHero polygon={polygon} grid={null} width={300} height={190} checking playKey={savedFarmId ?? 'new'} />
               </View>
             ) : (
-              <View style={st.celebrationIconWrap}>
-                <Icon name="check-circle-outline" size={56} color={C.primary} />
-              </View>
+              <Animated.View entering={ZoomIn.springify().damping(12)} style={st.celebrationIconWrap}>
+                <NotoEmoji name="plant" size={80} />
+              </Animated.View>
             )}
 
             <Text raw style={st.celebrationTitle}>{t('{name} is on your farm', { name })}</Text>

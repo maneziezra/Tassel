@@ -90,7 +90,7 @@ export default function CommunityScreen() {
               <Empty
                 icon="forum-outline"
                 title={tab === 'All' ? 'No posts yet' : t('No posts in {cat} yet', { cat: t(tab) })}
-                text="No questions yet. Ask the first one."
+                text="Be the first to ask a question!"
                 action={<Btn label="Post a question" icon="pencil-plus" onPress={() => router.push('/new-post')} style={{ marginTop: 12, paddingHorizontal: 24 }} />}
               />
             )

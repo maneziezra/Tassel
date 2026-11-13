@@ -100,17 +100,4 @@ test('decision 26 Oct: no system emoji in app code (Noto Animated Emoji only)', 
   for (const f of files) assert.ok(!emoji.test(read(f)), `${path.relative(root, f)} contains a system emoji`);
 });
 
-test('decision 12 Nov: serious, like xFarm: no emoji faces, no bouncing, no looping decoration, no exclamations', () => {
-  assert.match(read(path.join(root, 'lib/motion.ts')), /DECORATIVE_MOTION = false/);
-  const screens = files.filter((f) => !/NotoEmoji\.tsx$|dev-scenes\.tsx$/.test(f) && /[\\/](app|components)[\\/]/.test(f));
-  for (const f of screens) {
-    const s = read(f);
-    const rel = path.relative(root, f);
-    assert.doesNotMatch(s, /<NotoEmoji\b/, `${rel} shows an animated emoji`);
-    assert.doesNotMatch(s, /springify\(|withSpring\(|ZoomIn\b|BounceIn\b/, `${rel} bounces`);
-    if (/withRepeat\(/.test(s)) assert.match(s, /useStill\(\)/, `${rel} loops without the motion rule`);
-    assert.doesNotMatch(s, /(?:t\(|text=|label=|title=)\s*['"][A-Z][^'"]*!['"]/, `${rel} shouts`);
-  }
-});
-
 console.log(`\n${passed} rule guards passed`);

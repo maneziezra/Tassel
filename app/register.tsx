@@ -47,7 +47,7 @@ export default function RegisterScreen() {
         t(needsConfirmation ? 'Confirm your email' : 'Account ready'),
         needsConfirmation
           ? t('We sent a link to {email}. Open it to finish backing up. You can keep using the app meanwhile.', { email: email.trim() })
-          : t('Signed in as {name}. Your fields and scans are backed up.', { name: name.trim().split(' ')[0] }),
+          : t('Welcome, {name}! Your fields and scans are now backed up.', { name: name.trim().split(' ')[0] }),
         [{ text: t('OK'), onPress: () => router.replace('/profile') }]
       );
     } catch (e) {

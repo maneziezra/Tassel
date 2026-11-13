@@ -180,7 +180,7 @@ export default function PostScreen() {
           ) : (
             <View style={st.noReplies}>
               <Icon name="comment-outline" size={36} color={C.border} />
-              <Text style={{ color: C.textSub, marginTop: 8 }}>No replies yet.</Text>
+              <Text style={{ color: C.textSub, marginTop: 8 }}>No replies yet. Be the first to help!</Text>
             </View>
           )}
           <Text style={st.disclaimer}>Advice from other farmers is not checked. Confirm pesticide advice with an agro-dealer or extension officer.</Text>
